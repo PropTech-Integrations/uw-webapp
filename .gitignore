@@ -24,3 +24,5 @@ vite.config.ts.timestamp-*
 static/.well-known/appspecific/com.chrome.devtools.json
 
 *.code-workspace
+svelte-flowbite-awssdk-starter-template.code-workspace
+.vscode/settings.json

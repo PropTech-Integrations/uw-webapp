@@ -2,6 +2,12 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../uw-aws-infrastructure"
+		},
+		{
+			"path": "../uw-data-plane"
 		}
 	],
 	"settings": {
