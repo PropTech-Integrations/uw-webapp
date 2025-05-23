@@ -19,16 +19,17 @@ export async function getDataByUser(
 ): Promise<any[] | undefined> {
 	// Return type: array of items or undefined if none
 	// Build and send a QueryCommand to fetch items where userId equals the provided identityId
+	console.log('identityId: ', identityId);
 	const { Items } = await ddb.send(
 		new QueryCommand({
 			TableName: 'Projects', // DynamoDB table name
 			KeyConditionExpression: 'userId = :uid', // Filter expression on the partition key
 			ExpressionAttributeValues: {
-				':uid': { S: identityId } // Map placeholder to actual identityId value
+				':uid': { S: identityId } // Map placeholder to actual identityId value as DynamoDB AttributeValue
 			}
 		})
 	);
-
+	console.log('Items: ', Items);
 	// Return the array of items (or undefined if no matches)
 	return Items?.map(item => unmarshall(item)) ?? [];
 

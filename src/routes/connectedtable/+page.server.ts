@@ -30,7 +30,9 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
 	} catch {
 		throw error(401, 'Authentication required. getDynamoDBClient failed.');
 	}
-
+	
+	console.log('ddb: ', ddb);
+	console.log('identityId: ', identityId);
 	try {
 		data = await getDataByUser(ddb, identityId);
 		return { data };

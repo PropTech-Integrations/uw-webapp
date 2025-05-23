@@ -62,7 +62,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 	// Use authorization code flow
 	loginUrl.searchParams.set('response_type', 'code');
 	// Request scopes for user info
-	loginUrl.searchParams.set('scope', 'email openid phone');
+	loginUrl.searchParams.set('scope', 'email openid profile');
 	// Where Cognito should redirect after successful login
 	loginUrl.searchParams.set('redirect_uri', COGNITO_REDIRECT_URI);
 	// Attach the PKCE code challenge
