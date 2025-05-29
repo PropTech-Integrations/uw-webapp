@@ -13,7 +13,7 @@
 import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 
-import { USERDATA_TABLE } from '$env/static/private';
+import { DOCUMENTS_TABLE } from '$env/static/private';
 
 export async function getDataByUser(
 	ddb: DynamoDBClient, // Pre-configured DynamoDB client instance
@@ -24,7 +24,7 @@ export async function getDataByUser(
 	console.log('identityId: ', identityId);
 	const { Items } = await ddb.send(
 		new QueryCommand({
-			TableName: "Projects", // DynamoDB table name
+			TableName: DOCUMENTS_TABLE, // DynamoDB table name
 			KeyConditionExpression: 'userId = :uid', // Filter expression on the partition key
 			ExpressionAttributeValues: {
 				':uid': { S: identityId } // Map placeholder to actual identityId value as DynamoDB AttributeValue
@@ -33,6 +33,5 @@ export async function getDataByUser(
 	);
 	console.log('Items: ', Items);
 	// Return the array of items (or undefined if no matches)
-	return Items?.map(item => unmarshall(item)) ?? [];
-
+	return Items?.map((item) => unmarshall(item)) ?? [];
 }
