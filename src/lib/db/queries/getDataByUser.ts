@@ -12,26 +12,24 @@
 // Import the necessary DynamoDB client and command from AWS SDK v3
 import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
+import { getDocumentById } from 'uw-data-plane';
+// import { getDocumentById } from 'uw-data-plane/src/services/db/index';
+// import type { DocumentItem } from 'uw-data-plane/src/services/db/aws-dyanmodb/types';
 
 import { DOCUMENTS_TABLE } from '$env/static/private';
 
 export async function getDataByUser(
 	ddb: DynamoDBClient, // Pre-configured DynamoDB client instance
 	identityId: string // Cognito Identity ID to filter the query
-): Promise<any[] | undefined> {
+): Promise<{} | null> {
 	// Return type: array of items or undefined if none
 	// Build and send a QueryCommand to fetch items where userId equals the provided identityId
 	console.log('identityId: ', identityId);
-	const { Items } = await ddb.send(
-		new QueryCommand({
-			TableName: DOCUMENTS_TABLE, // DynamoDB table name
-			KeyConditionExpression: 'userId = :uid', // Filter expression on the partition key
-			ExpressionAttributeValues: {
-				':uid': { S: identityId } // Map placeholder to actual identityId value as DynamoDB AttributeValue
-			}
-		})
-	);
-	console.log('Items: ', Items);
+	// console.log('whoami: ', whoami());
+	const item = await getDocumentById("doc-545");
+	
+	console.log('Items: ', item);
 	// Return the array of items (or undefined if no matches)
-	return Items?.map((item) => unmarshall(item)) ?? [];
+	// return Items?.map((item) => unmarshall(item)) ?? [];
+	return item
 }
