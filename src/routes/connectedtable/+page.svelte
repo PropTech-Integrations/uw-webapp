@@ -22,13 +22,14 @@
 	let { data }: { data: PageData } = $props();
   
 	// Reactive state holding the array of items to display in the table
-	let table_data = $state(data.data as Item[]);
+	let table_data = $state((data as any).data as Item[] || []);
   
 	// Reference to the WebSocket connection, for cleanup
 	let socket: ReturnType<typeof createWebSocket>;
   
 	// Initialize WebSocket connection when component mounts
 	onMount(() => {
+    //   console.log('🔌 WebSocket connecting to', PUBLIC_WS_URL, "wss://mbft9w8es5.execute-api.us-west-2.amazonaws.com/prod", PUBLIC_WS_URL === "wss://mbft9w8es5.execute-api.us-west-2.amazonaws.com/prod");
 	  socket = createWebSocket({
 		url: PUBLIC_WS_URL,
 		onMessage: (event: StreamEvent) => {

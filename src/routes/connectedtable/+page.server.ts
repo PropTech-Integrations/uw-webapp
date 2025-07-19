@@ -31,13 +31,16 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
 		throw error(401, 'Authentication required. getDynamoDBClient failed.');
 	}
 	
-	console.log('ddb: ', ddb);
+	// console.log('ddb: ', ddb);
 	console.log('identityId: ', identityId);
-	try {
-		data = await getDataByUser(ddb, identityId);
-		return { data };
-	} catch(e) {
-		console.error('Error in getDataByUser: ', e);
-		throw error(401, 'Authentication required. getDataByUser failed.');
-	}
+
+
+
+	// try {
+	// 	data = await getDataByUser(ddb, identityId);
+	// 	return { data };
+	// } catch(e) {
+	// 	console.error('Error in getDataByUser: ', e);
+	// 	throw error(401, 'Authentication required. getDataByUser failed.');
+	// }
 };
