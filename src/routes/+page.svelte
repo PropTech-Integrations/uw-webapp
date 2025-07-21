@@ -20,8 +20,8 @@
   import { Button } from 'flowbite-svelte';
 </script>
 
-<section class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-  <div class="max-w-3xl text-center">
+<section class="min-h-screen w-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+  <div class="w-full text-center">
     <h1 class="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
       Welcome to Your SvelteKit Starter
     </h1>

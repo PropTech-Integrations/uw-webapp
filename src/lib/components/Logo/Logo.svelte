@@ -1,0 +1,1 @@
+<img src="/images/logos/logo-graphic-only.png" alt="Logo" class="w-10 h-10" />

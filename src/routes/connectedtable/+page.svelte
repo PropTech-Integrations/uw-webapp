@@ -20,7 +20,7 @@
   
 	// Extract initial data provided by the page's load function
 	let { data }: { data: PageData } = $props();
-  
+
 	// Reactive state holding the array of items to display in the table
 	let table_data = $state((data as any).data as Item[] || []);
   
