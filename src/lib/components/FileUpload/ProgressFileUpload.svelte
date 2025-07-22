@@ -69,7 +69,7 @@
 			{status === 'uploading' ? `Uploading… ${progress}%` : `Upload “${file.name}”`}
 		</Button>
 
-		<Progressbar {progress} />
+		<Progressbar {progress} /> // Demo
 
 		{#if status === 'done'}
 			<p class="text-green-600">✅ {message}</p>

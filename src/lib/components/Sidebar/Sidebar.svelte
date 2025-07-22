@@ -16,7 +16,7 @@
     <!-- Navigation -->
     <nav class="flex-1 overflow-y-auto px-2 py-4 space-y-1">
       <a
-        href="#"
+        href="/pipeline"
         class="group flex items-center px-2 py-2 text-sm font-medium rounded-lg transition-all
         hover:bg-gray-100 dark:hover:bg-gray-800
         {active === 'upload' ? 'bg-gray-100 dark:bg-gray-800 text-purple-600' : 'text-gray-700 dark:text-gray-300'}"

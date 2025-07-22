@@ -27,7 +27,7 @@
       },
       {
         id: '2',
-        address: '9404 West Rd, Houston, TX 77064, USA',
+        address: 'Hobby Lobby 4107 Broadway Street, Mount Vernon, IL 62864',
         statusTags: ['Active', 'Fail'],
         thumbnailUrl: '/images/thumbnails/2.png',
         stats: [
