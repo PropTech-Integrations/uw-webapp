@@ -1,21 +1,56 @@
-<!-- src/lib/PdfViewer.svelte -->
+<!-- src/lib/S3PdfList.svelte -->
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
-	GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
-
-	export let url: string;
-	let canvas: HTMLCanvasElement;
-
+	import PdfViewer from '$lib/components/PdfViewer.svelte';
+  
+	interface FileEntry {
+	  key: string;
+	  url: string;
+	}
+  
+	let files: FileEntry[] = [];
+	let loading = true;
+	let error: string | null = null;
+  
 	onMount(async () => {
-		const loadingTask = getDocument(url);
-		const pdf = await loadingTask.promise;
-		const page = await pdf.getPage(1); // render only first page
-		const viewport = page.getViewport({ scale: 1.5 });
-		canvas.width = viewport.width;
-		canvas.height = viewport.height;
-		await page.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise;
+	  try {
+		const res = await fetch('/api/s3-files');
+		if (!res.ok) throw new Error(`HTTP ${res.status}`);
+		files = await res.json();
+	  } catch (err: any) {
+		console.error(err);
+		error = err.message;
+	  } finally {
+		loading = false;
+	  }
 	});
-</script>
-
-<canvas bind:this={canvas}></canvas>
+  </script>
+  
+  {#if loading}
+	<p>Loading documents…</p>
+  {:else if error}
+	<p class="error">Error: {error}</p>
+  {:else if files.length === 0}
+	<p>No documents available.</p>
+  {:else}
+	<ul class="pdf-list">
+	  {#each files as file (file.key)}
+		<li class="pdf-item">
+		  <h4>{file.key}</h4>
+		  <PdfViewer
+			{file.url}
+			scale={1.2}
+			showBorder={false}
+			showButtons={[]}
+		  />
+		</li>
+	  {/each}
+	</ul>
+  {/if}
+  
+  <style>
+	.pdf-list { list-style: none; padding: 0; }
+	.pdf-item { margin-bottom: 2rem; }
+	.error { color: red; }
+  </style>
+  

@@ -33,7 +33,9 @@ const s3 = new S3Client({ region: REGION });
 // Define Zod schema to validate incoming JSON payload
 const payloadSchema = z.object({
   filename: z.string().min(1),
-  contentType: z.string().regex(/^[\w-]+\/[\w-+.]+$/, 'Invalid MIME type')
+  contentType: z.string().regex(/^[\w-]+\/[\w-+.]+$/, 'Invalid MIME type'),
+  checksumAlgorithm: z.literal('SHA256'),
+  checksumSHA256: z.string().regex(/^[A-Za-z0-9+/=]+$/, 'Invalid Base64 checksum')
 });
 
 /**
@@ -41,7 +43,7 @@ const payloadSchema = z.object({
  */
 export const POST: RequestHandler = async ({ request }) => {
   console.log("Entering Server side POST function: /api/upload-url");
-  let { filename, contentType } = await request.json();
+  let { filename, contentType, checksumSHA256 } = await request.json();
 
   console.log("Request body:", filename, contentType);
   
@@ -69,7 +71,9 @@ export const POST: RequestHandler = async ({ request }) => {
   const cmd = new PutObjectCommand({
     Bucket: S3_FILEUPLOADS_BUCKET,
     Key: key,
-    ContentType: contentType
+    ContentType: contentType,
+    ChecksumAlgorithm: 'SHA256',
+    ChecksumSHA256: checksumSHA256
   });
 
   try {

@@ -66,9 +66,11 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold">Pipeline</h1>
-      <button class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
-        New Analysis
+      <a href="/properties/new">
+        <button class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+        New Property Analysis
       </button>
+    </a>
     </div>
   
     <!-- Search & Filters -->

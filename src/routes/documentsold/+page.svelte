@@ -92,7 +92,3 @@
 		<p>Loading document data...</p>
 	{/if}
 </main>
-
-<style>
-
-</style>
