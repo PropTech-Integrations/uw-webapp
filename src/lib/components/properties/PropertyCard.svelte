@@ -31,9 +31,9 @@
 	];
 </script>
 
-<a href="/documents">
+<a href={prop.url} >
 	<div
-		class="flex items-center justify-between rounded-lg border border-dashed border-purple-300 bg-white p-4 transition-shadow hover:shadow"
+		class="flex items-center my-2 justify-between rounded-lg border border-dashed border-purple-300 bg-white p-4 transition-shadow hover:shadow"
 	>
 		<!-- Left: Thumbnail & Address -->
 		<div class="flex items-center space-x-4">
@@ -56,7 +56,7 @@
 				<div class="font-medium">{prop.address}</div>
 				<div class="mt-1 flex flex-wrap gap-2">
 					{#each prop.statusTags as tag}
-						<span class="rounded-full bg-gray-100 px-2 py-1 text-sm text-gray-700">
+						<span class="font-poppins rounded-full border-b- bg-yellow-100 px-2 py-1 text-sm text-yellow-700">
 							{tag}
 						</span>
 					{/each}
@@ -65,7 +65,7 @@
 		</div>
 
 		<!-- Middle (stats & metrics) -->
-		{#if !prop.isDraft}
+		<!-- {#if !prop.isDraft}
 			<div class="flex-1 px-6">
 				<div class="flex flex-wrap gap-2 text-sm text-gray-600">
 					{#each prop.stats ?? [] as stat, index}
@@ -82,22 +82,22 @@
 					{/if}
 				</div>
 			</div>
-		{/if}
+		{/if} -->
 
 		<!-- Right: Actions & Date -->
 		<div class="flex items-center space-x-4">
 			<div class="text-sm text-gray-500">{prop.date}</div>
 
-			{#if prop.isDraft}
+			<!-- {#if prop.isDraft}
 				<button class="rounded bg-purple-600 px-3 py-1 text-white" on:click={prop.onFinishDraft}>
 					finish draft
 				</button>
 			{:else}
-				<img src="https://i.pravatar.cc/32?u={prop.id}" alt="user" class="h-8 w-8 rounded-full" />
+				<!-- <img src="https://i.pravatar.cc/32?u={prop.id}" alt="user" class="h-8 w-8 rounded-full" /> -
 				<button class="rounded p-1 hover:bg-gray-100" aria-label="More options">
 					<p>...</p>
 				</button>
-			{/if}
+			{/if} -->
 		</div>
 	</div>
 </a>

@@ -1,9 +1,20 @@
 <script lang="ts">
     export let property: {
+      id: string;
       address: string;
       statusTags: string[];
       // thumbnailUrl: string;
     };
+
+    const menuItems = [
+    { label: 'Document Review', active: false, href: `/properties/${property.id}/document` },
+    { label: 'Summary', active: true, href: `/properties/${property.id}/summary` },
+    { label: 'Analysis', active: false, href: `/properties/${property.id}/analysis` },
+    { label: 'Property info', active: false, href: `/properties/${property.id}/property-info` },
+    { label: 'Market overview', active: false, href: `/properties/${property.id}/market-overview` },
+    { label: 'Sales comps', active: false, href: `/properties/${property.id}/sales-comps` },
+    { label: 'Rent comps', active: false, href: `/properties/${property.id}/rent-comps` },
+  ];
   </script>
   
   <aside class="w-64 bg-white border-r flex flex-col">
@@ -22,21 +33,12 @@
       </div>
   
       <nav class="mt-6 space-y-1 text-sm text-gray-600">
-        <a class="block px-2 py-1 bg-purple-50 text-purple-700 rounded" href="#">Summary</a>
-        <a class="block px-2 py-1 rounded hover:bg-gray-100" href="#">Analyses</a>
-        <a class="block px-2 py-1 rounded hover:bg-gray-100" href="#">Property info</a>
-        <a class="block px-2 py-1 rounded hover:bg-gray-100" href="#">Attachments</a>
-        <!-- … -->
+        {#each menuItems as item}
+          <a class="block px-2 py-1 rounded hover:bg-gray-100 {item.active ? 'bg-gray-100' : ''}" href={item.href}>{item.label}</a>
+        {/each}
       </nav>
     </div>
   
-    <div class="p-4 border-t">
-      <button class="w-full mb-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
-        Create brochure
-      </button>
-      <button class="w-full px-4 py-2 border rounded hover:bg-gray-100">
-        Share property website
-      </button>
-    </div>
+
   </aside>
   

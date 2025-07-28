@@ -1,6 +1,7 @@
 export interface Property {
   id: string;
   address: string;
+  url: string;
   thumbnailUrl?: string;
   statusTags: string[];
   stats?: string[];

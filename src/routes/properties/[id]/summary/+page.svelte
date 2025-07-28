@@ -10,6 +10,9 @@
 	import RentRollTotals from '$lib/components/properties/RentRollTotals.svelte';
 	import OperatingStatement from '$lib/components/properties/OperatingStatement.svelte';
 	import type { OperatingRow } from '$lib/types/property';
+	// import SpeedometerCard from '$lib/components/SpeedometerCard/index.svelte';
+
+	let id = window.location.pathname.split('/')[2];
 
 	// Mock data shape
 	interface PropertyInfoData {
@@ -66,9 +69,9 @@
 
 	// Example static fetch
 	const property: Property = {
-		id: '9404',
+		id: id,
 		address: '9404 West Rd, Houston, TX 77064, USA',
-		statusTags: ['Active', 'Fail'],
+		statusTags: [],
 		info: {
 			price: '$858,139,130',
 			units: 280,
@@ -195,6 +198,7 @@
 		}
 	];
 
+	console.log('property', property);
 	// reuse units & sf for the table header
 	const { units, sf } = rentRollData;
 </script>
@@ -204,6 +208,7 @@
 
 	<main class="flex-1 overflow-auto p-6">
 		<PropertyHeader address={property.address} />
+
 
 		<div class="mt-6 space-y-6">
 			<!-- Top row: Property Info, Metrics, Acquisition -->

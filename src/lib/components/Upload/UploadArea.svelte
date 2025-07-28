@@ -54,9 +54,9 @@
 			});
 
 			// Redirect to properties summary page if upload was successful and we have a SHA256 hash
-			if (result?.success && result.sha256) {
-				goto(`/properties/document/${result.sha256}`);
-			}
+			// if (result?.success && result.sha256) {
+			// 	goto(`/properties/document/${result.sha256}`);
+			// }
 		} catch (err) {
 			result = { success: false, message: (err as Error).message };
 		}

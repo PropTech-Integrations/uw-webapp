@@ -4,27 +4,6 @@
 	import SourceCard from '../../../lib/components/Upload/SourceCard.svelte';
 	import ProgressBar from '../../../lib/components/Upload/ProgressBar.svelte';
 
-	let steps = [
-		{ number: 1, title: 'Add Sources', active: true, description: 'Select files and data sources' },
-		{
-			number: 2,
-			title: 'Enrich with Industry Data',
-			active: false,
-			description:'ESRI and other industry data sources'
-		},
-		{
-			number: 3,
-			title: 'StratiqAI Analysis',
-			active: false,
-			description:'Next Generation AI Powered Analysis'
-		},
-		{
-			number: 4,
-			title: 'Build Reports',
-			active: false,
-			description: 'Generate Underwriting, Go/No Go, and Broker Reports'
-		}
-	];
 	const sourceCards = [
 		{
 			title: 'PDF Documents',
@@ -52,36 +31,6 @@
 <section
 	class="space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 shadow-md"
 >
-	<header class="flex items-center justify-between">
-		<h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1>
-		<DiscoverButton />
-	</header>
-
-	<ol
-		class="flex w-full items-center justify-between space-y-4 sm:flex sm:space-y-0 rtl:space-x-reverse"
-	>
-		{#each steps as step}
-			<li
-				class="flex w-full items-center space-x-2.5  text-blue-600 rtl:space-x-reverse dark:text-blue-500"
-        class:text-blue-600={step.active}
-				class:text-gray-500={!step.active}
-				class:opacity-85={!step.active}
-			>
-				<span
-					class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border"
-          class:text-blue-600={step.active}
-          class:text-gray-500={!step.active}
-          class:opacity-85={!step.active}
-				>
-					{step.number}
-				</span>
-				<span>
-					<h3 class="font-medium leading-tight">{step.title}</h3>
-					<p class="text-xs">{step.description}</p>
-				</span>
-			</li>
-		{/each}
-	</ol>
 
 	<!-- <ol class="flex items-center w-full text-sm font-medium text-center text-gray-500 dark:text-gray-400 sm:text-base">
     <li class="flex md:w-full items-center text-blue-600 dark:text-blue-500 sm:after:content-[''] after:w-full after:h-1 after:border-b after:border-gray-200 after:border-1 after:hidden sm:after:inline-block after:mx-6 xl:after:mx-10 dark:after:border-gray-700">
@@ -135,7 +84,7 @@
 
 	<UploadArea />
 
-	<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+	<div class="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
 		{#each sourceCards as card}
 			<SourceCard {card} />
 		{/each}
