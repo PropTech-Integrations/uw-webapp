@@ -1,44 +1,41 @@
 <script lang="ts">
-    export let property: {
-      id: string;
-      address: string;
-      statusTags: string[];
-      // thumbnailUrl: string;
-    };
+	let { property } = $props();
+	console.log(property);
+	const menuItems = [
+		{ label: 'Document Review', active: false, href: `/properties/${property.id}/document` },
+		{ label: 'Summary', active: true, href: `/properties/${property.id}/summary` },
+		{ label: 'Investment Analysis', active: false, href: `/properties/${property.id}/analysis` },
+		{ label: 'Market overview', active: false, href: `/properties/${property.id}/market` },
+		{ label: 'Sales comps', active: false, href: `/properties/${property.id}/salescomps` },
+		{ label: 'Rent comps', active: false, href: `/properties/${property.id}/rentcomps` }
+	];
+</script>
 
-    const menuItems = [
-    { label: 'Document Review', active: false, href: `/properties/${property.id}/document` },
-    { label: 'Summary', active: true, href: `/properties/${property.id}/summary` },
-    { label: 'Analysis', active: false, href: `/properties/${property.id}/analysis` },
-    { label: 'Property info', active: false, href: `/properties/${property.id}/property-info` },
-    { label: 'Market overview', active: false, href: `/properties/${property.id}/market-overview` },
-    { label: 'Sales comps', active: false, href: `/properties/${property.id}/sales-comps` },
-    { label: 'Rent comps', active: false, href: `/properties/${property.id}/rent-comps` },
-  ];
-  </script>
-  
-  <aside class="w-64 bg-white border-r flex flex-col">
-    <div class="p-4 flex-1">
-      <!-- Placeholder thumbnail -->
-      <div class="w-full h-40 bg-gray-100 rounded mb-4 flex items-center justify-center">
-        <!-- <img src={property.thumbnailUrl} alt="Property thumbnail" class="w-full h-full object-cover rounded" /> -->
-         <img src="/images/thumbnails/3.png" alt="Property thumbnail" class="w-full h-full object-cover rounded" />
-      </div>
-  
-      <h2 class="font-semibold">{property.address}</h2>
-      <div class="flex flex-wrap gap-2 mt-2">
-        {#each property.statusTags as tag}
-          <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">{tag}</span>
-        {/each}
-      </div>
-  
-      <nav class="mt-6 space-y-1 text-sm text-gray-600">
-        {#each menuItems as item}
-          <a class="block px-2 py-1 rounded hover:bg-gray-100 {item.active ? 'bg-gray-100' : ''}" href={item.href}>{item.label}</a>
-        {/each}
-      </nav>
-    </div>
-  
+<aside class="flex min-w-50 flex-col border-r border-gray-200 bg-white">
+	<div class="flex-1 p-4">
+		<!-- Placeholder thumbnail -->
+		<div class="mb-4 px-2 flex items-center justify-center rounded bg-gray-100">
+			<img
+				src={property.image}
+				alt="Property thumbnail"
+				class="max-h-50 max-w-50 rounded object-contain"
+			/>
+		</div>
 
-  </aside>
-  
+		<h2 class="font-semibold">{property.name}</h2>
+		<!-- <div class="mt-2 flex flex-wrap gap-2">
+			{#each property.statusTags as tag}
+				<span class="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">{tag}</span>
+			{/each}
+		</div> -->
+
+		<nav class="mt-6 space-y-1 text-sm text-gray-600">
+			{#each menuItems as item}
+				<a
+					class="block rounded px-2 py-1 hover:bg-gray-100 {item.active ? 'bg-gray-100' : ''}"
+					href={item.href}>{item.label}</a
+				>
+			{/each}
+		</nav>
+	</div>
+</aside>

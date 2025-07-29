@@ -1,6 +1,6 @@
 <script lang="ts">
 	import NewPropertyStep from '$lib/components/properties/NewPropertyStep.svelte';
-	import DiscoverButton from '$lib/components/Upload/DiscoverButton.svelte';
+	import Button from '$lib/ui/Button.svelte';
 
 	import Step1AddSource from '../../../lib/components/Upload/Step1AddSource.svelte';
 	import Step2EnrichData from '../../../lib/components/Upload/Step2EnrichData.svelte';
@@ -42,11 +42,11 @@
 </script>
 
 <section
-	class="space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-stone-50 to-indigo-50 p-6 shadow-md"
+	class="space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 shadow-md"
 >
 	<header class="flex items-center justify-between">
 		<h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1>
-		<DiscoverButton />
+		<Button href="/support" icon>Help & Documentation</Button>
 	</header>
 
 	<NewPropertyStep bind:steps />

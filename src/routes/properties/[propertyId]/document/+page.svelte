@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import PdfViewer from 'svelte-pdf';
-	import type { PageData } from './$types'; // Import the type for page data
+	import type { PageData } from './[id]/$types'; // Import the type for page data
 	import { marked } from 'marked';
 	import { Accordion, AccordionItem, P } from 'flowbite-svelte';
 
@@ -24,7 +24,7 @@
 		{#each documentData as page, index}
 			<div class="col-span-3">
 				<P class="m-4 mb-0 font-bold">Page{page.pageId}</P>
-				<PdfViewer scale={1.2} url={page.url} showBorder={false} showButtons={['']} />
+				<PdfViewer scale={0.9} url={page.url} showBorder={false} showButtons={['']} />
 			</div>
 			<div class="col-span-2">
 				{#if page.entities && page.entities.length > 0}

@@ -1,30 +1,25 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import PdfViewer from 'svelte-pdf';
-	import type { PageData } from './$types'; // Import the type for page data
+
 	import { marked } from 'marked';
 	import { Accordion, AccordionItem, P } from 'flowbite-svelte';
 
 	import EntitiesList from '$lib/components/properties/EntitiesList.svelte';
 	import Sidebar from '$lib/components/properties/sidebar/Sidebar.svelte';
 
-	// Extract the document data provided by the page's load function
-	export let data: PageData;
-
 	// Reactive state holding the document data
+	let { data } = $props();
 	let documentData = data.document;
 	// console.log('Document Analysis', documentData);
 
 	let pdfViewers: any[] = [];
-	let id = '';
-	
-	// Use browser check to avoid SSR issues
-	if (typeof window !== 'undefined') {
-		id = window.location.pathname.split('/')[2];
-	}
+
+	let propertyId = data.propertyId;
+
 	// Example static fetch
 	const property = {
-		id: id,
+		id: propertyId,
 		address: '9404 West Rd, Houston, TX 77064, USA',
 		statusTags: [],
 		info: {

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import IntegrationCard from '$lib/components/IntegrationCard.svelte';
-	import DiscoverButton from '$lib/components/Upload/DiscoverButton.svelte';
 
 	interface Integration {
 		iconSrc: string;
@@ -22,7 +21,7 @@
 		},
 		{
 			iconSrc: '/icons/google-drive.svg',
-			title: 'Mapbox',
+			title: 'StratiqAI CRE Index',
 			description: 'Create custom maps and visualize data with Mapbox\'s powerful mapping platform.',
 			removeHref: '#',
 			connectHref: '#',
@@ -30,7 +29,7 @@
 		},
 		{
 			iconSrc: '/icons/google-drive.svg',
-			title: 'CARTO',
+			title: 'US Bureau of Labor Statistics',
 			description: 'Transform location data into business outcomes with CARTO\'s spatial analysis tools.',
 			removeHref: '#',
 			connectHref: '#',
@@ -38,7 +37,7 @@
 		},
 		{
 			iconSrc: '/icons/google-drive.svg',
-			title: 'SuperGIS',
+			title: 'US Census Bureau',
 			description: 'Utilize SuperGIS for efficient geographic data management and spatial analysis.',
 			removeHref: '#',
 			connectHref: '#',
@@ -51,10 +50,6 @@
 <section
 	class="w-full space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 shadow-md"
 >
-	<!-- <header class="flex items-center justify-between">
-		<h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1>
-		<DiscoverButton />
-	</header> -->
 	<div class="mb-6 flex items-center justify-between">
 		<h1 class="text-2xl font-semibold text-gray-900">Integrations</h1>
 	</div>

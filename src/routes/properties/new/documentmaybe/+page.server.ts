@@ -1,5 +1,4 @@
-
-import type { PageServerLoad } from '../$types';
+import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
@@ -11,8 +10,8 @@ const client = new DynamoDBClient({ region: REGION });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 export const load: PageServerLoad = async ({ params }) => {
-	console.log("params -------------------------->", params.id)
-    const DOCUMENT_HASH = params.id;
+	console.log("params -------------------------->", params.propertyId)
+    const DOCUMENT_HASH = params.propertyId;
 	try {
 		const pageCommand = new QueryCommand({
 			TableName: TABLE_NAME,

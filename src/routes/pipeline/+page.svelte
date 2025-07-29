@@ -1,6 +1,6 @@
 <script lang="ts">
 	import PropertyCard from '$lib/components/properties/PropertyCard.svelte';
-	import Button from '$lib/ui/button/index.svelte';
+	import Button from '$lib/ui/Button.svelte';
 
 	interface Property {
 		id: string;
@@ -73,13 +73,12 @@
 		
 		<button
 			class="flex items-center space-x-2 rounded-lg border border-gray-300 bg-white px-4 py-2 shadow-sm transition hover:bg-gray-50"
-			onclick={() => window.location.href = 'mailto:?subject=New%20Property%20Analysis&body=Check%20out%20the%20new%20property%20analysis%20at%20our%20webapp.'}
 		>
 
 			<span class="text-xs font-medium text-gray-700">Forward Documents to <b class="font-semibold">user@stratiq-pipeline.com</b> for auto analysis</span>
 		</button>
 		
-		<Button label="New Property Analysis" href="/properties/new" icon={true} />
+		<Button href="/properties/new" icon={true}>New Property Analysis</Button>
 	</div>
 
 	<!-- Search & Filters -->
@@ -90,12 +89,12 @@
 			class="flex-1 rounded-lg border border-gray-400 px-4 py-2 focus:outline-none focus:ring"
 		/>
 		<!-- <button class="rounded border px-3 py-2 hover:bg-gray-100">Filters</button> -->
-		<Button label="Filters" href="#" icon={false} />
+		<Button href="#" icon={false}>Filters</Button>
 	</div>
 
 	<!-- List -->
 	<div class="space-y-4">
-		{#each properties as prop (prop.id)}
+		{#each properties as prop}
 			<PropertyCard {prop} />
 		{/each}
 	</div>

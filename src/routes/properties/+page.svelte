@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import MarketSizeCard from '$lib/components/cards/statistics/MarketSizeCard.svelte';
 	import Riskcard from '$lib/components/cards/statistics/riskcard.svelte';
 	import TitleTextCard from '$lib/components/cards/statistics/TitleTextCard.svelte';
@@ -9,6 +9,11 @@
 	// import GoogleMapCard from '$lib/components/MapBox.svelte';
 	import { Button, Card, CardPlaceholder, Heading, P, Toggle } from 'flowbite-svelte';
 	import { ArrowRightOutline } from 'flowbite-svelte-icons';
+	import Sidebar from '$lib/components/properties/sidebar/Sidebar.svelte';
+
+	export let data: { id: string };
+	$: console.log(data);
+
 	let vCard = false;
 	// let imageUrl = 'https://pti-demo-web-assets.s3.us-west-2.amazonaws.com/images/aarons.png';
 	let imageUrl = 'https://pti-demo-web-assets.s3.us-west-2.amazonaws.com/images/aaronmap.png'
@@ -48,13 +53,16 @@
 	];
 </script>
 
-<Heading tag="h2" class="mb-8" customSize="text-2xl font-extrabold  md:text-3xl lg:text-4xl">
+<section
+	class="w-full space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 shadow-md"
+>
+<Heading tag="h2" class="mb-8 text-2xl font-extrabold  md:text-3xl lg:text-4xl">
 	Market Analysis
 </Heading>
 
 <div class="grid grid-cols-2 gap-4">
 	<Card img={imageUrl} reverse={vCard} class="max-w-full">
-		<Heading tag="h4" class="mb-4" customSize="text-md font-extrabold  md:text-lg lg:text-xl">
+		<Heading tag="h4" class="mb-4 text-md font-extrabold  md:text-lg lg:text-xl">
 			Hillsboro, OR
 		</Heading>
 		<P class="mb-3 font-normal text-gray-700 dark:text-gray-400 leading-tight">
@@ -84,6 +92,7 @@
 	<StatCard label="INFORMATION" val="2%" />
 	<StatCard label="OTHER SERVICES" val="3%" />
 </div>
+</section>
 
 
 <!-- <MarketSizeCard />

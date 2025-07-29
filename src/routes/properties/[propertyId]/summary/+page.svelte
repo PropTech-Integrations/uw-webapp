@@ -1,4 +1,6 @@
 <script lang="ts">
+	let { data } = $props();
+	let propertyId = data.propertyId;
 	import Sidebar from '$lib/components/properties/sidebar/Sidebar.svelte';
 	import PropertyHeader from '$lib/components/properties/PropertyHeader.svelte';
 	import PropertyInfo from '$lib/components/properties/PropertyInfo.svelte';
@@ -10,9 +12,6 @@
 	import RentRollTotals from '$lib/components/properties/RentRollTotals.svelte';
 	import OperatingStatement from '$lib/components/properties/OperatingStatement.svelte';
 	import type { OperatingRow } from '$lib/types/property';
-	import SpeedometerCard from '$lib/components/SpeedometerCard/index.svelte';
-
-	let id = window.location.pathname.split('/')[2];
 
 	// Mock data shape
 	interface PropertyInfoData {
@@ -67,9 +66,8 @@
 		acquisition: AcquisitionData;
 	}
 
-	// Example static fetch
 	const property: Property = {
-		id: id,
+		id: propertyId,
 		address: '9404 West Rd, Houston, TX 77064, USA',
 		statusTags: [],
 		info: {
@@ -203,40 +201,51 @@
 	const { units, sf } = rentRollData;
 </script>
 
-<div class="flex h-full">
-	<Sidebar {property} />
+<main class="flex-1 overflow-auto p-6">
+	<PropertyHeader address={property.address} />
 
-	<main class="flex-1 overflow-auto p-6">
-		<div>
-			<nav class="text-xs text-gray-500">
-				Properties / {property.address} /
-				<span class="font-medium text-gray-700">Market Summary</span>
-			</nav>
-			<h1 class="mt-1 text-2xl font-bold">Market Summary - Dashboard Not Live</h1>
+	<div class="mt-6 space-y-6">
+		<!-- Top row: Property Info, Metrics, Acquisition -->
+		<div class="grid grid-cols-3 gap-6">
+			<PropertyInfo info={property.info} />
+			<MetricsPanel metrics={property.metrics} />
+			<AcquisitionSale acquisition={property.acquisition} />
 		</div>
 
-		<div class="mt-6 flex items-center justify-center space-x-4">
-			<SpeedometerCard
-				title="Market"
-				value={75}
-				description="Evaluates the market's growth potential and stability, including factors like population trends, job growth, rental rates, and economic conditions."
-				buttonText="Review"
-				buttonLink="/review"
-			/>
-			<SpeedometerCard
-				title="Sponsor"
-				value={55}
-				description="Assesses the sponsor's track record, operational involvement, experience in asset class, vertical integration, and consistency in meeting projections."
-				buttonText="Review"
-				buttonLink="/review"
-			/>
-			<SpeedometerCard
-				title="Alignment"
-				value={45}
-				description="Examines investor alignment through preferred returns, fee structures, waterfall arrangements, and distribution strategies to ensure fair sponsor-investor dynamics."
-				buttonText="Review"
-				buttonLink="/review"
-			/>
-		</div>
-	</main>
-</div>
+		<!-- Comps Comparison - Full width -->
+		<section class="space-y-2">
+			<div class="flex items-center justify-between">
+				<h2 class="text-lg font-semibold">Comps comparison</h2>
+				<a href="#" class="text-sm text-gray-500 hover:underline">view detail</a>
+			</div>
+			<CompsComparison {rows} />
+		</section>
+
+		<!-- Loan Info - Full width -->
+		<section class="space-y-2">
+			<div class="flex items-center justify-between">
+				<h2 class="text-lg font-semibold">Loan information</h2>
+				<a href="#" class="text-sm text-gray-500 hover:underline">view detail</a>
+			</div>
+			<LoanInfo {...loanData} />
+		</section>
+
+		<!-- Rent Roll Totals - Full width -->
+		<section class="space-y-2">
+			<div class="flex items-center justify-between">
+				<h2 class="text-lg font-semibold">Rent roll totals</h2>
+				<a href="#" class="text-sm text-gray-500 hover:underline">view detail</a>
+			</div>
+			<RentRollTotals {rentRollData} />
+		</section>
+
+		<!-- Operating Statement - Full width -->
+		<section class="space-y-2">
+			<div class="flex items-center justify-between">
+				<h2 class="text-lg font-semibold">Operating statement</h2>
+				<a href="#" class="text-sm text-gray-500 hover:underline">view detail</a>
+			</div>
+			<OperatingStatement {operatingRows} {units} {sf} />
+		</section>
+	</div>
+</main>

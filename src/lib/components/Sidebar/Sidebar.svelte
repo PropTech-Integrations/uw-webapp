@@ -10,33 +10,20 @@
 </script>
 
 <aside
-	class={`transition-width flex h-screen flex-col border-r border-gray-200 bg-white duration-300 dark:border-gray-700 dark:bg-gray-900 ${isCollapsed ? 'w-20' : 'w-40 md:w-60'}`}
+	class={`transition-width flex h-screen flex-col border-r border-gray-200 bg-white duration-300 dark:border-gray-700 dark:bg-gray-900 ${isCollapsed ? 'w-20' : 'w-36'}`}
 >
 	<!-- Logo and Toggle Button -->
 	<div
 		class="flex h-16 items-center justify-between border-b border-gray-200 px-2 pt-8 dark:border-gray-700"
 	>
-		<Logo />
-		<button on:click={toggleSidebar} class="text-gray-500 focus:outline-none dark:text-gray-300">
-			{#if isCollapsed}
-				<svg
-					class="h-6 w-6 text-gray-600 dark:text-white"
-					aria-hidden="true"
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					fill="none"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke="currentColor"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M19 12H5m14 0-4 4m4-4-4-4"
-					/>
-				</svg>
-			{:else}
+		<img
+			src="/images/logos/logo-graphic-only.png"
+			alt="Logo"
+			class="h-10 w-10 justify-center"
+			onclick={toggleSidebar}
+		/>
+		<button onclick={toggleSidebar} class="text-gray-500 focus:outline-none dark:text-gray-300">
+			{#if !isCollapsed}
 				<svg
 					class="h-6 w-6 text-gray-600 dark:text-white"
 					aria-hidden="true"
@@ -62,12 +49,12 @@
 	<nav class="font-poppins flex-1 space-y-1 overflow-y-auto px-2 py-4">
 		<a
 			href="/pipeline"
-			class="group flex items-center rounded-lg px-2 py-2 text-sm font-medium transition-all
+			class="group flex items-center justify-center rounded-lg px-2 py-2 text-sm font-medium transition-all
 			hover:bg-gray-100 dark:hover:bg-gray-800
 			{active === 'upload'
 				? 'bg-gray-100 text-stone-600 dark:bg-gray-800'
 				: 'text-gray-700 dark:text-gray-300'}"
-			on:click={() => (active = 'upload')}
+			onclick={() => (active = 'upload')}
 		>
 			<svg
 				class="mr-3 h-6 w-6 text-gray-800 dark:text-white"
@@ -91,13 +78,13 @@
 		</a>
 
 		<a
-			href="#"
-			class="group flex items-center rounded-lg px-2 py-2 text-sm font-medium transition-all
+			href="/markets"
+			class="group flex items-center justify-center rounded-lg px-2 py-2 text-sm font-medium transition-all
 			hover:bg-gray-100 dark:hover:bg-gray-800
 			{active === 'analysis'
 				? 'bg-gray-100 text-stone-600 dark:bg-gray-800'
 				: 'text-gray-700 dark:text-gray-300'}"
-			on:click={() => (active = 'analysis')}
+			  onclick={() => (active = 'analysis')}
 		>
 			<svg
 				class="mr-3 h-6 w-6 text-stone-600 dark:text-white"
@@ -121,8 +108,8 @@
 		</a>
 
 		<a
-			href="#"
-			class="group flex items-center rounded-lg px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+			href="reports"
+			class="group flex items-center justify-center rounded-lg px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
 		>
 			<svg
 				class="mr-3 h-6 w-6 text-gray-800 dark:text-white"
@@ -153,8 +140,8 @@
 		</a> -->
 
 		<a
-			href="#"
-			class="group flex items-center rounded-lg px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+			href="support"
+			class="group flex items-center justify-center rounded-lg px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
 		>
 			<svg
 				class="mr-3 h-6 w-6 text-gray-800 dark:text-white"

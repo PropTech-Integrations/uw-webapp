@@ -1,5 +1,4 @@
 <script lang="ts">
-	import DiscoverButton from '../../../lib/components/Upload/DiscoverButton.svelte';
 	import UploadArea from '../../../lib/components/Upload/UploadArea.svelte';
 	import SourceCard from '../../../lib/components/Upload/SourceCard.svelte';
 	import ProgressBar from '../../../lib/components/Upload/ProgressBar.svelte';
@@ -84,7 +83,7 @@
 
 	<UploadArea />
 
-	<div class="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+	<div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
 		{#each sourceCards as card}
 			<SourceCard {card} />
 		{/each}

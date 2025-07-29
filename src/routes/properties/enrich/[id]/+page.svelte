@@ -1,6 +1,6 @@
 <script lang="ts">
 	import IntegrationCard from '$lib/components/IntegrationCard.svelte';
-	import DiscoverButton from '$lib/components/Upload/DiscoverButton.svelte';
+	import Button from '$lib/ui/Button.svelte';
 
 	interface Integration {
 		iconSrc: string;
@@ -37,7 +37,7 @@
 >
 	<header class="flex items-center justify-between">
 		<h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1>
-		<DiscoverButton />
+		<Button href="/support" icon>Help & Documentation</Button>
 	</header>
 	<div class="mb-6 flex items-center justify-between">
 		<h1 class="text-2xl font-semibold text-white">Integrations</h1>
