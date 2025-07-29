@@ -300,11 +300,11 @@
 		<h1 class="mt-1 text-2xl font-bold">Market Summary - Dashboard Not Live</h1>
 	</div>
 
-	<div class="mt-6 flex items-center justify-center space-x-4">
+	<div class="my-6 flex items-center justify-center space-x-4">
 		<SpeedometerCard
 			title="Market"
 			value={75}
-			description="Evaluates the market's growth potential and stability, including factors like population trends, job growth, rental rates, and economic conditions."
+			description="Evaluates the market's growth potential and stability, including factors like population trends, job growth, rental rates, and economics."
 			buttonText="Review"
 			buttonLink="/review"
 		/>
@@ -318,7 +318,7 @@
 		<SpeedometerCard
 			title="Alignment"
 			value={45}
-			description="Examines investor alignment through preferred returns, fee structures, waterfall arrangements, and distribution strategies to ensure fair sponsor-investor dynamics."
+			description="Examines investor alignment through preferred returns, fee structures, waterfall and distribution methods for sponsor-investor dynamics."
 			buttonText="Review"
 			buttonLink="/review"
 		/>

@@ -1,15 +1,18 @@
 <script lang="ts">
+	import Button from "$lib/ui/Button.svelte";
+
 	export let title: string;
 	export let value: number;
 	export let description: string;
 	export let buttonText: string;
 	export let buttonLink: string;
+	export let className: string = "";
 
 	// Map 0-100 to -90° to 90° rotation around the bottom center (100,100)
 	const rotation = (value / 100) * 180 - 90;
 </script>
 
-<div class="flex w-80 h-100 flex-col items-center rounded-lg bg-white p-6 border border-gray-400 shadow">
+<div class="flex w-80 h-100 flex-col items-center rounded-lg bg-white p-6 border border-gray-400 shadow {className}">
 	<h2 class="mb-4 text-lg font-medium">{title}</h2>
 
 	<div class="relative h-24 w-48 ">
@@ -39,8 +42,5 @@
 	<p class="mt-4 text-4xl font-bold">{value}%</p>
 	<p class="mb-4 mt-2 text-center text-sm text-gray-500">{description}</p>
 
-	<a
-		href={buttonLink}
-		class="mt-auto rounded bg-yellow-500 px-6 py-2 text-white hover:bg-yellow-600">{buttonText}</a
-	>
+    <Button href={buttonLink} className="mt-auto mb-0">{buttonText}</Button>
 </div>

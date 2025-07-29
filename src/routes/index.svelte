@@ -6,7 +6,7 @@
 	<SpeedometerCard
 		title="Market"
 		value={75}
-		description="Evaluates the market's growth potential and stability, including factors like population trends, job growth, rental rates, and economic conditions."
+		description="Evaluates the market's growth potential and stability, including factors like population trends, job growth, rental rates, and economics."
 		buttonText="Review"
 		buttonLink="/review"
 	/>
