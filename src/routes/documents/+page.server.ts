@@ -1,10 +1,9 @@
 import type { PageServerLoad } from './$types';
-import { error } from '@sveltejs/kit';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
-const REGION = 'us-west-2'; // Update to your region
-const TABLE_NAME = 'uw-dev-documents-e1tez94r';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
+
+import {DOCUMENTS_TABLE, REGION} from '$env/static/private';
 const client = new DynamoDBClient({ region: REGION });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
@@ -13,14 +12,13 @@ export const load: PageServerLoad = async () => {
     // const DOCUMENT_HASH = params.id;
 	try {
 		const documentCommand = new ScanCommand({
-			TableName: TABLE_NAME,
+			TableName: DOCUMENTS_TABLE,
 			FilterExpression: 'begins_with(PK, :pk) AND SK = :sk',
 			ExpressionAttributeValues: {
 				':pk': 'DOCUMENT',
 				':sk': 'METADATA'
 			}
 		});
-
 
 		const documentResponse = await ddbDocClient.send(documentCommand);
 

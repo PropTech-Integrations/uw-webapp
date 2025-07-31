@@ -1,4 +1,3 @@
-
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -11,8 +10,8 @@ const client = new DynamoDBClient({ region: REGION });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 export const load: PageServerLoad = async ({ params }) => {
-	console.log("params -------------------------->", params.propertyId)
-    const DOCUMENT_HASH = params.propertyId;
+	console.log('params -------------------------->', params.propertyId);
+	const DOCUMENT_HASH = params.propertyId;
 	try {
 		const pageCommand = new QueryCommand({
 			TableName: TABLE_NAME,
@@ -32,9 +31,20 @@ export const load: PageServerLoad = async ({ params }) => {
 			}
 		});
 
-		const [pageResponse, textResponse] = await Promise.all([
+		// Fetch insights for the current page
+		const insightCommand = new QueryCommand({
+			TableName: TABLE_NAME,
+			KeyConditionExpression: 'PK = :pk and begins_with(SK, :prefix)',
+			ExpressionAttributeValues: {
+				':pk': `DOCUMENT#${DOCUMENT_HASH}`,
+				':prefix': `ASSET#INSIGHT#`
+			}
+		});
+
+		const [pageResponse, textResponse, insightResponse] = await Promise.all([
 			ddbDocClient.send(pageCommand),
-			ddbDocClient.send(textCommand)
+			ddbDocClient.send(textCommand),
+			ddbDocClient.send(insightCommand)
 		]);
 
 		if (!pageResponse.Items || pageResponse.Items.length === 0) {
@@ -45,6 +55,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 		const pages = pageResponse.Items;
 		const texts = textResponse.Items || [];
+		const insights = insightResponse.Items || [];
 
 		const uniquePages = new Map<number, any>();
 		pages.forEach((page: any) => {
@@ -66,34 +77,19 @@ export const load: PageServerLoad = async ({ params }) => {
 
 		for (const page of uniquePagesArray) {
 			let url = 'https://uw-dev-documents-e1tez94r.s3.us-west-2.amazonaws.com/' + page.key;
+			console.log('url -------------------------->', url);
 			let textItem = texts.find((text: any) => text.pageId === page.pageId);
 			let text = textItem ? textItem.text : '';
 
-			// Fetch insights for the current page
-			const insightCommand = new QueryCommand({
-				TableName: TABLE_NAME,
-				KeyConditionExpression: 'PK = :pk and begins_with(SK, :prefix)',
-				ExpressionAttributeValues: {
-					':pk': `DOCUMENT#${DOCUMENT_HASH}`,
-					':prefix': `ASSET#INSIGHT#${String(Number(page.pageId)-1)}#`
-				}
-			});
-            // console.log("insightCommand -------------------------->", insightCommand)
-
-			const insightResponse = await ddbDocClient.send(insightCommand);
-			const insights = insightResponse.Items || [];
+			const entities = insights.filter((insight: any) => insight.pageId === page.pageId);
 
 			organizedData.push({
 				pageId: Number(page.pageId),
 				url: url,
 				images: [], // Placeholder, as images are not fetched in this call
 				text: text,
-				entities: insights
+				entities: entities
 			});
-
-            organizedData.forEach((page) => {
-                // console.log("page -------------------------->", page.pageId)
-            })
 		}
 
 		// console.log("Organized Data", organizedData);

@@ -1,10 +1,16 @@
 <script lang="ts">
 	import { Badge, Button, Heading, Hr, P } from 'flowbite-svelte';
 	import { onMount } from 'svelte';
-	export let entities: { category: string; subCategory?: string; entity: string; discovered: boolean }[];
+	interface entities {
+		category: string;
+		name: string;
+		value: string;
+		confidence: number;
+	}
+	export let entities: entities[];
 
 	let showAll = false;
-	let displayedEntities: { category: string; subCategory?: string; entity: string; discovered: boolean }[] = [];
+	let displayedEntities: entities[] = [];
 
 	onMount(() => {
 		displayedEntities = entities.slice(0, 12);
@@ -23,20 +29,16 @@
 
 <div class="mt-20 text-white">
 
-	<Heading tag="h3" class="text-xl font-bold pb-4">
-		{#if displayedEntities.length > 0}
-			{displayedEntities[0].category}
-		{/if}
-	</Heading>
+	<Heading tag="h4" class="text-md font-bold pb-4">Labeled Data</Heading>
 	{#each displayedEntities as value, key}
 		<div class="mb-2 grid grid-cols-9 gap-4">
-			
-			{#if value.subCategory}
-				<Badge class="col-span-2 text-center">{value.subCategory}</Badge>
+			{#if value.name}
+				<Badge class="col-span-2 text-center">{value.name}</Badge>
 			{:else}
-				<Badge class="col-span-2 text-center">{value.category}</Badge>
+				<Badge class="col-span-2 text-center">{value.value}</Badge>
 			{/if}
-			<P class="col-span-5 text-sm">{truncateText(value.entity)}</P>
+			<P class="col-span-5 text-sm">{truncateText(value.value)}</P>
+			<P class="col-span-2 text-sm">{value.confidence * 100}% confidence</P>
 			<!-- <P class="text-sm underline">Edit</P> -->
 			<!-- {#if value.discovered}
 				<Badge class="col-span-2 text-center">Discovered</Badge>

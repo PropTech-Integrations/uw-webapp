@@ -10,7 +10,7 @@
 </script>
 
 <aside
-	class={`transition-width flex h-screen flex-col border-r border-gray-200 bg-white duration-300 dark:border-gray-700 dark:bg-gray-900 ${isCollapsed ? 'w-20' : 'w-36'}`}
+	class={`transition-width flex h-full flex-col border-r border-gray-200 bg-white duration-300 dark:border-gray-700 dark:bg-gray-900 ${isCollapsed ? 'w-20' : 'w-36'}`}
 >
 	<!-- Logo and Toggle Button -->
 	<div
@@ -166,7 +166,7 @@
 	</nav>
 
 	<!-- Footer -->
-	<div
+	<!-- <div
 		class="flex items-center justify-between border-t border-gray-200 px-4 py-4 dark:border-gray-700"
 	>
 		<img
@@ -178,5 +178,5 @@
 			<span class="font-semibold text-gray-900 dark:text-white">Pro User</span>
 			<span class="text-xs text-gray-500 dark:text-gray-400">PRO</span>
 		</div>
-	</div>
+	</div> -->
 </aside>

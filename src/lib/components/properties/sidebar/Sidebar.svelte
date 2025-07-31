@@ -11,7 +11,7 @@
 	];
 </script>
 
-<aside class="flex min-w-50 flex-col border-r border-gray-200 bg-white">
+<aside class="flex min-w-50 flex-col border-r border-l border-gray-200 bg-white">
 	<div class="flex-1 p-4">
 		<!-- Placeholder thumbnail -->
 		<div class="mb-4 px-2 flex items-center justify-center rounded bg-gray-100">
