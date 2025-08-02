@@ -76,7 +76,7 @@ const columns = [{
 			et dolore magna aliqua.
 		</p>
 		<div class="my-4 grid grid-cols-5 gap-4">
-			{#each property.pages as page, index}
+			{#each property.pages.sort((a, b) => a.pageId - b.pageId) as page, index}
 				<div class="col-span-2">
 					<P class="m-4 mb-0 font-bold">Page{page.pageId}</P>
 					<PdfViewer scale={0.75} url={page.uri} showBorder={false} showButtons={['']} />

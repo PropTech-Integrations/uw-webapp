@@ -22,27 +22,30 @@ export const POST: RequestHandler = async ({ request }) => {
 	// Calculate SHA256 hash of the file
 	const sha256Hash = createHash('sha256').update(buffer).digest('hex');
 
-	// Use the hash as the key for S3
-	const key = sha256Hash;
-
+	// Use the hash and append the file extension as the key for S3
+	const key = `${sha256Hash}${file.name.substring(file.name.lastIndexOf('.'))}`;
+	console.log(key)
 	try {
-		await s3.send(
-			new PutObjectCommand({
-				Bucket: S3_FILEUPLOADS_BUCKET,
-				Key: key,
-				Body: buffer,
-				ContentType: file.type,
-				ChecksumAlgorithm: 'SHA256'
-			})
-		);
-
-		return new Response(JSON.stringify({ 
-			success: true, 
-			message: `Stored as ${key}`,
-			sha256: sha256Hash
-		}), {
-			status: 200
+		const command = new PutObjectCommand({
+			Bucket: S3_FILEUPLOADS_BUCKET,
+			Key: key,
+			Body: buffer,
+			ContentType: file.type,
+			ChecksumAlgorithm: 'SHA256'
 		});
+		console.log(command)
+		await s3.send(command);
+
+		return new Response(
+			JSON.stringify({
+				success: true,
+				message: `Stored as ${key}`,
+				sha256: sha256Hash
+			}),
+			{
+				status: 200
+			}
+		);
 	} catch (err) {
 		console.error('S3 upload error', err);
 		return new Response(JSON.stringify({ success: false, message: 'Upload failed' }), {
