@@ -2,8 +2,8 @@
 	import NewPropertyStep from '$lib/components/properties/NewPropertyStep.svelte';
 	import Button from '$lib/ui/Button.svelte';
 
-	import Step1AddSource from '../../../lib/components/Upload/Step1AddSource.svelte';
-	import Step2EnrichData from '../../../lib/components/Upload/Step2EnrichData.svelte';
+	import Step1AddSource from '$lib/components/Upload/Step1AddSource.svelte';
+	import Step2EnrichData from '$lib/components/Upload/Step2EnrichData.svelte';
 	import { fade } from 'svelte/transition';
 
 	interface Step {

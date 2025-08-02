@@ -1,35 +1,22 @@
 // your item shape
-export interface Item {
-	projectId: string;
-	createdAt: string;
-	name: string;
-	userId: string;
-}
+import type { INamedEntity } from "uw-data-plane";
+
+import type { Hash } from "crypto";
+
 
 interface RemoveEvent {
 	event: 'REMOVE';
-	keys: {
-		projectId: string;
-		userId: string;
-	};
+	data: INamedEntity;
 }
 
 interface InsertEvent {
 	event: 'INSERT';
-	keys: {
-		projectId: string;
-		userId: string;
-	};
-	item: Item;
+	data: INamedEntity;
 }
 
 interface ModifyEvent {
 	event: 'MODIFY';
-	keys: {
-		projectId: string;
-		userId: string;
-	};
-	item: Item;
+	data: INamedEntity;
 }
 // shape of a stream notification
 export type StreamEvent = RemoveEvent | InsertEvent | ModifyEvent;

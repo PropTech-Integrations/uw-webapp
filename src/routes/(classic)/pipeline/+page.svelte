@@ -3,7 +3,7 @@
 	import Button from '$lib/ui/Button.svelte';
 
 	export let data;
-	const { properties, table } = data;
+	const { properties } = data;
 
 </script>
 
@@ -14,7 +14,7 @@
 	<div class="flex items-center justify-between">
 		<h1 class="font-poppins text-2xl font-semibold">Pipeline</h1>
 		<!-- INSERT_YOUR_CODE -->
-		<h3>{table}</h3>
+
 		<button
 			class="flex items-center space-x-2 rounded-lg border border-gray-300 bg-white px-4 py-2 shadow-sm transition hover:bg-gray-50"
 		>

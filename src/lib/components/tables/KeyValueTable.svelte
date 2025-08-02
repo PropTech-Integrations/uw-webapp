@@ -17,7 +17,7 @@
 			<TableHeadCell colspan={2}>{title}</TableHeadCell>
 		</tr>
 	</TableHead>
-	<TableBody tableBodyClass="divide-y">
+	<TableBody class="divide-y">
         {#each data as {key, val}}
 		<TableBodyRow>
 			<TableBodyCell>{key}</TableBodyCell>
@@ -26,3 +26,5 @@
         {/each}
 	</TableBody>
 </Table>
+
+

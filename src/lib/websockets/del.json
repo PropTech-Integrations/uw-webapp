@@ -1,0 +1,37 @@
+{
+	"eventType": "MODIFY",
+	"data": {
+		"discovered": true,
+		"assistant": "GeminiService",
+		"confidence": 0.91,
+		"document": {
+			"bucket": "uw-dev-documents-e1tez94r",
+			"etag": "a63c9d8c51ec0a9291a88085fe37d871",
+			"hash": "c42fdf5d3d1e873c8ae713110424968eec1dded045067183a387c5ff5e1b11de",
+			"key": "c42fdf5d3d1e873c8ae713110424968eec1dded045067183a387c5ff5e1b11de/document.pdf"
+		},
+		"source": {
+			"bucket": "uw-dev-documents-e1tez94r",
+			"document": {
+				"bucket": "uw-dev-documents-e1tez94r",
+				"etag": "a63c9d8c51ec0a9291a88085fe37d871",
+				"hash": "c42fdf5d3d1e873c8ae713110424968eec1dded045067183a387c5ff5e1b11de",
+				"key": "c42fdf5d3d1e873c8ae713110424968eec1dded045067183a387c5ff5e1b11de/document.pdf"
+			},
+			"etag": "064da0696d63c715f020fc65a5c82794",
+			"pageId": "11",
+			"hash": "2bcb1d524dd270ad0116796e36a29441e1956f737885369b56a87c92a557fc65",
+			"key": "c42fdf5d3d1e873c8ae713110424968eec1dded045067183a387c5ff5e1b11de/pages/11.pdf"
+		},
+		"pageId": "11",
+		"type": "ENTITY_RECOGNITION",
+		"createdAt": "2025-07-31T22:39:18.576Z",
+		"SK": "ASSET#INSIGHT#11 | HOBBY LOBBY - MOUNT VERNON, IL#Footer#11#5585bd18a1c6720ce24b784c6952636cb74d657a1ddb959d20615bd421979e16",
+		"name": "Footer",
+		"model": "Gemini",
+		"PK": "DOCUMENT#c42fdf5d3d1e873c8ae713110424968eec1dded045067183a387c5ff5e1b11de",
+		"category": "11 | HOBBY LOBBY - MOUNT VERNON, IL",
+		"value": "11 | HOBBY LOBBY - MOUNT VERNON, IL",
+		"hash": "11 | HOBBY LOBBY - MOUNT VERNON, IL#Footer#11#5585bd18a1c6720ce24b784c6952636cb74d657a1ddb959d20615bd421979e16"
+	}
+}

@@ -1,20 +1,62 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+
+	// Import Environment Variables
+	import { PUBLIC_WS_URL } from '$env/static/public'; // WebSocket endpoint from environment
+
+	// Import Application Libraries, Types, and Functions
+	import { mergeEvents } from '$lib/websockets/mergeEvents'; // Helper to merge stream events into table data
+	import type { StreamEvent } from '$lib/websockets/types'; // Type definitions for stream events and data items
+	import { createWebSocket } from '$lib/websockets/websockets'; // Factory to create a configured WebSocket
+
 	import PdfViewer from 'svelte-pdf';
 	import type { PageData } from './$types'; // Import the type for page data
 	import { marked } from 'marked';
+	// import { classify } from '../../../../../../scripts/insights/classifier';
 	import { Accordion, AccordionItem, Heading, P } from 'flowbite-svelte';
 
 	import EntitiesList from '$lib/components/properties/EntitiesList.svelte';
 
 	// Extract the document data provided by the page's load function
-	export let data: PageData;
+	// export let data: PageData;
+	// Extract initial data provided by the page's load function
+	let { data }: { data: PageData } = $props();
+	console.log('data -------------------------->', data);
+	// Reactive state holding the array of items to display in the table
+	let docdata = $state(data.document)
+	console.log('table_data --------------------------');
+	$inspect(docdata);
+	// Reference to the WebSocket connection, for cleanup
+	let socket: ReturnType<typeof createWebSocket>;
 
 	// Reactive state holding the document data
 	let documentData = data.document;
 	console.log('Document Analysis', documentData);
 
 	let pdfViewers: any[] = [];
+
+	// Initialize WebSocket connection when component mounts
+	onMount(() => {
+		//   console.log('🔌 WebSocket connecting to', PUBLIC_WS_URL, "wss://mbft9w8es5.execute-api.us-west-2.amazonaws.com/prod", PUBLIC_WS_URL === "wss://mbft9w8es5.execute-api.us-west-2.amazonaws.com/prod");
+		socket = createWebSocket({
+			url: PUBLIC_WS_URL,
+			onMessage: (event: StreamEvent) => {
+				console.log('event -------------------------->', event);
+				const type = classify(event.data);
+				console.log('type -------------------------->', type);
+				// Merge each incoming DynamoDB stream event into the current table data
+				docdata = mergeEvents(docdata, [event]);
+			},
+			onOpen: () => console.log('🔌 WebSocket connected'), // Log on successful connection
+			onClose: () => console.log('❌ WebSocket closed'), // Log on connection close
+			onError: () => console.warn('⚠️ WebSocket error') // Warn on any connection errors
+		});
+	});
+
+	// Clean up the WebSocket connection when component is destroyed
+	onDestroy(() => {
+		socket?.close();
+	});
 </script>
 
 <!-- Page layout: Display document data in a table -->
