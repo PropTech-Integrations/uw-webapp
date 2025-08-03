@@ -7,10 +7,12 @@
 		value: string;
 		confidence: number;
 	}
-	export let entities: entities[];
+	let { entities } = $props();
+	// console.log("entities -------------------------->");
+	// $inspect(entities);
 
-	let showAll = false;
-	let displayedEntities: entities[] = [];
+	let showAll = $state(false);
+	let displayedEntities: entities[] = $state([]);
 
 	onMount(() => {
 		displayedEntities = entities.slice(0, 12);
@@ -39,7 +41,7 @@
 			{/if}
 			<P class="col-span-5 text-sm">{truncateText(value.value)}</P>
 			<P class="col-span-2 text-sm">{value.confidence * 100}% confidence</P>
-			<!-- <P class="text-sm underline">Edit</P> -->
+				<!-- <P class="text-sm underline">Edit</P> -->
 			<!-- {#if value.discovered}
 				<Badge class="col-span-2 text-center">Discovered</Badge>
 			{/if} -->

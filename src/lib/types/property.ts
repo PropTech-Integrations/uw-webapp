@@ -1,15 +1,14 @@
 export interface Property {
   id: string;
-  address: string;
-  url: string;
+  address?: string;
+  assetType?: string;
+  city?: string;
+  country?: string;
+  name?: string;
+  state?: string;
+  zip?: string;
+  createdAt?: string;
   thumbnailUrl?: string;
-  statusTags: string[];
-  stats?: string[];
-  cap?: string;
-  grm?: string;
-  date: string;
-  isDraft?: boolean;
-  onFinishDraft?: () => void;
 }
 
 export interface CompsComparisonRow {

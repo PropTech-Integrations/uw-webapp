@@ -2,8 +2,8 @@
 	import type { Property } from '$lib/types/property';
 	import type { CompsComparisonRow } from '$lib/types/property';
 	import CompsComparison from '$lib/components/properties/CompsComparison.svelte';
-	export let prop: Property;
-	$: console.log(prop);
+	let { prop }: { prop: Property } = $props();
+	$inspect(prop);
 	const compsComparisonRows: CompsComparisonRow[] = [
 		{
 			label: 'Averages',
@@ -32,7 +32,7 @@
 	];
 </script>
 
-<a href={prop.url} >
+<a href={`/properties/${prop.id}/summary`} >
 	<div
 		class="flex items-center my-2 justify-between rounded-lg border border-dashed border-purple-300 bg-white p-4 transition-shadow hover:shadow"
 	>
@@ -54,14 +54,15 @@
 			{/if}
 
 			<div>
-				<div class="font-medium">{prop.address}</div>
-				<div class="mt-1 flex flex-wrap gap-2">
+				<div class="font-medium text-lg">{prop.name}</div>
+				<div class="font-medium text-sm">{prop.address}, {prop.city}, {prop.state} {prop.zip}</div>
+				<!-- <div class="mt-1 flex flex-wrap gap-2">
 					{#each prop.statusTags as tag}
 						<span class="font-poppins rounded-full border-b- bg-yellow-100 px-2 py-1 text-sm text-yellow-700">
 							{tag}
 						</span>
 					{/each}
-				</div>
+				</div> -->
 			</div>
 		</div>
 
@@ -84,10 +85,13 @@
 				</div>
 			</div>
 		{/if} -->
+		<div class="flex items-center space-x-4">
+			<div class="text-sm text-gray-500">{prop.assetType}</div>
+		</div>
 
 		<!-- Right: Actions & Date -->
 		<div class="flex items-center space-x-4">
-			<div class="text-sm text-gray-500">{prop.date}</div>
+			<div class="text-sm text-gray-500">{prop.createdAt}</div>
 
 			<!-- {#if prop.isDraft}
 				<button class="rounded bg-purple-600 px-3 py-1 text-white" on:click={prop.onFinishDraft}>

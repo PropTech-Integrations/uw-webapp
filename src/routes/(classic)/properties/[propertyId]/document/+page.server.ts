@@ -7,7 +7,7 @@ import { buildProperty } from '$lib/db/buildProperty';
 import type { IInsight } from '$lib/db/buildProperty';
 
 export const load: PageServerLoad = async ({ params }) => {
-  const documentHash = params.propertyId;                   // pulled from the URL
+  const documentHash = params.propertyId;         // pulled from the URL
   const tableName = DOCUMENTS_TABLE;              // from your env
   const region = REGION;                          // from your env
 

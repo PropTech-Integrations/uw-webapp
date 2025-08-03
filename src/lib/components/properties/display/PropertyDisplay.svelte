@@ -5,61 +5,15 @@
 	import EntitiesList from '../EntitiesList.svelte';
 	import { marked } from 'marked';
 
-
-  const data = [{
-        id: 1,
-        city: "Amieshire",
-        email: "Leora13@yahoo.com",
-        firstName: "Ernest",
-        lastName: "Schuppe",
-        companyName: "Lebsack - Nicolas",
-    },
-    {
-        id: 2,
-        city: "Gust",
-        email: "Mose_Gerhold51@yahoo.com",
-        firstName: "Janis",
-        lastName: "Vandervort",
-        companyName: "Glover - Hermiston",
-    },
-];
-
-const columns = [{
-        id: "id",
-        width: 50
-    },
-    {
-        id: "city",
-        width: 100,
-        header: "City",
-        footer: "City",
-    },
-    {
-        id: "firstName",
-        header: "First Name",
-        footer: "First Name",
-        width: 150,
-    },
-    {
-        id: "lastName",
-        header: "Last Name",
-        footer: "Last Name",
-        width: 150,
-    },
-    {
-        id: "email",
-        header: "Email",
-        footer: "Email"
-    },
-    {
-        id: "companyName",
-        header: "Company",
-        footer: "Company"
-    },
-];
-
-
 	let { property } = $props();
+	// console.log('property -------------------------->');
+	// $inspect(property);
+	let pages = $derived(property.pages.sort((a, b) => Number(a.pageId) - Number(b.pageId)));
+	let insights = $derived(property.insights.sort((a, b) => Number(a.pageId) - Number(b.pageId)));
+	console.log('insights -------------------------->');
+	$inspect(insights);
+
+	let texts = $derived(property.texts.sort((a, b) => Number(a.pageId) - Number(b.pageId)));
 </script>
 
 <Tabs
@@ -70,29 +24,32 @@ const columns = [{
 		{#snippet titleSlot()}
 			<span>Page View</span>
 		{/snippet}
-		<p class="text-sm text-gray-500 dark:text-gray-400">
+		<!-- <p class="text-sm text-gray-500 dark:text-gray-400">
 			<b>Page View:</b>
 			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
 			et dolore magna aliqua.
-		</p>
-		<div class="my-4 grid grid-cols-5 gap-4">
-			{#each property.pages.sort((a, b) => a.pageId - b.pageId) as page, index}
+		</p> -->
+		<div class="my-4 grid grid-cols-4 gap-4">
+			{#each pages as page, index}
 				<div class="col-span-2">
 					<P class="m-4 mb-0 font-bold">Page{page.pageId}</P>
-					<PdfViewer scale={0.75} url={page.uri} showBorder={false} showButtons={['']} />
+					<PdfViewer scale={0.53} url={page.uri} showBorder={false} showButtons={['']} />
 				</div>
 				<div class="col-span-2">
 					<EntitiesList
-						entities={property.insights.filter((insight) => insight.pageId === page.pageId)}
+						entities={insights.filter((insight) => {
+							return Number(insight.pageId) + 1 == Number(page.pageId);
+						})}
 					/>
 
 					<Accordion flush>
 						<AccordionItem>
 							{#snippet header()}Raw Scanned Text{/snippet}
+							<p>{index}</p>
 							<p class="text-sm">
 								{@html marked(
-									property.texts
-										.filter((text) => text.pageId === page.pageId)
+									texts
+										.filter((text) => text.pageId == index)
 										.map((text) => text.text)
 										.join('\n')
 								)}
@@ -133,7 +90,6 @@ const columns = [{
 			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
 			et dolore magna aliqua.
 		</p>
-
 	</TabItem>
 	<TabItem class="w-full">
 		{#snippet titleSlot()}

@@ -24,7 +24,7 @@
 	<TableHead>
 		<TableHeadCell class="w-1/4 px-2 py-1">Name</TableHeadCell>
 		<TableHeadCell class="w-1/4 px-2 py-1">Value</TableHeadCell>
-		<TableHeadCell class="w-1/4 px-2 py-1">Category</TableHeadCell>
+		<!-- <TableHeadCell class="w-1/4 px-2 py-1">Category</TableHeadCell> -->
 		<TableHeadCell class="w-1/16 px-2 py-1">Confidence</TableHeadCell>
 	</TableHead>
 	<TableBody>
@@ -32,8 +32,8 @@
 		<TableBodyRow onclick={() => toggleRow(i)} class="px-2 py-1">
 		  <TableBodyCell class="w-1/4 px-2 py-1">{item.name}</TableBodyCell>
 		  <TableBodyCell class="w-1/4 px-2 py-1">{item.value}</TableBodyCell>
-		  <TableBodyCell class="w-1/4 px-2 py-1">{item.category}</TableBodyCell>
-		  <TableBodyCell class="w-1/16 px-2 py-1">{item.confidence}</TableBodyCell>
+		  <!-- <TableBodyCell class="w-1/4 px-2 py-1">{item.category}</TableBodyCell> -->
+		  <TableBodyCell class="w-1/16 px-2 py-1 text-xs">{(parseFloat(item.confidence) * 100).toFixed(0)}%</TableBodyCell>
 		</TableBodyRow>
 		{#if openRow === i}
 		  <TableBodyRow

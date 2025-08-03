@@ -149,15 +149,31 @@ const parseImage = (insight: Insight): IImage => {
 };
 
 const parseInsight = (insight: Insight): IInsight => {
-	if (!insight.hash || !insight.category || !insight.pageId || !insight.name || !insight.value) {
-		throw new Error('Missing required fields: hash, category, pageId, name, or value');
+	console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	console.log(insight.hash);
+	console.log(insight.category);
+
+	console.log(insight.name);
+	console.log(insight.value);
+	if (!insight.hash) {
+		throw new Error('Missing required fields: hash');
+	}
+	if ( !insight.category ) {
+		throw new Error('Missing required fields: category');
+	}
+
+	if (!insight.name) {
+		throw new Error('Missing required fields: name');
+	}
+	if (!insight.value) {
+		throw new Error('Missing required fields: value');
 	}
 	const document = parseDocument(insight);
 	return {
 		hash: insight.hash,
 		category: insight.category,
 		confidence: insight.confidence || 0,
-		pageId: insight.pageId,
+		pageId: insight.pageId || '',
 		name: insight.name,
 		value: insight.value,
 		type: insight.type || '',
