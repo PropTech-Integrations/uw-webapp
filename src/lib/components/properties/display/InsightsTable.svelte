@@ -20,7 +20,7 @@
 	};
 </script>
   
-<Table class="w-full max-w-screen-lg">
+<Table class="w-full max-w-screen-lg text-xs">
 	<TableHead>
 		<TableHeadCell class="w-1/4 px-2 py-1">Name</TableHeadCell>
 		<TableHeadCell class="w-1/4 px-2 py-1">Value</TableHeadCell>
@@ -31,7 +31,7 @@
 	  {#each insights as item, i}
 		<TableBodyRow onclick={() => toggleRow(i)} class="px-2 py-1">
 		  <TableBodyCell class="w-1/4 px-2 py-1">{item.name}</TableBodyCell>
-		  <TableBodyCell class="w-1/4 px-2 py-1">{item.value}</TableBodyCell>
+		  <TableBodyCell class="w-1/4 px-2 py-1 text-blue-500">{item.value}</TableBodyCell>
 		  <!-- <TableBodyCell class="w-1/4 px-2 py-1">{item.category}</TableBodyCell> -->
 		  <TableBodyCell class="w-1/16 px-2 py-1 text-xs">{(parseFloat(item.confidence) * 100).toFixed(0)}%</TableBodyCell>
 		</TableBodyRow>

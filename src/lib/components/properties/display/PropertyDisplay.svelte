@@ -33,7 +33,7 @@
 			{#each pages as page, index}
 				<div class="col-span-2">
 					<P class="m-4 mb-0 font-bold">Page{page.pageId}</P>
-					<PdfViewer scale={0.53} url={page.uri} showBorder={false} showButtons={['']} />
+					<PdfViewer scale={0.60} url={page.uri} showBorder={false} showButtons={['']} />
 				</div>
 				<div class="col-span-2">
 					<EntitiesList
@@ -63,7 +63,7 @@
 	</TabItem>
 	<TabItem class="w-full">
 		{#snippet titleSlot()}
-			<span>Insights</span>
+			<span>AI Labelled Data</span>
 		{/snippet}
 		<p class="text-sm text-gray-500 dark:text-gray-400">
 			<b>Dashboard:</b>
@@ -83,7 +83,7 @@
 	</TabItem>
 	<TabItem class="w-full">
 		{#snippet titleSlot()}
-			<span>Verified Labels</span>
+			<span>Customize Report</span>
 		{/snippet}
 		<p class="text-sm text-gray-500 dark:text-gray-400">
 			<b>Settings:</b>
