@@ -92,8 +92,8 @@
 >
 	{#if file}
 		<div class="space-y-2">
-			<p>{uploading ? `Uploading… ${progress}%` : `Ready to upload ${file.name}`}</p>
-			<progress max="100" value={progress}></progress>
+			<p>{uploading ? `Uploading… ${progress}%` : `Uploaded ${file.name}`}</p>
+			<progress class="w-full" max="100" value={progress}></progress>
 
 			{#if result}
 				{#if result.success}
