@@ -74,7 +74,7 @@
 		{#each documentData as page, index}
 			<div class="col-span-3">
 				<P class="m-4 mb-0 font-bold">Page{page.pageId}</P>
-				<PdfViewer scale={0.75} url={page.url} showBorder={false} showButtons={['']} />
+				<PdfViewer scale={0.55} url={page.url} showBorder={false} showButtons={['']} />
 			</div>
 			<div class="col-span-2">
 				<EntitiesList entities={page.entities} />

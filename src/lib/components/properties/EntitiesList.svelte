@@ -41,7 +41,7 @@
 			{/if}
 			<P class="col-span-5 text-sm">{truncateText(value.value)}</P>
 			<P class="col-span-2 text-sm">{value.confidence * 100}% confidence</P>
-				<!-- <P class="text-sm underline">Edit</P> -->
+			<!-- <P class="text-sm underline">Edit</P> -->
 			<!-- {#if value.discovered}
 				<Badge class="col-span-2 text-center">Discovered</Badge>
 			{/if} -->

@@ -48,13 +48,42 @@
 	<!-- Navigation -->
 	<nav class="font-poppins flex-1 space-y-1 overflow-y-auto px-2 py-4">
 		<a
+			href="/properties/new"
+			class="group flex items-center justify-center rounded-lg px-2 py-2 text-sm font-medium transition-all
+			hover:bg-gray-100 dark:hover:bg-gray-800
+			{active === '/properties/new'
+				? 'bg-gray-100 text-stone-600 dark:bg-gray-800'
+				: 'text-gray-700 dark:text-gray-300'}"
+			onclick={() => (active = '/properties/new')}
+		>
+			<svg
+				class="mr-3 h-6 w-6 text-gray-800 dark:text-white"
+				aria-hidden="true"
+				xmlns="http://www.w3.org/2000/svg"
+				width="24"
+				height="24"
+				fill="none"
+				viewBox="0 0 24 24"
+			>
+				<path
+					stroke="currentColor"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M4 16h13M4 16l4-4m-4 4 4 4M20 8H7m13 0-4 4m4-4-4-4"
+				/>
+			</svg>
+
+			<span class={`hidden ${isCollapsed ? 'md:hidden' : 'md:inline'}`}>New Property</span>
+		</a>
+		<a
 			href="/pipeline"
 			class="group flex items-center justify-center rounded-lg px-2 py-2 text-sm font-medium transition-all
 			hover:bg-gray-100 dark:hover:bg-gray-800
-			{active === 'upload'
+			{active === 'pipeline'
 				? 'bg-gray-100 text-stone-600 dark:bg-gray-800'
 				: 'text-gray-700 dark:text-gray-300'}"
-			onclick={() => (active = 'upload')}
+			onclick={() => (active = 'pipeline')}
 		>
 			<svg
 				class="mr-3 h-6 w-6 text-gray-800 dark:text-white"

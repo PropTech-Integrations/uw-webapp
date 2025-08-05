@@ -3,6 +3,6 @@
 
 	// Redirect to /pipeline when this page is loaded (browser only)
 	onMount(() => {
-		window.location.href = '/pipeline';
+		window.location.href = '/properties/new';
 	});
 </script>

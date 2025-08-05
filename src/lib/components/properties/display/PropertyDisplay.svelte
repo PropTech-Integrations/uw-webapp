@@ -33,7 +33,7 @@
 			{#each pages as page, index}
 				<div class="col-span-2">
 					<P class="m-4 mb-0 font-bold">Page{page.pageId}</P>
-					<PdfViewer scale={0.60} url={page.uri} showBorder={false} showButtons={['']} />
+					<PdfViewer scale={0.8} url={page.uri} showBorder={false} showButtons={['']} />
 				</div>
 				<div class="col-span-2">
 					<EntitiesList
