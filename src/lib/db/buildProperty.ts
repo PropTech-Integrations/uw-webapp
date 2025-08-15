@@ -149,12 +149,12 @@ const parseImage = (insight: Insight): IImage => {
 };
 
 const parseInsight = (insight: Insight): IInsight => {
-	console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-	console.log(insight.hash);
-	console.log(insight.category);
+	// console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	// console.log(insight.hash);
+	// console.log(insight.category);
 
-	console.log(insight.name);
-	console.log(insight.value);
+	// console.log(insight.name);
+	// console.log(insight.value);
 	if (!insight.hash) {
 		throw new Error('Missing required fields: hash');
 	}

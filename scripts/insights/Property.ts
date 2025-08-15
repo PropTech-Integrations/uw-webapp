@@ -199,8 +199,8 @@ const buildProperty = (insightsJSON: InsightJSON[]): IProperty => {
 const property = buildProperty(insightsJSON);
 
 // console.log(property);
-console.log(JSON.stringify(property, null, 2));
-console.log('property.pages.length', property.pages.length);
-console.log('property.texts.length', property.texts.length);
-console.log('property.images.length', property.images.length);
-console.log('property.insights.length', property.insights.length);
+// console.log(JSON.stringify(property, null, 2));
+// console.log('property.pages.length', property.pages.length);
+// console.log('property.texts.length', property.texts.length);
+// console.log('property.images.length', property.images.length);
+// console.log('property.insights.length', property.insights.length);

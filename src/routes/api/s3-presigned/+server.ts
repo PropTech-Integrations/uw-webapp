@@ -7,7 +7,7 @@
  *
  *   Environment Variables:
  *     - REGION: AWS region (e.g., "us-west-2").
- *     - AWS_S3_FILEUPLOADS_BUCKET: Name of the S3 bucket for file uploads.
+ *     - AWS_FILE_UPLOADS_BUCKET: Name of the S3 bucket for file uploads.
  *
  *   Authentication:
  *     - Relies on `locals.user` being populated by an authentication hook.
@@ -22,7 +22,7 @@ import type { RequestHandler } from './$types';
 import { json, error as svelteError } from '@sveltejs/kit';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { REGION, S3_FILEUPLOADS_BUCKET } from '$env/static/private';
+import { REGION, FILE_UPLOADS_BUCKET } from '$env/static/private';
 
 // Initialize S3 client with the configured AWS region
 const s3 = new S3Client({ region: REGION });
@@ -48,7 +48,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   // Prepare S3 PutObjectCommand with bucket, key, and MIME type
   const command = new PutObjectCommand({
-    Bucket: S3_FILEUPLOADS_BUCKET,
+    Bucket: FILE_UPLOADS_BUCKET,
     Key: key,
     ContentType: contentType
   });

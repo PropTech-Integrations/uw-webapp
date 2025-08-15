@@ -12,7 +12,7 @@
 	import Sidebar from '$lib/components/properties/sidebar/Sidebar.svelte';
 
 	export let data: { id: string };
-	$: console.log(data);
+	// $: console.log(data);
 
 	let vCard = false;
 	// let imageUrl = 'https://pti-demo-web-assets.s3.us-west-2.amazonaws.com/images/aarons.png';

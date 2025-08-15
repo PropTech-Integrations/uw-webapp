@@ -22,17 +22,17 @@
 	// export let data: PageData;
 	// Extract initial data provided by the page's load function
 	let { data }: { data: PageData } = $props();
-	console.log('data -------------------------->', data);
+	// console.log('data -------------------------->', data);
 	// Reactive state holding the array of items to display in the table
 	let docdata = $state(data.property);
-	console.log('table_data --------------------------');
+	// console.log('table_data --------------------------');
 	$inspect(docdata);
 	// Reference to the WebSocket connection, for cleanup
 	let socket: ReturnType<typeof createWebSocket>;
 
 	// Reactive state holding the document data
 	let property = data.property;
-	console.log('Document Analysis', property);
+	// console.log('Document Analysis', property);
 
 	let pdfViewers: any[] = [];
 

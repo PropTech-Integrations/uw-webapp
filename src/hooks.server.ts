@@ -1,6 +1,7 @@
 // src/hooks.server.ts
 import type { Handle } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
+import { decodeJwt } from 'jose';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// Don't protect the /auth/login and /auth/callback routes
@@ -25,6 +26,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 		// console.log('refresh_token:', refresh_token);
 		throw redirect(302, '/auth/login');
 	}
+
+	// Decode the id_token to get user information
+	const decoded = decodeJwt(id_token);
+	console.log('decoded: ', decoded);
 
 	// Store user data on event.locals
 	event.locals.user = { id_token, access_token, refresh_token }; // You can decode the token here if needed

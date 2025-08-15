@@ -1,6 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
-import { DOCUMENT_BUCKET, DOCUMENTS_TABLE, REGION, S3_FILEUPLOADS_BUCKET } from '$env/static/private';
+import { DOCUMENT_BUCKET, DOCUMENTS_TABLE, REGION, FILE_UPLOADS_BUCKET } from '$env/static/private';
 
 import type { PageServerLoad } from './$types';
 
@@ -88,7 +88,7 @@ export const load: PageServerLoad = async () => {
 	};
 
 	const highlightsGroupedByHash = groupHighlightsByDocumentHash(highlights);
-	console.log(highlightsGroupedByHash);
+	// console.log(highlightsGroupedByHash);
 
 	const convertToPropertyList = (highlightMap: Record<string, any[]>): Property[] => {
 		return Object.entries(highlightMap).map(([hash, highlights]) => {
@@ -110,9 +110,9 @@ export const load: PageServerLoad = async () => {
 	};
 
 	const properties = convertToPropertyList(highlightsGroupedByHash);
-	console.log("======================")
-	console.log(properties);
-	console.log("======================")
+	// console.log("======================")
+	// console.log(properties);
+	// console.log("======================")
 
 
 	// highlights.forEach((highlight) => {

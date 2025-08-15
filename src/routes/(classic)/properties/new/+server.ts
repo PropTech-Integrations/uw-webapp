@@ -2,7 +2,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { createHash } from 'crypto';
-import { REGION, S3_FILEUPLOADS_BUCKET } from '$env/static/private';
+import { REGION, FILE_UPLOADS_BUCKET } from '$env/static/private';
 
 const s3 = new S3Client({ region: REGION });
 
@@ -27,7 +27,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	console.log(key)
 	try {
 		const command = new PutObjectCommand({
-			Bucket: S3_FILEUPLOADS_BUCKET,
+			Bucket: FILE_UPLOADS_BUCKET,
 			Key: key,
 			Body: buffer,
 			ContentType: file.type,

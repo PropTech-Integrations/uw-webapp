@@ -8,7 +8,7 @@
  *
  *   Environment Variables:
  *     - REGION: AWS region (e.g., "us-west-2").
- *     - S3_FILEUPLOADS_BUCKET: Target S3 bucket name for uploads.
+ *     - FILE_UPLOADS_BUCKET: Target S3 bucket name for uploads.
  *
  *   Error Handling:
  *     - 400 Bad Request: Invalid JSON payload or schema validation failure.
@@ -22,9 +22,9 @@ import { createHash } from 'crypto';
 import { z } from 'zod';
 
 // Load environment variables (must be defined)
-import { REGION, S3_FILEUPLOADS_BUCKET } from '$env/static/private';
-if (!S3_FILEUPLOADS_BUCKET) {
-  throw new Error('Missing S3_FILEUPLOADS_BUCKET env var');
+import { REGION, FILE_UPLOADS_BUCKET } from '$env/static/private';
+if (!FILE_UPLOADS_BUCKET) {
+  throw new Error('Missing FILE_UPLOADS_BUCKET env var');
 }
 
 // Initialize the AWS S3 client with the specified region
@@ -69,7 +69,7 @@ export const POST: RequestHandler = async ({ request }) => {
   // Prepare the S3 PutObjectCommand with bucket, key, and content type
   
   const cmd = new PutObjectCommand({
-    Bucket: S3_FILEUPLOADS_BUCKET,
+    Bucket: FILE_UPLOADS_BUCKET,
     Key: key,
     ContentType: contentType,
     ChecksumAlgorithm: 'SHA256',
