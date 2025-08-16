@@ -1,12 +1,3 @@
-export type UserItem = {
-	userId: string;
-	sk: string;
-	entityType: string;
-	entityId: string;
-	data: any;
-	createdAt: string;
-};
-
 export const Q_LIST = `
 query List($limit:Int) {
   listUserItems(limit:$limit) {
