@@ -10,7 +10,7 @@ const client = new DynamoDBClient({ region: REGION });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 export const load: PageServerLoad = async ({ params }) => {
-	console.log("params -------------------------->", params.propertyId)
+	// console.log("params -------------------------->", params.propertyId)
     const DOCUMENT_HASH = params.propertyId;
 	try {
 		const pageCommand = new QueryCommand({

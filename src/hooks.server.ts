@@ -29,7 +29,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Decode the id_token to get user information
 	const decoded = decodeJwt(id_token);
-	console.log('decoded: ', decoded);
+	// console.log('decoded: ', decoded);
 
 	// Store user data on event.locals
 	event.locals.user = { id_token, access_token, refresh_token }; // You can decode the token here if needed
