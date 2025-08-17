@@ -2,7 +2,7 @@
 // Works with your existing createAppSyncWsClient.
 
 // Import the public environment variables
-import { PUBLIC_GRAPHQL_HTTP_ENDPOINT, PUBLIC_GRAPHQL_API_KEY } from '$env/static/public';
+import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from '$env/static/public';
 
 export type SubscribeOptions<T = unknown> = {
 	query: string;
@@ -18,10 +18,19 @@ export type AppSyncWsClient = {
 };
 
 // ---- helpers ----
-export async function gql<T>(query: string, variables: Record<string, any> = {}): Promise<T> {
+export async function gql<T>(
+	query: string,
+	variables: Record<string, any> = {},
+	idToken: string
+): Promise<T> {
+	const headers: Record<string, string> = {
+		'content-type': 'application/json',
+		'Authorization': idToken
+	};
+	console.log('headers', headers);
 	const res = await fetch(PUBLIC_GRAPHQL_HTTP_ENDPOINT, {
 		method: 'POST',
-		headers: { 'content-type': 'application/json', 'x-api-key': PUBLIC_GRAPHQL_API_KEY },
+		headers,
 		body: JSON.stringify({ query, variables })
 	});
 	const body = await res.json();
@@ -288,9 +297,13 @@ export function setupAppSyncRealtime(
 	clientOptions: RealtimeClientOptions,
 	subs: SubscriptionSpec<any>[]
 ): () => void {
+	console.log('setupAppSyncRealtime');
+	console.log('clientOptions', clientOptions);
+	console.log('subs', subs);
 	// Adapt auth to the WS client's supported modes
 	const { auth, ...rest } = clientOptions;
 	let wsAuth: AppSyncAuth;
+	console.log('auth', auth);
 	switch (auth.mode) {
 		// case 'jwt':
 		// 	wsAuth = { mode: 'cognito', idToken: auth.jwt };
@@ -298,6 +311,7 @@ export function setupAppSyncRealtime(
 		case 'apiKey':
 		case 'cognito':
 			wsAuth = auth as AppSyncAuth;
+			console.log('wsAuth', wsAuth);
 			break;
 		default:
 			throw new Error(`Unsupported auth mode for AppSync realtime: ${(auth as any)?.mode}`);

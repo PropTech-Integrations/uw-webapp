@@ -1,59 +1,62 @@
 <script lang="ts">
-    // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    // Imports Section
-    // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Imports Section
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 	// Import Svelte's fade transition for animating list items
 	import { fade } from 'svelte/transition';
 
 	// Import types for page props and user items
 	import type { PageProps } from './$types';
-	
-    // Import types for user items
-	import type { UserItem } from '$lib/types/UserItem';
-	
-    // Import realtime subscription setup and helper for extracting data at a path
-	import { setupAppSyncRealtime, subAtPath } from '$lib/realtime/websocket/AppSyncWsClient';
-	
-    // Import list operations for UserItem (upsert/remove helpers)
-	import { userItemOps } from '$lib/realtime/websocket/ListOperations';
-	
-    // Import GraphQL subscription queries for create, update, and delete events
-	import { S_CREATE, S_UPDATE, S_DELETE } from '$lib/realtime/graphql/queries';
-	
-    // Import public environment variables for GraphQL endpoint and API key
-	import { PUBLIC_GRAPHQL_HTTP_ENDPOINT, PUBLIC_GRAPHQL_API_KEY } from '$env/static/public';
 
-    // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    // State Section
-    // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Import types for user items
+	import type { UserItem } from '$lib/types/UserItem';
+
+	// Import realtime subscription setup and helper for extracting data at a path
+	import { setupAppSyncRealtime, subAtPath } from '$lib/realtime/websocket/AppSyncWsClient';
+
+	// Import list operations for UserItem (upsert/remove helpers)
+	import { userItemOps } from '$lib/realtime/websocket/ListOperations';
+
+	// Import GraphQL subscription queries for create, update, and delete events
+	import { S_CREATE, S_UPDATE, S_DELETE } from '$lib/realtime/graphql/queries';
+
+	// Import public environment variables for GraphQL endpoint and API key
+	import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from '$env/static/public';
+	import { error } from '@sveltejs/kit';
+
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// State Section
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 	// Get initial data from server-side load function
 	let { data }: PageProps = $props();
 
 	// Make items reactive and deeply tracked for mutations (Svelte 5 $state)
 	let items = $state<UserItem[]>(data.items);
-	
-    // Reactive error message, initially null
+
+	// Get idToken from server-side load function
+	let idToken = data.idToken!
+
+	// Reactive error message, initially null
 	let errorMsg = $state<string | null>(null);
-	
-    // Enable Svelte's inspection tool for debugging items
+
+	// Enable Svelte's inspection tool for debugging items
 	// $inspect(items);
 
-    // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    // Effects Section
-    // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Effects Section
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 	// Set up GraphQL realtime subscriptions when component is mounted
 	$effect.root(() => {
 		// Only run on the client (not during SSR)
 		if (typeof window === 'undefined') return;
 
-		// Start AppSync realtime client with API key auth and wire up subscriptions
 		const dispose = setupAppSyncRealtime(
 			{
 				graphqlHttpUrl: PUBLIC_GRAPHQL_HTTP_ENDPOINT,
-				auth: { mode: 'apiKey', apiKey: PUBLIC_GRAPHQL_API_KEY }
+				auth: { mode: 'cognito', idToken }
 			},
 			[
 				// Subscribe to "create" events and upsert new items into the list

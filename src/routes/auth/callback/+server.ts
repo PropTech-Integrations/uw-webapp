@@ -4,9 +4,9 @@ import { error, redirect, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async (params) => {
 	// Log incoming request parameters for debugging
-	console.log('--------------------------------');
-	console.log("Entered callback route");
-	console.log('params: ', params);
+	// console.log('--------------------------------');
+	// console.log("Entered callback route");
+	// console.log('params: ', params);
 	const { cookies, url } = params;
 	const code = url.searchParams.get('code');
 
@@ -39,11 +39,11 @@ export const GET: RequestHandler = async (params) => {
 	};
 
 	// Log environment variables and request details for debugging
-	console.log('COGNITO_DOMAIN: ', COGNITO_DOMAIN);
-	console.log('COGNITO_CLIENT_ID: ', COGNITO_CLIENT_ID);
-	console.log('COGNITO_REDIRECT_URI: ', COGNITO_REDIRECT_URI);
-	console.log('code: ', code);
-	console.log('codeVerifier: ', codeVerifier);
+	// console.log('COGNITO_DOMAIN: ', COGNITO_DOMAIN);
+	// console.log('COGNITO_CLIENT_ID: ', COGNITO_CLIENT_ID);
+	// console.log('COGNITO_REDIRECT_URI: ', COGNITO_REDIRECT_URI);
+	// console.log('code: ', code);
+	// console.log('codeVerifier: ', codeVerifier);
 
 	// Send request to exchange authorization code for tokens
 	const response = await fetch(`${COGNITO_DOMAIN}/oauth2/token`, requestOptions);
