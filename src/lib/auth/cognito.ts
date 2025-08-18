@@ -35,7 +35,7 @@ export function decodeJwt<T = Record<string, unknown>>(jwt: string): T {
 }
 
 export const getAWSIdentityId = async ({ idToken }: { idToken: string }) => {
-	// console.log('getAWSIdentityId: ', idToken);
+	console.log('getAWSIdentityId: ', idToken);
 	if (!idToken) {
 		throw new Error('Authentication is required and has failed or is missing.');
 	}

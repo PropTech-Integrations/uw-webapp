@@ -1,14 +1,11 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
+import type { CurrentUser } from '$lib/types/auth';
 declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
-			user?: {
-				id_token: string;
-				access_token: string;
-				refresh_token: string;
-			};
+			currentUser?: CurrentUser;
 		}
 		// interface PageData {}
 		// interface PageState {}
