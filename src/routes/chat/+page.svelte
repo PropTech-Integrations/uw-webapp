@@ -70,7 +70,13 @@
       try {
         const m = localStorage.getItem('chat.messages');
         const mdl = localStorage.getItem('chat.model');
-        if (m) messages = JSON.parse(m);
+        if (m) {
+          const parsedMessages = JSON.parse(m);
+          // Clean up any messages with invalid roles
+          messages = parsedMessages.filter((msg: any) => 
+            msg.role === 'system' || msg.role === 'user' || msg.role === 'assistant'
+          );
+        }
         if (mdl) model = mdl;
       } catch {}
     }
@@ -78,6 +84,21 @@
     function clearChat() {
       messages = [];
       saveLocal();
+    }
+
+    function clearLocalStorage() {
+      try {
+        localStorage.removeItem('chat.messages');
+        localStorage.removeItem('chat.model');
+        messages = [
+          {
+            id: uuid(),
+            role: 'assistant',
+            content: "Hi! I'm your AI assistant. How can I help today?",
+            ts: new Date().toISOString()
+          }
+        ];
+      } catch {}
     }
   
     function scrollToBottom() {
@@ -126,6 +147,14 @@
             title="Clear conversation"
           >
             Clear
+          </button>
+
+          <button
+            class="ml-1 text-sm px-3 py-2 rounded-xl border border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-800 text-red-700 dark:text-red-200"
+            on:click={clearLocalStorage}
+            title="Clear localStorage and reset"
+          >
+            Reset
           </button>
         </div>
       </div>

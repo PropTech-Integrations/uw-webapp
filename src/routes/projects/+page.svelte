@@ -1,10 +1,92 @@
 <script lang="ts">
-	import type { LayoutProps } from '../$types';
+  // 1. Import the SvelteKit Types for the Page Properties
+	import type { PageProps } from './$types';
+  
+	// Import realtime subscription setup and helper for extracting data at a path
+	import { setupAppSyncRealtime, subAtPath, gql } from '$lib/realtime/websocket/AppSyncWsClient';
 
-	let { data }: LayoutProps = $props();
-	console.log('=========================================');
-	console.log(data);
-	console.log('=========================================');
+	// Import list operations for UserItem (upsert/remove helpers)
+	import { userItemOps } from '$lib/realtime/websocket/ListOperations';
+
+	// Import GraphQL subscription queries for create, update, and delete events
+	import { S_CREATE, S_UPDATE, S_DELETE } from '$lib/realtime/graphql/UserItems/queryDefs';
+
+	// Import public environment variables for GraphQL endpoint and API key
+	import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from '$env/static/public';
+
+	// Import types for user items
+	import type { UserItem } from '$lib/types/UserItem';
+  import type { Project } from '$lib/types/belongsToUser/project';
+
+	// 2. Get the Props for the Component
+	let componentProps: PageProps = $props();
+
+	// 3. Get the authenticated current User from the Load Data
+	let currentUser = $derived(componentProps.data?.currentUser);
+
+	// Get idToken from server-side load function
+	// TODO: The web socket should be enhanced so that the URL with the authentiation is created on the server side.
+  //       This will allow the server to not have to pass the idToken to the client
+  //       Expiration times should be set to 1 hour or less
+  let idToken = componentProps.data.idToken!
+
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// State Section
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+	// 4. Make items reactive and deeply tracked for mutations (Svelte 5 $state)	
+  let items = $state<UserItem[]>(componentProps.data?.items);
+  // $inspect(items);
+  
+  let projects:Project[] = $derived(
+    items.map((item) => {
+      const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+      return { ...data, id: item.entityId };
+    })
+  );
+  $inspect(projects);
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Effects Section
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+	// Set up GraphQL realtime subscriptions when component is mounted
+	$effect.root(() => {
+		// Only run on the client (not during SSR)
+		if (typeof window === 'undefined') return;
+
+		const dispose = setupAppSyncRealtime(
+			{
+				graphqlHttpUrl: PUBLIC_GRAPHQL_HTTP_ENDPOINT,
+				auth: { mode: 'cognito', idToken }
+			},
+			[
+				// Subscribe to "create" events and upsert new items into the list
+				subAtPath<UserItem>({
+					query: S_CREATE,
+					path: 'onCreateUserItem',
+					next: (it) => userItemOps.upsertMutable(items, it)
+				}),
+				// Subscribe to "update" events and upsert updated items into the list
+				subAtPath<UserItem>({
+					query: S_UPDATE,
+					path: 'onUpdateUserItem',
+					next: (it) => userItemOps.upsertMutable(items, it)
+				}),
+				// Subscribe to "delete" events and remove deleted items from the list
+				subAtPath<UserItem>({
+					query: S_DELETE,
+					path: 'onDeleteUserItem',
+					next: (it) => userItemOps.removeMutable(items, it)
+				})
+			]
+		);
+
+		// Return disposer to clean up subscriptions on component unmount/HMR
+		return dispose;
+	});
+
+	// Reactive error message, initially null
+	let errorMsg = $state<string | null>(null);
 
 	// Flowbite Svelte Components
 	import {
@@ -16,6 +98,7 @@
 		Heading,
 		Indicator
 	} from 'flowbite-svelte';
+
 	import { Input, Table, TableBody, TableBodyCell, TableBodyRow, TableHead } from 'flowbite-svelte';
 	import { TableHeadCell, Toolbar, ToolbarButton } from 'flowbite-svelte';
 	import { CogSolid, DotsVerticalOutline, DownloadSolid } from 'flowbite-svelte-icons';
@@ -26,14 +109,9 @@
 		TrashBinSolid
 	} from 'flowbite-svelte-icons';
 
-	// Local Types
-	import type { Project } from '$lib/types/belongsToUser/project';
-
 	// Local Components
-	import Projects from './projects.json';
-	import { imagesPath } from './variables';
 	import DeleteModal from './DeleteModal.svelte';
-	import UserModal from './UserModal.svelte';
+	import ProjectModal from './ProjectModal.svelte';
 	import MetaTag from './MetaTag.svelte';
 
 	// State
@@ -41,14 +119,42 @@
 	let openDelete: boolean = $state(false); // modal control
 	let current_project: any = $state({});
 
-	// current user from load data
-	let currentUser = $derived(data?.currentUser);
-
 	// Meta Tags
 	const path: string = '/projects';
 	const description: string = 'My StratiqAI Projects';
 	const title: string = 'My StratiqAI Projects';
 	const subtitle: string = 'My StratiqAI Projects';
+
+
+	// Sample project data
+	const sampleProject = {
+		id: crypto.randomUUID?.() || Math.random().toString(36).slice(2),
+		name: 'Sample Project',
+		address: '123 Main St',
+		assetType: 'Office',
+		city: 'Sample City',
+		state: 'CA',
+		zip: '90001',
+		country: 'USA',
+		image: '',
+		description: 'A sample project for demonstration.',
+		ownerId: currentUser?.sub || '',
+		createdAt: new Date().toISOString(),
+		status: 'Active',
+		members: [],
+		tags: ['demo'],
+		isPublic: false,
+		isArchived: false,
+		isDeleted: false,
+		isActive: true,
+		id_token: '', // Fill in as needed
+		access_token: '',
+		refresh_token: ''
+	};
+
+	// Creation is handled inside ProjectModal
+
+
 </script>
 
 <MetaTag {path} {description} {title} {subtitle} />
@@ -123,7 +229,7 @@
 			{/each}
 		</TableHead>
 		<TableBody>
-			{#each Projects as project}
+			{#each projects as project}
 				<TableBodyRow class="text-base border-gray-200">
 					<TableBodyCell class="w-4 p-4"><Checkbox /></TableBodyCell>
 					<TableBodyCell class="mr-12 flex items-center space-x-6 whitespace-nowrap p-4">
@@ -182,7 +288,7 @@
 		</TableBody>
 	</Table>
 </main>
-
+<!-- onclick={() => ((current_project = project), (openDelete = true))} -->
 <!-- Modals -->
-<UserModal bind:open={openProject} data={current_project} />
-<DeleteModal bind:open={openDelete} />
+<ProjectModal bind:open={openProject} data={current_project} idToken={idToken} /> 
+<DeleteModal bind:open={openDelete} data={current_project} idToken={idToken} />

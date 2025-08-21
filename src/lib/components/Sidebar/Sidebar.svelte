@@ -14,12 +14,12 @@
 >
 	<!-- Logo and Toggle Button -->
 	<div
-		class="flex h-16 items-center justify-between border-b border-gray-200 px-2 pt-8 dark:border-gray-700"
+		class="flex h-16 items-center justify-between border-b border-gray-200 px-2 pt-4 dark:border-gray-700"
 	>
 		<img
 			src="/images/logos/logo-graphic-only.png"
-			alt="Logo"
-			class="h-10 w-10 justify-center"
+			alt="StratiqAI Logo"
+			class="h-15 w-15 justify-center m-auto"
 			onclick={toggleSidebar}
 		/>
 		<button onclick={toggleSidebar} class="text-gray-500 focus:outline-none dark:text-gray-300">

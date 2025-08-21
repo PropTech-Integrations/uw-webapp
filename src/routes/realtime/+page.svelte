@@ -19,7 +19,7 @@
 	import { userItemOps } from '$lib/realtime/websocket/ListOperations';
 
 	// Import GraphQL subscription queries for create, update, and delete events
-	import { S_CREATE, S_UPDATE, S_DELETE } from '$lib/realtime/graphql/queries';
+	import { S_CREATE, S_UPDATE, S_DELETE } from '../../lib/realtime/graphql/UserItems/queryDefs';
 
 	// Import public environment variables for GraphQL endpoint and API key
 	import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from '$env/static/public';

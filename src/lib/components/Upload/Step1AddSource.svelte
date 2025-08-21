@@ -83,7 +83,7 @@
 
 	<UploadArea />
 
-	<div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+	<div class="grid grid-cols-1 gap-4 ">
 		{#each sourceCards as card}
 			<SourceCard {card} />
 		{/each}

@@ -3,7 +3,7 @@
 	import type { CompsComparisonRow } from '$lib/types/property';
 	import CompsComparison from '$lib/components/properties/CompsComparison.svelte';
 	let { prop }: { prop: Property } = $props();
-	$inspect(prop);
+	// $inspect(prop);
 	const compsComparisonRows: CompsComparisonRow[] = [
 		{
 			label: 'Averages',

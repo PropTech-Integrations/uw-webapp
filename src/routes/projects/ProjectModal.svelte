@@ -1,8 +1,36 @@
 <script lang="ts">
 	import { Button, Input, Label, Modal, Textarea, Checkbox, Select } from 'flowbite-svelte';
 	import type { UserModalProps } from './types';
+	import { gql } from '$lib/realtime/websocket/AppSyncWsClient';
+	import type { UserItem } from '$lib/types/UserItem';
 
-	let { open = $bindable(true), data }: UserModalProps = $props();
+	// GraphQL mutations for create/update
+	const M_CREATE = `
+		mutation CreateProject($input: CreateUserItemInput!) {
+			createUserItem(input: $input) {
+				sk
+				entityType
+				entityId
+				data
+				createdAt
+			}
+		}
+	`;
+
+	const M_UPDATE = `
+		mutation UpdateProject($input: UpdateUserItemInput!) {
+			updateUserItem(input: $input) {
+				sk
+				entityType
+				entityId
+				data
+				createdAt
+			}
+		}
+	`;
+	let { open = $bindable(true), data, idToken }: UserModalProps = $props();
+
+	let formEl: HTMLFormElement;
 
 	function init(form: HTMLFormElement) {
 		for (const key in data) {
@@ -21,6 +49,57 @@
 			}
 		}
 	}
+
+	async function handleSubmit(e: Event) {
+		e.preventDefault();
+		const form = formEl;
+		const formData = new FormData(form);
+
+		const project: any = {};
+		for (const [key, value] of formData.entries()) {
+			if (key === 'isPublic') {
+				project[key] = true;
+			} else if (key === 'tags') {
+				project[key] = (value as string).split(',').map(s => s.trim()).filter(Boolean);
+			} else {
+				project[key] = value;
+			}
+		}
+		if (!formData.has('isPublic')) project.isPublic = false;
+
+		const merged = { ...data, ...project };
+
+		const id = merged.id || crypto.randomUUID?.() || Math.random().toString(36).slice(2);
+		const sk = "PROJECT#" + id;
+		const now = new Date().toISOString();
+
+		const input = {
+			sk,
+			entityType: 'PROJECT',
+			entityId: id,
+			createdAt: merged.createdAt || now,
+			data: JSON.stringify({ ...merged, id, createdAt: merged.createdAt || now })
+		};
+
+		console.log('input', JSON.stringify(input, null, 2));
+		let mutation: string;
+		let opName: string;
+		if (data && data.id) {
+			mutation = M_UPDATE;
+			opName = 'updateUserItem';
+		} else {
+			mutation = M_CREATE;
+			opName = 'createUserItem';
+		}
+
+		try {
+			const res = await gql<{ items:UserItem }>(mutation, { input }, idToken);
+			open = false;
+		} catch (err) {
+			console.error('Error saving project:', err);
+			alert('Error saving project');
+		}
+	}
 </script>
 
 <Modal
@@ -31,7 +110,7 @@
 >
 	<!-- Modal body -->
 	<div class="space-y-6 p-0">
-		<form action="#" use:init>
+		<form bind:this={formEl} use:init onsubmit={handleSubmit}>
 			<div class="grid grid-cols-6 gap-6">
 				<Label class="col-span-6 space-y-2 sm:col-span-3">
 					<span>Name</span>
@@ -95,13 +174,12 @@
 					</div>
 				</Label>
 			</div>
+			<!-- Modal footer -->
+			<div class="mt-6 flex justify-end">
+				<Button type="submit">{Object.keys(data).length ? 'Save project' : 'Add project'}</Button>
+			</div>
 		</form>
 	</div>
-
-	<!-- Modal footer -->
-	{#snippet footer()}
-		<Button type="submit">{Object.keys(data).length ? 'Save project' : 'Add project'}</Button>
-	{/snippet}
 </Modal>
 
 <!--

@@ -245,11 +245,14 @@ export interface DeleteModalProps {
 	title?: string;
 	yes?: string;
 	no?: string;
+	data: Record<string, string>;
+	idToken: string;
 }
 
 export interface UserModalProps {
 	open: boolean;
 	data: Record<string, string>;
+	idToken: string;
 }
 
 export interface DeleteDrawerProps {

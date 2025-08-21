@@ -3,6 +3,7 @@
     import type { AIAction } from '$lib/types/chat';
     import { v4 as uuid } from 'uuid';
     import { ui } from '$lib/stores/ui.svelte';
+	import NewProjectWorkflow from '$lib/components/Project/NewProjectWorkflow.svelte';
   
     // --- demo state ---
     type Task = { id: string; title: string; status: 'todo'|'doing'|'done' };
@@ -57,7 +58,7 @@
   </script>
   
   <!-- Full viewport split: main app + right chat drawer -->
-  <div class="min-h-[100svh] flex bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+  <div class="min-h-[100svh] w-full flex bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
        style={`padding-right:${ui.sidebarOpen ? ui.sidebarWidth : 0}px`}>
     <!-- Main app area -->
     <div class="flex-1 flex flex-col min-w-0">
@@ -69,47 +70,14 @@
             {ui.sidebarOpen ? 'Hide AI' : 'Show AI'}
           </button>
           <h1 class="text-base font-semibold">Workspace</h1>
-          <p class="text-xs text-gray-500 dark:text-gray-400 hidden md:block">Ask the AI to add/move/update tasks.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 hidden md:block">Build Your AI Powered CRE Expert</p>
         </div>
-        <div class="text-xs opacity-70">Demo Kanban</div>
+        <div class="text-xs opacity-70"></div>
       </header>
   
       <!-- Content -->
       <main class="flex-1 p-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {#each columns as col}
-            <section class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm p-3">
-              <div class="flex items-center justify-between mb-2">
-                <h2 class="text-sm font-semibold">{col.title}</h2>
-                <button class="text-xs px-2 py-1 rounded-lg border hover:bg-gray-100 dark:hover:bg-gray-800"
-                        onclick={() => addQuick(col.key)}>+ Add</button>
-              </div>
-              <ul class="space-y-2">
-                {#each tasks.filter(t => t.status === col.key) as t (t.id)}
-                  <li class="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 px-3 py-2">
-                    <div class="text-sm">{t.title}</div>
-                    <div class="mt-2 flex items-center gap-2 text-[11px] text-gray-500">
-                      <code class="opacity-80">{t.id.slice(0,8)}</code>
-                      <div class="ml-auto flex gap-1">
-                        <button class="px-2 py-0.5 rounded border hover:bg-gray-100 dark:hover:bg-gray-700"
-                                onclick={() => (tasks = tasks.filter(x => x.id !== t.id))}>Delete</button>
-                        <div class="relative">
-                          <select bind:value={t.status}
-                            class="text-[11px] rounded border border-gray-300 dark:border-gray-700 bg-transparent"
-                            onchange={() => (tasks = [...tasks])}>
-                            <option value="todo">todo</option>
-                            <option value="doing">doing</option>
-                            <option value="done">done</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                {/each}
-              </ul>
-            </section>
-          {/each}
-        </div>
+        <NewProjectWorkflow />
       </main>
     </div>
   

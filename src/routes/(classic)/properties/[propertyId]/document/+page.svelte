@@ -26,7 +26,7 @@
 	// Reactive state holding the array of items to display in the table
 	let docdata = $state(data.property);
 	// console.log('table_data --------------------------');
-	$inspect(docdata);
+	// $inspect(docdata);
 	// Reference to the WebSocket connection, for cleanup
 	let socket: ReturnType<typeof createWebSocket>;
 

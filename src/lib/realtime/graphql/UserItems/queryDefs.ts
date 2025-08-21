@@ -20,3 +20,16 @@ export const S_DELETE = `
 subscription OnDelete {
   onDeleteUserItem { sk entityType entityId data createdAt }
 }`;
+
+export const Q_LIST_USER_PROJECTS = `
+query listUserProjects {
+  queryUserItemsByEntityTypeUserIdIndex(entityType: "PROJECT") {
+    items {
+      sk
+      entityType
+      entityId
+      data
+      createdAt
+    }
+  }
+}`;

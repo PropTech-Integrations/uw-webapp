@@ -11,7 +11,7 @@
     let messages = $state<ChatMessage[]>([
       {
         id: uuid(),
-        role: 'StratiqAI',
+        role: 'assistant',
         content: "Hi! I can help and also control the app. Try: “Add a task to email the pipeline investors today.”",
         ts: new Date().toISOString()
       }
@@ -27,7 +27,13 @@
     $effect(() => {
       try {
         const saved = localStorage.getItem('drawer.messages');
-        if (saved) messages = JSON.parse(saved);
+        if (saved) {
+          const parsedMessages = JSON.parse(saved);
+          // Clean up any messages with invalid roles
+          messages = parsedMessages.filter((msg: any) => 
+            msg.role === 'system' || msg.role === 'user' || msg.role === 'assistant'
+          );
+        }
       } catch {}
     });
   
@@ -46,16 +52,16 @@
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (!res.ok || data.error) {
-          push('StratiqAI', `⚠️ ${data.error || res.statusText}`);
+          push('assistant', `⚠️ ${data.error || res.statusText}`);
           return;
         }
         const reply: string = data.reply ?? '';
-        push('StratiqAI', reply);
+        push('assistant', reply);
   
         const actions = parseActionsFromReply(reply);
         if (actions.length) onActions?.(actions);
       } catch (e: any) {
-        push('StratiqAI', `⚠️ Network error: ${e?.message ?? e}`);
+        push('assistant', `⚠️ Network error: ${e?.message ?? e}`);
       } finally {
         loading = false;
       }
@@ -66,6 +72,20 @@
     }
   
     function toggle() { ui.sidebarOpen = !ui.sidebarOpen; }
+
+    function clearMessages() {
+      try {
+        localStorage.removeItem('drawer.messages');
+        messages = [
+          {
+            id: uuid(),
+            role: 'assistant',
+            content: "Hi! I can help and also control the app. Try: \"Add a task to email the pipeline investors today.\"",
+            ts: new Date().toISOString()
+          }
+        ];
+      } catch {}
+    }
   
     // --- Drag-resize logic ---
     let startX = 0;
@@ -142,6 +162,11 @@
           class="text-xs px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
           Close
         </button>
+
+        <button type="button" on:click={clearMessages}
+          class="text-xs px-2 py-1 rounded-lg border border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-800 text-red-700 dark:text-red-200">
+          Clear
+        </button>
       </div>
     </div>
   
@@ -151,7 +176,7 @@
       {#each messages as m (m.id)}
         <div class="flex {m.role === 'user' ? 'justify-end' : 'justify-start'}">
           <div class="{m.role === 'user'
-              ? 'bg-pink-600 text-white'
+              ? 'bg-blue-600 text-white'
               : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'} rounded-2xl px-4 py-2 max-w-[85%]">
             <div class="text-[11px] opacity-70 mb-1">{m.role} · {m.ts ? new Date(m.ts).toLocaleTimeString() : ''}</div>
             <div class="whitespace-pre-wrap text-sm">{m.content}</div>

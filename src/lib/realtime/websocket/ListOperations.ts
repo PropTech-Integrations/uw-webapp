@@ -39,6 +39,7 @@ export function createListOps<T>(opts: { keyFor: KeyFn<T>; normalize?: Normalize
 	// --- MUTATING versions (perfect for $state arrays) ---
 	// Function to insert or update an item in the list in place
 	function upsertMutable(items: T[], it: T): void {
+		console.log('upsertMutable', it);
 		it = norm(it); // Normalize the item
 		const k = opts.keyFor(it); // Get the key for the item
 		const i = items.findIndex((x) => opts.keyFor(x) === k); // Find the index of the item in the list
@@ -47,7 +48,6 @@ export function createListOps<T>(opts: { keyFor: KeyFn<T>; normalize?: Normalize
 		else items.unshift(it); // If not found, add the item to the start of the list
 	}
 
-	// Function to remove an item from the list in place
 	function removeMutable(items: T[], it: T): void {
 		const k = opts.keyFor(norm(it)); // Get the key for the normalized item
 		// In-place filter to remove the item, reducing garbage collection

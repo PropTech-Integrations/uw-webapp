@@ -1,4 +1,4 @@
-export type Role = 'system' | 'user' | 'StratiqAI';
+export type Role = 'system' | 'user' | 'assistant';
 
 export type ChatMessage = {
   role: Role;
