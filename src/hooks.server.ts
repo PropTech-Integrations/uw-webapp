@@ -33,8 +33,11 @@ function claimsToCurrentUser(payload: JWTPayload) {
 		tenantId: payload['custom:tenant_id'] as string,
 		locale: payload['locale'] as string,
 		timezone: payload['custom:timezone'] as string,
+		// amr: Authentication Methods References (array of strings indicating how the user was authenticated)
 		amr: payload['amr'] as string[],
+		// exp: Expiration time (epoch seconds when the token expires)
 		exp: payload['exp'] as number,
+		// iat: Issued at time (epoch seconds when the token was issued)
 		iat: payload['iat'] as number
 	};
 	return cu;

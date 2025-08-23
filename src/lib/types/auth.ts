@@ -1,23 +1,24 @@
-// src/lib/types/auth.ts
-export type CurrentUser = {
-    isAuthenticated: boolean;
-    sub?: string;
-    username?: string;
-    email?: string;
-    emailVerified?: boolean;
-    phoneNumber?: string;
-    phoneNumberVerified?: boolean;
-    givenName?: string;
-    familyName?: string;
-    name?: string;
-    preferredUsername?: string;
-    pictureUrl?: string;
-    groups?: string[];
-    tenantId?: string;
-    locale?: string;
-    timezone?: string;
-    amr?: string[];
-    exp?: number;
-    iat?: number;
+  // src/lib/types/auth.ts
+
+  // Represents the authenticated user and their claims
+  export type CurrentUser = {
+      isAuthenticated: boolean;         // Whether the user is authenticated
+      sub?: string;                     // Cognito user unique identifier (subject)
+      username?: string;                // Username (may be Cognito or preferred username)
+      email?: string;                   // User's email address
+      emailVerified?: boolean;          // Whether the email is verified
+      phoneNumber?: string;             // User's phone number
+      phoneNumberVerified?: boolean;    // Whether the phone number is verified
+      givenName?: string;               // User's given (first) name
+      familyName?: string;              // User's family (last) name
+      name?: string;                    // User's full name
+      preferredUsername?: string;       // User's preferred username
+      pictureUrl?: string;              // URL to user's profile picture
+      groups?: string[];                // Cognito groups the user belongs to
+      tenantId?: string;                // Custom tenant ID (multi-tenancy)
+      locale?: string;                  // User's locale (language/country)
+      timezone?: string;                // User's timezone
+      amr?: string[];                   // Authentication Methods References
+      exp?: number;                     // Token expiration time (epoch seconds)
+      iat?: number;                     // Token issued at time (epoch seconds)
   };
-  

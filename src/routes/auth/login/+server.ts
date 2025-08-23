@@ -43,7 +43,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 		// maxAge: 300
 	});
 
-    console.log("/auth/login cookies: ", cookies.getAll());
+    // console.log("/auth/login cookies: ", cookies.getAll());
 
 	// const redirectUri = url.origin + '/auth/callback';
 	// const loginUrl = new URL(`${COGNITO_DOMAIN}/oauth2/authorize`);
@@ -58,19 +58,19 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 	// 4. Build the Cognito Hosted UI login URL with required query parameters
 	const loginUrl = new URL(`${COGNITO_DOMAIN}/login`);
 	// Identify the client application
-	loginUrl.searchParams.set('client_id', COGNITO_CLIENT_ID);
-	// Use authorization code flow
-	loginUrl.searchParams.set('response_type', 'code');
-	// Request scopes for user info
-	loginUrl.searchParams.set('scope', 'email openid profile');
-	// Where Cognito should redirect after successful login
-	loginUrl.searchParams.set('redirect_uri', COGNITO_REDIRECT_URI);
-	// Attach the PKCE code challenge
-	loginUrl.searchParams.set('code_challenge', challenge);
-	// Specify the code challenge method
-	loginUrl.searchParams.set('code_challenge_method', 'S256');
+	// loginUrl.searchParams.set('client_id', COGNITO_CLIENT_ID);
+	// // Use authorization code flow
+	// loginUrl.searchParams.set('response_type', 'code');
+	// // Request scopes for user info
+	// loginUrl.searchParams.set('scope', 'email openid profile');
+	// // Where Cognito should redirect after successful login
+	// loginUrl.searchParams.set('redirect_uri', COGNITO_REDIRECT_URI);
+	// // Attach the PKCE code challenge
+	// loginUrl.searchParams.set('code_challenge', challenge);
+	// // Specify the code challenge method
+	// loginUrl.searchParams.set('code_challenge_method', 'S256');
 
-	console.log('loginUrl:', loginUrl);
+	// console.log('loginUrl:', loginUrl);
 
 	throw redirect(302, loginUrl.toString());
 };

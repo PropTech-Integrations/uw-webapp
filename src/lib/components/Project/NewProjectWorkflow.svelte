@@ -41,23 +41,55 @@
 	]);
 </script>
 
-<section
-	class="space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 shadow-md"
->
-	<header class="flex items-center justify-between">
-		<h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1>
-		<Button href="/support" icon>Help & Documentation</Button>
-	</header>
 
-	<NewPropertyStep bind:steps />
 
-	{#if steps[0].active}
-		<div in:fade={{ duration: 200 }} out:fade={{ duration: 200 }}>
-			<Step1AddSource />
-		</div>
-	{:else if steps[1].active}
-		<div in:fade={{ duration: 200 }} out:fade={{ duration: 200 }}>
-			<Step2EnrichData />
-		</div>
-	{/if}
-</section>
+<div class="grid grid-cols-4 gap-6">
+	<!-- Column 1 -->
+	<div class="col-span-1">
+		<header class="flex items-center justify-between">
+			<h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1>			
+		</header>
+
+		<NewPropertyStep bind:steps />
+
+		{#if steps[0].active}
+			<div in:fade={{ duration: 200 }} out:fade={{ duration: 200 }}>
+				<Step1AddSource />
+			</div>
+		{:else if steps[1].active}
+			<div in:fade={{ duration: 200 }} out:fade={{ duration: 200 }}>
+				<Step2EnrichData />
+			</div>
+		{/if}
+	</div>
+
+	<!-- Columns 2 & 3 (Filler) -->
+	<div class="col-span-3">
+	<!-- Blog Section -->
+	<section class="bg-white rounded-xl shadow p-6 mb-6">
+		<h2 class="text-xl font-semibold mb-4">StratiqAI Blog</h2>
+		<article class="mb-6">
+			<h3 class="text-lg font-bold mb-2">Welcome to the StratiqAI Blog!</h3>
+			<p class="text-gray-700 mb-2">
+				Stay up to date with the latest news, product updates, and industry insights from the StratiqAI team.
+			</p>
+			<a href="/blog/welcome" class="text-blue-600 hover:underline text-sm">Read more →</a>
+		</article>
+		<article class="mb-6">
+			<h3 class="text-lg font-bold mb-2">How AI is Transforming Property Analysis</h3>
+			<p class="text-gray-700 mb-2">
+				Discover how artificial intelligence is streamlining underwriting and property evaluation for real estate professionals.
+			</p>
+			<a href="/blog/ai-property-analysis" class="text-blue-600 hover:underline text-sm">Read more →</a>
+		</article>
+		<article>
+			<h3 class="text-lg font-bold mb-2">Tips for Uploading Your First Property</h3>
+			<p class="text-gray-700 mb-2">
+				Get started quickly with our step-by-step guide to uploading and analyzing your first property in StratiqAI.
+			</p>
+			<a href="/blog/first-property-tips" class="text-blue-600 hover:underline text-sm">Read more →</a>
+		</article>
+	</section>
+
+	</div>
+</div>

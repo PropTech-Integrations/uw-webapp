@@ -1,0 +1,5 @@
+{
+    "source": ["com.mycompany.scheduler"],
+    "detail-type": ["myapp.scheduled.job"]
+  }
+  

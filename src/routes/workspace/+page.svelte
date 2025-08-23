@@ -4,6 +4,7 @@
     import { v4 as uuid } from 'uuid';
     import { ui } from '$lib/stores/ui.svelte';
 	import NewProjectWorkflow from '$lib/components/Project/NewProjectWorkflow.svelte';
+	import Button from '$lib/ui/Button.svelte';
   
     // --- demo state ---
     type Task = { id: string; title: string; status: 'todo'|'doing'|'done' };
@@ -71,8 +72,13 @@
           </button>
           <h1 class="text-base font-semibold">Workspace</h1>
           <p class="text-xs text-gray-500 dark:text-gray-400 hidden md:block">Build Your AI Powered CRE Expert</p>
+          <div class="flex-1"></div>
+
         </div>
         <div class="text-xs opacity-70"></div>
+        <div>
+          <Button href="/support" icon>Help & Documentation</Button>
+        </div>
       </header>
   
       <!-- Content -->
