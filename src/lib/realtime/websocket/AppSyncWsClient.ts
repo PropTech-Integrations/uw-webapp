@@ -42,7 +42,6 @@ export async function gql<T>(
 }
 
 // ---------- helpers ----------
-
 function toRealtimeUrl(httpUrl: URL): string {
 	// Standard AppSync domains:
 	// https://<id>.appsync-api.<region>.amazonaws.com/graphql
@@ -300,17 +299,14 @@ export function setupAppSyncRealtime(
 	clientOptions: RealtimeClientOptions,
 	subs: SubscriptionSpec<any>[]
 ): () => void {
-	console.log('setupAppSyncRealtime');
-	console.log('clientOptions', clientOptions);
-	console.log('subs', subs);
+	// console.log('setupAppSyncRealtime');
+	// console.log('clientOptions', clientOptions);
+	// console.log('subs', subs);
 	// Adapt auth to the WS client's supported modes
 	const { auth, ...rest } = clientOptions;
 	let wsAuth: AppSyncAuth;
-	console.log('auth', auth);
+
 	switch (auth.mode) {
-		// case 'jwt':
-		// 	wsAuth = { mode: 'cognito', idToken: auth.jwt };
-		// 	break;
 		case 'apiKey':
 		case 'cognito':
 			wsAuth = auth as AppSyncAuth;

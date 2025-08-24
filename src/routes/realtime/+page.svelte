@@ -95,12 +95,10 @@
 
 	<!-- Display items in a responsive grid -->
 	<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-		{#each items as it (it.sk)}
+		{#each items as it (it.entityId)}
 			<!-- Card for each user item, with fade in/out transitions -->
 			<div class="max-w-sm rounded-lg border border-gray-200 bg-white shadow-md" in:fade out:fade>
 				<div class="p-5">
-					<!-- Display sk as the card title -->
-					<h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900">{it.sk}</h5>
 					<!-- Show entity type and entity id -->
 					<p class="font-normal text-gray-700">{it.entityType} → {it.entityId}</p>
 					<!-- Show creation date in local format -->

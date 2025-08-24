@@ -72,18 +72,18 @@
 </ol>-->
 
 	<p class="text-gray-600 text-sm">
-		Start your property analysis by adding sources. StratiqAI can base its responses on PDF
+		<!-- Start your property analysis by adding sources. StratiqAI can base its responses on PDF
 		documents such as offering memorandums, property reports, investor presentations. StratiqAI can
-		also understand Rent Rolls, T12s and income an expense statements.
-		<span class="hidden md:inline">
+		also understand Rent Rolls, T12s and income an expense statements. -->
+		<!-- <span class="hidden md:inline">
 			(Examples: marketing plans, course reading, research notes, meeting transcripts, sales
 			documents, etc.)
-		</span>
+		</span> -->
 	</p>
 
 	<UploadArea />
 
-	<div class="grid grid-cols-1 gap-4 ">
+	<div class="grid grid-cols-1 gap-4">
 		{#each sourceCards as card}
 			<SourceCard {card} />
 		{/each}

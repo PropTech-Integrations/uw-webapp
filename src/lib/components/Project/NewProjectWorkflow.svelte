@@ -46,11 +46,11 @@
 <div class="grid grid-cols-4 gap-6">
 	<!-- Column 1 -->
 	<div class="col-span-1">
-		<header class="flex items-center justify-between">
+		<header class="flex items-center justify-between mb-4">
 			<h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1>			
 		</header>
-
-		<NewPropertyStep bind:steps />
+		<Step1AddSource />
+		<!-- <NewPropertyStep bind:steps />
 
 		{#if steps[0].active}
 			<div in:fade={{ duration: 200 }} out:fade={{ duration: 200 }}>
@@ -60,7 +60,7 @@
 			<div in:fade={{ duration: 200 }} out:fade={{ duration: 200 }}>
 				<Step2EnrichData />
 			</div>
-		{/if}
+		{/if} -->
 	</div>
 
 	<!-- Columns 2 & 3 (Filler) -->

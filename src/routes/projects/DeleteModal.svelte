@@ -20,11 +20,11 @@
 		const mutation = `
 		mutation DeleteProject($input: DeleteUserItemInput!) {
 			deleteUserItem(input: $input) {
-		    sk entityType entityId data createdAt
+		      entityType entityId data createdAt
 			}
 		}
 	`;
-		const input = { sk: 'PROJECT#' + id };
+		const input = { entityType: 'PROJECT', entityId: id };
 		console.log('input', JSON.stringify(input, null, 2));
 		try {
 			const res = await gql<{ deleteUserItem: UserItem }>(mutation, { input }, idToken);
@@ -40,12 +40,15 @@
 	<ExclamationCircleOutline class="mx-auto mb-4 mt-8 h-10 w-10 text-red-600" />
 
 	<h3 class="mb-6 text-center text-lg text-gray-500 dark:text-gray-300">{title}</h3>
-	<div class="mb-6 flex flex-row items-center rounded-lg  p-4 ">
-		<img src={data.image} alt={data.name} class="mr-6 h-50 w-50 rounded" />
+	<div class="mb-6 flex flex-row items-center rounded-lg p-4">
+		<img src={data.image} alt={data.name} class="h-50 w-50 mr-6 rounded" />
 		<div class="flex flex-col items-start">
 			<div class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{data.name}</div>
 			<div class="mb-1 text-sm text-gray-500 dark:text-gray-300">{data.address}</div>
-			<div class="mb-1 text-sm text-gray-500 dark:text-gray-300">{data.city}, {data.state} {data.zip}</div>
+			<div class="mb-1 text-sm text-gray-500 dark:text-gray-300">
+				{data.city}, {data.state}
+				{data.zip}
+			</div>
 			<div class="mb-1 text-xs text-gray-400 dark:text-gray-400">Type: {data.assetType}</div>
 			<div class="mb-1 text-xs text-gray-400 dark:text-gray-400">Status: {data.status}</div>
 		</div>

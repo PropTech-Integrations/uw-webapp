@@ -1,7 +1,7 @@
 <script lang="ts">
-  // 1. Import the SvelteKit Types for the Page Properties
+	// 1. Import the SvelteKit Types for the Page Properties
 	import type { PageProps } from './$types';
-  
+
 	// Import realtime subscription setup and helper for extracting data at a path
 	import { setupAppSyncRealtime, subAtPath, gql } from '$lib/realtime/websocket/AppSyncWsClient';
 
@@ -16,7 +16,7 @@
 
 	// Import types for user items
 	import type { UserItem } from '$lib/types/UserItem';
-  import type { Project } from '$lib/types/belongsToUser/project';
+	import type { Project } from '$lib/types/belongsToUser/project';
 
 	// 2. Get the Props for the Component
 	let componentProps: PageProps = $props();
@@ -26,25 +26,29 @@
 
 	// Get idToken from server-side load function
 	// TODO: The web socket should be enhanced so that the URL with the authentiation is created on the server side.
-  //       This will allow the server to not have to pass the idToken to the client
-  //       Expiration times should be set to 1 hour or less
-  let idToken = componentProps.data.idToken!
+	//       This will allow the server to not have to pass the idToken to the client
+	//       Expiration times should be set to 1 hour or less
+	let idToken = componentProps.data.idToken!;
+
+	// Debug: Log the idToken status
+	console.log('idToken from props:', idToken ? 'present' : 'missing');
+	console.log('componentProps.data:', componentProps.data);
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// State Section
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-	// 4. Make items reactive and deeply tracked for mutations (Svelte 5 $state)	
-  let items = $state<UserItem[]>(componentProps.data?.items);
-  // $inspect(items);
-  
-  let projects:Project[] = $derived(
-    items.map((item) => {
-      const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
-      return { ...data, id: item.entityId };
-    })
-  );
-  $inspect(projects);
+	// 4. Make items reactive and deeply tracked for mutations (Svelte 5 $state)
+	let items = $state<UserItem[]>(componentProps.data?.items);
+	// $inspect(items);
+
+	let projects: Project[] = $derived(
+		items.map((item) => {
+			const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+			return { ...data, id: item.entityId };
+		})
+	);
+
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Effects Section
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -53,6 +57,14 @@
 	$effect.root(() => {
 		// Only run on the client (not during SSR)
 		if (typeof window === 'undefined') return;
+
+		// Check if idToken is available before setting up WebSocket
+		if (!idToken) {
+			console.error('No idToken available for WebSocket authentication');
+			return;
+		}
+
+		console.log('Setting up WebSocket with idToken:', idToken ? 'present' : 'missing');
 
 		const dispose = setupAppSyncRealtime(
 			{
@@ -125,7 +137,6 @@
 	const title: string = 'My StratiqAI Projects';
 	const subtitle: string = 'My StratiqAI Projects';
 
-
 	// Sample project data
 	const sampleProject = {
 		id: crypto.randomUUID?.() || Math.random().toString(36).slice(2),
@@ -153,8 +164,6 @@
 	};
 
 	// Creation is handled inside ProjectModal
-
-
 </script>
 
 <MetaTag {path} {description} {title} {subtitle} />
@@ -162,24 +171,24 @@
 <main class="relative h-full w-full overflow-y-auto bg-white dark:bg-gray-800">
 	<h1 class="hidden">Projects</h1>
 	<div class="p-4">
-		<Breadcrumb class="mb-5">
+		<!-- <Breadcrumb class="mb-5">
 			<BreadcrumbItem home>Home</BreadcrumbItem>
 			<BreadcrumbItem href="/projects">Projects</BreadcrumbItem>
 			<BreadcrumbItem>List</BreadcrumbItem>
-		</Breadcrumb>
+		</Breadcrumb> -->
 
-		{#if currentUser?.isAuthenticated}
+		<!-- {#if currentUser?.isAuthenticated}
 			<p>Hi {currentUser.givenName + ' ' + currentUser.familyName}</p>
 		{:else}
 			<a href="/auth/login">Sign in</a>
-		{/if}
+		{/if} -->
 
-		<Heading tag="h1" class="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white"
-			>All Projects</Heading
-		>
 		<Toolbar embedded class="w-full py-4 text-gray-500  dark:text-gray-300">
+			<Heading tag="h1" class="text-xl pr-8 font-semibold text-gray-900 sm:text-2xl dark:text-white"
+				>My Projects</Heading
+			>
 			<Input placeholder="Search for projects" class="me-4 w-80 border xl:w-96" />
-			<div class="border-l border-gray-100 pl-2 dark:border-gray-700">
+			<!-- <div class="border-l border-gray-100 pl-2 dark:border-gray-700">
 				<ToolbarButton
 					color="dark"
 					class="m-0 rounded p-1 hover:bg-gray-100 focus:ring-0 dark:hover:bg-gray-700"
@@ -204,19 +213,19 @@
 				>
 					<DotsVerticalOutline size="lg" />
 				</ToolbarButton>
-			</div>
+			</div> -->
 			{#snippet end()}
 				<div class="flex items-center space-x-2">
 					<Button
 						size="sm"
 						class="gap-2 whitespace-nowrap px-3"
-						onclick={() => ((current_project = {}), (openProject = true))}
+						onclick={() => (window.location.href = '/projects/workspace')}
 					>
 						<PlusOutline size="sm" />Add Project
 					</Button>
-					<Button size="sm" color="alternative" class="gap-2 px-3">
+					<!-- <Button size="sm" color="alternative" class="gap-2 px-3">
 						<DownloadSolid size="md" class="-ml-1" />Export
-					</Button>
+					</Button> -->
 				</div>
 			{/snippet}
 		</Toolbar>
@@ -230,18 +239,20 @@
 		</TableHead>
 		<TableBody>
 			{#each projects as project}
-				<TableBodyRow class="text-base border-gray-200">
+				<TableBodyRow class="border-gray-200 text-base">
 					<TableBodyCell class="w-4 p-4"><Checkbox /></TableBodyCell>
 					<TableBodyCell class="mr-12 flex items-center space-x-6 whitespace-nowrap p-4">
-						<Avatar src={project.image} size="lg" cornerStyle="rounded" />
-						<div class="text-sm font-normal text-gray-500 dark:text-gray-300">
-							<div class="text-base font-semibold text-gray-900 dark:text-white">
-								{project.name}
-							</div>
+						<a href={`/properties/${project.id}`} class="flex items-center space-x-6 group">
+							<Avatar src={project.image} size="lg" cornerStyle="rounded" />
 							<div class="text-sm font-normal text-gray-500 dark:text-gray-300">
-								{project.description}
+								<div class="text-base font-semibold text-gray-900 dark:text-white group-hover:underline">
+									{project.name}
+								</div>
+								<div class="text-sm font-normal text-gray-500 dark:text-gray-300">
+									{project.description}
+								</div>
 							</div>
-						</div>
+						</a>
 					</TableBodyCell>
 					<TableBodyCell
 						class="max-w-sm overflow-hidden truncate p-4 text-base font-normal text-gray-500 xl:max-w-xs dark:text-gray-300"
@@ -290,5 +301,5 @@
 </main>
 <!-- onclick={() => ((current_project = project), (openDelete = true))} -->
 <!-- Modals -->
-<ProjectModal bind:open={openProject} data={current_project} idToken={idToken} /> 
-<DeleteModal bind:open={openDelete} data={current_project} idToken={idToken} />
+<ProjectModal bind:open={openProject} data={current_project} {idToken} />
+<DeleteModal bind:open={openDelete} data={current_project} {idToken} />

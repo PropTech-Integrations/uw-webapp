@@ -84,7 +84,7 @@ export function createListOps<T>(opts: { keyFor: KeyFn<T>; normalize?: Normalize
 
 // Create list operations specifically for UserItem type
 export const userItemOps = createListOps<UserItem>({
-	keyFor: (it) => it.sk, // Define how to generate a key for UserItem
+	keyFor: (it) => it.entityId, // Define how to generate a key for UserItem
 	normalize: (it) => {
 		if (typeof it.data === 'string') {
 			try {
