@@ -47,7 +47,7 @@
 	<!-- Column 1 -->
 	<div class="col-span-1">
 		<header class="flex items-center justify-between">
-			<h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1>
+			<!-- <h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1> -->
 			<Button href="/support" icon>Help & Documentation</Button>
 		</header>
 

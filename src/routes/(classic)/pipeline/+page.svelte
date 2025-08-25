@@ -22,7 +22,7 @@
 			<span class="text-xs font-medium text-gray-700">Forward Documents to <b class="font-semibold">user@stratiq-pipeline.com</b> for auto analysis</span>
 		</button>
 		
-		<Button href="/properties/new" icon={true}>New Property Analysis</Button>
+		<!-- <Button href="/properties/new" icon={true}>New Property Analysis</Button> -->
 	</div>
 
 	<!-- Search & Filters -->

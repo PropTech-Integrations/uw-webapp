@@ -43,12 +43,12 @@
 
 
 
-<div class="grid grid-cols-4 gap-6">
+<div class="grid grid-cols-3 gap-6">
 	<!-- Column 1 -->
 	<div class="col-span-1">
-		<header class="flex items-center justify-between mb-4">
+		<!-- <header class="flex items-center justify-between mb-4">
 			<h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1>			
-		</header>
+		</header> -->
 		<Step1AddSource />
 		<!-- <NewPropertyStep bind:steps />
 
@@ -64,7 +64,7 @@
 	</div>
 
 	<!-- Columns 2 & 3 (Filler) -->
-	<div class="col-span-3">
+	<div class="col-span-2">
 	<!-- Blog Section -->
 	<section class="bg-white rounded-xl shadow p-6 mb-6">
 		<h2 class="text-xl font-semibold mb-4">StratiqAI Blog</h2>

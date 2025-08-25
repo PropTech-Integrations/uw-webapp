@@ -1,66 +1,7 @@
 <script lang="ts">
-	// import { invalidate } from '$app/navigation';
-	// import { go } from '$app/navigation';
-	import { goto } from '$app/navigation';
-	let file: File | null = null;
-	let progress = 0;
-	let uploading = false;
-	let result: { success: boolean; message: string; sha256?: string } | null = null;
-
+	import { TrashBinOutline } from 'flowbite-svelte-icons';
+	let files: { file: File; uploading: boolean; progress: number; result: { success: boolean; message: string; sha256?: string } | null }[] = [];
 	let fileInput: HTMLInputElement;
-
-	// 1) make this async so we can await upload()
-	async function handleFileChange(e: Event) {
-		file = (e.currentTarget as HTMLInputElement).files?.[0] ?? null;
-		progress = 0;
-		result = null;
-
-		if (file) {
-			await upload();
-		}
-	}
-
-	// 2) same upload logic as before
-	async function upload() {
-		if (!file) return;
-		uploading = true;
-
-		const form = new FormData();
-		form.append('file', file);
-
-		try {
-			const response = await new Promise<void>((resolve, reject) => {
-				const xhr = new XMLHttpRequest();
-				xhr.open('POST', '/properties/new');
-				xhr.upload.onprogress = (e) => {
-					if (e.lengthComputable) {
-						progress = Math.round((e.loaded / e.total) * 100);
-					}
-				};
-				xhr.onload = () => {
-					uploading = false;
-					if (xhr.status >= 200 && xhr.status < 300) {
-						result = JSON.parse(xhr.responseText);
-						resolve();
-					} else {
-						reject(new Error(`Upload failed (${xhr.status})`));
-					}
-				};
-				xhr.onerror = () => {
-					uploading = false;
-					reject(new Error('Network error'));
-				};
-				xhr.send(form);
-			});
-
-			// Redirect to properties summary page if upload was successful and we have a SHA256 hash
-			// if (result?.success && result.sha256) {
-			// 	goto(`/properties/document/${result.sha256}`);
-			// }
-		} catch (err) {
-			result = { success: false, message: (err as Error).message };
-		}
-	}
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' || event.key === ' ') {
@@ -68,46 +9,93 @@
 		}
 	}
 
+	async function handleFileChange(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		if (!input.files?.length) return;
+		const fileList = Array.from(input.files);
+		await addAndUploadFiles(fileList);
+		input.value = ''; // allow re-upload of same file(s)
+	}
+
 	function handleDrop(event: DragEvent) {
 		event.preventDefault();
-		const files = event.dataTransfer?.files;
-		if (files && files.length > 0) {
-			file = files[0];
-			handleFileChange({ currentTarget: { files } } as unknown as Event);
+		const droppedFiles = event.dataTransfer?.files;
+		if (droppedFiles && droppedFiles.length > 0) {
+			addAndUploadFiles(Array.from(droppedFiles));
 		}
 	}
 
 	function handleDragOver(event: DragEvent) {
 		event.preventDefault();
 	}
+
+	function removeFile(idx: number) {
+		files = files.slice(0, idx).concat(files.slice(idx + 1));
+	}
+
+	async function addAndUploadFiles(fileList: File[]) {
+		for (const file of fileList) {
+			await addAndUploadFile(file);
+		}
+	}
+
+	async function addAndUploadFile(file: File) {
+		const fileObj = { file, uploading: true, progress: 0, result: null };
+		files = [...files, fileObj];
+		const idx = files.length - 1;
+		const form = new FormData();
+		form.append('file', file);
+
+		try {
+			await new Promise<void>((resolve, reject) => {
+				const xhr = new XMLHttpRequest();
+				xhr.open('POST', '/properties/new');
+				xhr.upload.onprogress = (e) => {
+					if (e.lengthComputable) {
+						files[idx].progress = Math.round((e.loaded / e.total) * 100);
+						files = [...files];
+					}
+				};
+				xhr.onload = () => {
+					files[idx].uploading = false;
+					if (xhr.status >= 200 && xhr.status < 300) {
+						files[idx].result = JSON.parse(xhr.responseText);
+						files = [...files];
+						resolve();
+					} else {
+						files[idx].result = { success: false, message: `Upload failed (${xhr.status})` };
+						files = [...files];
+						reject(new Error(`Upload failed (${xhr.status})`));
+					}
+				};
+				xhr.onerror = () => {
+					files[idx].uploading = false;
+					files[idx].result = { success: false, message: 'Network error' };
+					files = [...files];
+					reject(new Error('Network error'));
+				};
+				xhr.send(form);
+			});
+		} catch (err) {
+			files[idx].uploading = false;
+			files[idx].result = { success: false, message: (err as Error).message };
+			files = [...files];
+		}
+	}
 </script>
 
 <div
-	class="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-8 transition hover:border-gray-400"
+	class="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-2 transition hover:border-gray-400"
 	tabindex="0"
 	role="button"
 	on:keydown={handleKeydown}
 	on:drop={handleDrop}
 	on:dragover={handleDragOver}
 >
-	{#if file}
-		<div class="space-y-2">
-			<p>{uploading ? `Uploading… ${progress}%` : `Uploaded ${file.name}`}</p>
-			<progress class="w-full" max="100" value={progress}></progress>
-
-			{#if result}
-				{#if result.success}
-					<p class="text-green-600">✅ {result.message}</p>
-				{:else}
-					<p class="text-red-600">⚠️ {result.message}</p>
-				{/if}
-			{/if}
-		</div>
-	{/if}
-
 	<input
 		type="file"
 		accept=".pdf"
+		multiple
 		style="display: none;"
 		bind:this={fileInput}
 		on:change={handleFileChange}
@@ -121,16 +109,61 @@
 		/>
 	</svg>
 	<p class="text-lg font-medium text-gray-700">Upload sources</p>
-	<p class="text-sm text-gray-500">
-		Drag & drop or <span
+	<p class="text-sm text-center text-gray-500">
+		Drag & drop<br/>or <span
 			class="cursor-pointer text-blue-600 underline"
 			on:click={() => fileInput.click()}
 			on:keydown={handleKeydown}
 			tabindex="0"
-			role="button">choose file</span
+			role="button">click</span
 		> to upload
 	</p>
 	<p class="mt-2 text-xs text-gray-400">
-		Supported file types: PDF, .txt, Markdown, Audio (e.g. mp3)
+		Supported file types: PDF
 	</p>
 </div>
+
+{#if files.length}
+	<table class="min-w-full mt-4 text-sm text-left text-gray-500 border rounded-lg">
+		<thead class="bg-gray-50">
+			<tr>
+				<th class="px-4 py-2">File Name</th>
+				<th class="px-4 py-2 w-12"></th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each files as f, idx}
+				<tr class="border-b last:border-b-0">
+					<td class="px-4 py-2">
+						<div>
+							<span>{f.file.name}</span>
+							{#if f.uploading}
+								<span class="ml-2 text-xs text-blue-500">Uploading… {f.progress}%</span>
+							{/if}
+							<!-- {#if f.result}
+								{#if f.result.success}
+									<span class="ml-2 text-green-600">✅ {f.result.message}</span>
+								{:else}
+									<span class="ml-2 text-red-600">⚠️ {f.result.message}</span>
+								{/if}
+							{/if} -->
+						</div>
+						{#if f.uploading}
+							<progress class="w-full mt-1" max="100" value={f.progress}></progress>
+						{/if}
+					</td>
+					<td class="px-4 py-2 text-center">
+						<button
+							type="button"
+							class="text-red-500 hover:text-red-700"
+							aria-label="Remove file"
+							on:click={() => removeFile(idx)}
+						>
+						<TrashBinOutline class="shrink-0 h-6 w-6" />
+						</button>
+					</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
+{/if}

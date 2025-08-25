@@ -36,7 +36,7 @@
 	class="w-full space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 shadow-md"
 >
 	<header class="flex items-center justify-between">
-		<h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1>
+		<!-- <h1 class="font-poppins text-2xl font-semibold">New Property Analysis</h1> -->
 		<Button href="/support" icon>Help & Documentation</Button>
 	</header>
 	<div class="mb-6 flex items-center justify-between">

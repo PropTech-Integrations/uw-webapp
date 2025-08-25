@@ -1,7 +1,5 @@
 <script lang="ts">
 	import RightChatDrawer from '$lib/components/RightChatDrawer.svelte';
-	import type { AIAction } from '$lib/types/chat';
-	import { v4 as uuid } from 'uuid';
 	import { ui } from '$lib/stores/ui.svelte';
 	import NewProjectWorkflow from '$lib/components/Project/NewProjectWorkflow.svelte';
 	import Button from '$lib/ui/Button.svelte';
