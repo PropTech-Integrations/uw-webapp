@@ -185,7 +185,7 @@
 
 		<Toolbar embedded class="w-full py-4 text-gray-500  dark:text-gray-300">
 			<Heading tag="h1" class="text-xl pr-8 font-semibold text-gray-900 sm:text-2xl dark:text-white"
-				>My Projects</Heading
+				>Investment Pipeline</Heading
 			>
 			<Input placeholder="Search for projects" class="me-4 w-80 border xl:w-96" />
 			<!-- <div class="border-l border-gray-100 pl-2 dark:border-gray-700">

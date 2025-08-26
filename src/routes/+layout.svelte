@@ -6,10 +6,10 @@
 	let { children, data } = $props<{ children: any; data: LayoutData }>();
 
 	let isSidebarOpen = $state(false);
-	let sidebarWidthCollapsed = `w-16`;
+	let sidebarWidthCollapsed = `w-14`;
 	let sidebarWidthExpanded = `w-40`;
 	let mainMarginLeftExpanded = `ml-40`;
-	let mainMarginLeftCollapsed = `ml-16`;
+	let mainMarginLeftCollapsed = `ml-14`;
 
 
 	if (typeof localStorage !== 'undefined') {
