@@ -24,8 +24,6 @@ export function createListOps<T>(opts: { keyFor: KeyFn<T>; normalize?: Normalize
 	}
 
 	function removeMutable(items: T[], it: T): void {
-		console.log('remove it', it);
-		console.log('remove items', items);
 		const k = opts.keyFor(norm(it));
 		let w = 0;
 		for (let r = 0; r < items.length; r++) {
@@ -47,8 +45,6 @@ export function createListOps<T>(opts: { keyFor: KeyFn<T>; normalize?: Normalize
 	}
 
 	function remove(items: T[], it: T): T[] {
-		console.log('remove it', it);
-		console.log('remove items', items);
 		const k = opts.keyFor(norm(it));
 		return items.filter((x) => opts.keyFor(x) !== k);
 	}

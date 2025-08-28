@@ -1,6 +1,6 @@
 <script lang="ts">
 	let { property } = $props();
-	console.log(property);
+	// console.log(property);
 	const menuItems = [
 		{ label: 'Document Review', active: false, href: `/properties/${property.id}/document` },
 		{ label: 'Summary', active: true, href: `/properties/${property.id}/summary` },

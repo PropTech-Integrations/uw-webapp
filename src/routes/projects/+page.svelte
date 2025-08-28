@@ -32,8 +32,8 @@
 	let idToken = componentProps.data.idToken!;
 
 	// Debug: Log the idToken status
-	console.log('idToken from props:', idToken ? 'present' : 'missing');
-	console.log('componentProps.data:', componentProps.data);
+	// console.log('idToken from props:', idToken ? 'present' : 'missing');
+	// console.log('componentProps.data:', componentProps.data);
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// State Section

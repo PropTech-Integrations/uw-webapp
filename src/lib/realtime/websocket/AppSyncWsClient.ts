@@ -27,10 +27,10 @@ export async function gql<T>(
 		'content-type': 'application/json',
 		'Authorization': idToken
 	};
-	console.log('GraphQL Request ------------------------------------');
-	console.log('headers', headers);
-	console.log('body', JSON.stringify({ query, variables }));
-	console.log('----------------------------------------------------');
+	// console.log('GraphQL Request ------------------------------------');
+	// console.log('headers', headers);
+	// console.log('body', JSON.stringify({ query, variables }));
+	// console.log('----------------------------------------------------');
 	const res = await fetch(PUBLIC_GRAPHQL_HTTP_ENDPOINT, {
 		method: 'POST',
 		headers,
