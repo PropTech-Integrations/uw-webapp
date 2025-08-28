@@ -3,8 +3,8 @@
 	import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
 	import type { DeleteModalProps } from './types';
 	import { gql } from '$lib/realtime/websocket/AppSyncWsClient';
-	import type { UserItem } from '$lib/types/UserItem';
-
+	import type { Project } from '$lib/types/Project';
+	import { M_DELETE_PROJECT } from '$lib/realtime/graphql/Projects/mutations';
 	let {
 		open = $bindable(true),
 		title = 'Are you sure you want to delete this?',
@@ -16,19 +16,12 @@
 
 	$inspect(data);
 	async function deleteProject(id: string, idToken: string) {
-		console.log('deleteProject', id);
-		const mutation = `
-		mutation DeleteProject($input: DeleteUserItemInput!) {
-			deleteUserItem(input: $input) {
-		      entityType entityId data createdAt
-			}
-		}
-	`;
-		const input = { entityType: 'PROJECT', entityId: id };
+		const mutation = M_DELETE_PROJECT;
+		const input = { id };
 		console.log('input', JSON.stringify(input, null, 2));
 		try {
-			const res = await gql<{ deleteUserItem: UserItem }>(mutation, { input }, idToken);
-			return res.deleteUserItem;
+			const res = await gql<{ deleteProject: Project }>(mutation, { input }, idToken);
+			return res.deleteProject;
 		} catch (e) {
 			console.error('Error deleting project:', e);
 			throw e;

@@ -6,17 +6,18 @@
 	import { setupAppSyncRealtime, subAtPath, gql } from '$lib/realtime/websocket/AppSyncWsClient';
 
 	// Import list operations for UserItem (upsert/remove helpers)
-	import { userItemOps } from '$lib/realtime/websocket/ListOperations';
+	import { projectListOps } from '$lib/realtime/websocket/ListOperations';
 
 	// Import GraphQL subscription queries for create, update, and delete events
-	import { S_CREATE, S_UPDATE, S_DELETE } from '$lib/realtime/graphql/UserItems/queryDefs';
+	// import { S_CREATE, S_UPDATE, S_DELETE } from '$lib/realtime/graphql/UserItems/queryDefs';
+	import { M_CREATE_PROJECT, M_DELETE_PROJECT } from '$lib/realtime/graphql/Projects/mutations';
+	import { S_CREATE_PROJECT, S_UPDATE_PROJECT, S_DELETE_PROJECT } from '$lib/realtime/graphql/Projects/subscriptions';
 
 	// Import public environment variables for GraphQL endpoint and API key
 	import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from '$env/static/public';
 
 	// Import types for user items
-	import type { UserItem } from '$lib/types/UserItem';
-	import type { Project } from '$lib/types/belongsToUser/project';
+	import type { Project } from '$lib/types/Project';
 
 	// 2. Get the Props for the Component
 	let componentProps: PageProps = $props();
@@ -39,15 +40,15 @@
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 	// 4. Make items reactive and deeply tracked for mutations (Svelte 5 $state)
-	let items = $state<UserItem[]>(componentProps.data?.items);
+	let projects = $state<Project[]>(componentProps.data?.items);
 	// $inspect(items);
 
-	let projects: Project[] = $derived(
-		items.map((item) => {
-			const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
-			return { ...data, id: item.entityId };
-		})
-	);
+	// let projects: Project[] = $derived(
+	// 	items.map((item) => {
+	// 		const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+	// 		return { ...data, id: item.entityId };
+	// 	})
+	// );
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Effects Section
@@ -73,22 +74,22 @@
 			},
 			[
 				// Subscribe to "create" events and upsert new items into the list
-				subAtPath<UserItem>({
-					query: S_CREATE,
-					path: 'onCreateUserItem',
-					next: (it) => userItemOps.upsertMutable(items, it)
+				subAtPath<Project>({
+					query: S_CREATE_PROJECT,
+					path: 'onProjectCreated',	
+					next: (it) => projectListOps.upsertMutable(projects, it)
 				}),
 				// Subscribe to "update" events and upsert updated items into the list
-				subAtPath<UserItem>({
-					query: S_UPDATE,
-					path: 'onUpdateUserItem',
-					next: (it) => userItemOps.upsertMutable(items, it)
+				subAtPath<Project>({
+					query: S_UPDATE_PROJECT,
+					path: 'onProjectUpdated',
+					next: (it) => projectListOps.upsertMutable(projects, it)
 				}),
 				// Subscribe to "delete" events and remove deleted items from the list
-				subAtPath<UserItem>({
-					query: S_DELETE,
-					path: 'onDeleteUserItem',
-					next: (it) => userItemOps.removeMutable(items, it)
+				subAtPath<Project>({
+					query: S_DELETE_PROJECT,
+					path: 'onProjectDeleted',
+					next: (it) => projectListOps.removeMutable(projects, it)
 				})
 			]
 		);
@@ -242,8 +243,8 @@
 				<TableBodyRow class="border-gray-200 text-base">
 					<TableBodyCell class="w-4 p-4"><Checkbox /></TableBodyCell>
 					<TableBodyCell class="mr-12 flex items-center space-x-6 whitespace-nowrap p-4">
-						<a href={`/properties/${project.id}`} class="flex items-center space-x-6 group">
-							<Avatar src={project.image} size="lg" cornerStyle="rounded" />
+						<a href={`/projects/workspace/${project.id}`} class="flex items-center space-x-6 group">
+							<Avatar src={project.image || ''} size="lg" cornerStyle="rounded" />
 							<div class="text-sm font-normal text-gray-500 dark:text-gray-300">
 								<div class="text-base font-semibold text-gray-900 dark:text-white group-hover:underline">
 									{project.name}
@@ -278,13 +279,13 @@
 						</div>
 					</TableBodyCell>
 					<TableBodyCell class="space-x-2 p-4">
-						<Button
+						<!-- <Button
 							size="sm"
 							class="gap-2 px-3"
 							onclick={() => ((current_project = project), (openProject = true))}
 						>
 							<EditOutline size="sm" /> Edit
-						</Button>
+						</Button> -->
 						<Button
 							color="red"
 							size="sm"

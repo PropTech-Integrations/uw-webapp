@@ -141,6 +141,7 @@ export function createAppSyncWsClient(opts: {
 	ws.addEventListener('message', (evt) => {
 		const msg = safeJsonParse(String(evt.data));
 		if (!msg) return;
+		console.log('msg', msg);
 		opts.onEvent?.(msg);
 
 		switch (msg.type) {
