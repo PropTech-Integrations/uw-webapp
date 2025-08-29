@@ -31,3 +31,34 @@ export const Q_LIST_USER_PROJECTS = `
         }
     }
   `;
+
+export const Q_GET_PROJECT = `
+    query getProject($id: ID!) {
+        getProject(id: $id) {
+            id
+            name
+            address
+            city
+            state
+            zip
+            country
+            assetType
+            createdAt
+            description
+            documents {
+              id
+              filename
+            }
+            image
+            isActive
+            members
+            ownerId
+            status
+            tags
+            updatedAt
+            isArchived
+            isDeleted
+            isPublic
+        }
+    }
+  `;

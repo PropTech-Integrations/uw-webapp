@@ -1,6 +1,22 @@
 <script lang="ts">
 	import { TrashBinOutline } from 'flowbite-svelte-icons';
-	let files: { file: File; uploading: boolean; progress: number; result: { success: boolean; message: string; sha256?: string } | null }[] = [];
+
+	type Document = {
+		id: string;
+		filename: string;
+	};
+
+	let { documents = $bindable() } = $props<{ documents: Document[] }>();
+	// console.log('documents', documents);
+
+	let files: { file: File; uploading: boolean; progress: number; result: { success: boolean; message: string; sha256?: string } | null }[] = $state([]);
+	$inspect(files);
+
+	// If documents is not empty, set files to the documents
+	if (documents.length > 0) {
+		files = documents.map((doc: Document) => ({ file: new File([], doc.filename), uploading: false, progress: 0, result: null }));
+	}
+
 	let fileInput: HTMLInputElement;
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -13,6 +29,7 @@
 		const input = e.currentTarget as HTMLInputElement;
 		if (!input.files?.length) return;
 		const fileList = Array.from(input.files);
+		console.log('fileList', fileList);
 		await addAndUploadFiles(fileList);
 		input.value = ''; // allow re-upload of same file(s)
 	}
@@ -30,7 +47,9 @@
 	}
 
 	function removeFile(idx: number) {
+		const removedFile = files[idx];
 		files = files.slice(0, idx).concat(files.slice(idx + 1));
+		documents = documents.filter((doc: Document) => doc.filename !== removedFile.file.name);
 	}
 
 	async function addAndUploadFiles(fileList: File[]) {
@@ -76,6 +95,7 @@
 				};
 				xhr.send(form);
 			});
+			documents = [...documents, { id: files[idx].result?.sha256 || '1234567890', filename: files[idx].file.name }];
 		} catch (err) {
 			files[idx].uploading = false;
 			files[idx].result = { success: false, message: (err as Error).message };
@@ -88,9 +108,9 @@
 	class="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-2 transition hover:border-gray-400"
 	tabindex="0"
 	role="button"
-	on:keydown={handleKeydown}
-	on:drop={handleDrop}
-	on:dragover={handleDragOver}
+	onkeydown={handleKeydown}
+	ondrop={handleDrop}
+	ondragover={handleDragOver}
 >
 	<input
 		type="file"
@@ -98,7 +118,7 @@
 		multiple
 		style="display: none;"
 		bind:this={fileInput}
-		on:change={handleFileChange}
+		onchange={handleFileChange}
 	/>
 	<svg class="mb-4 h-10 w-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
@@ -112,8 +132,8 @@
 	<p class="text-sm text-center text-gray-500">
 		Drag & drop<br/>or <span
 			class="cursor-pointer text-blue-600 underline"
-			on:click={() => fileInput.click()}
-			on:keydown={handleKeydown}
+			onclick={() => fileInput.click()}
+			onkeydown={handleKeydown}
 			tabindex="0"
 			role="button">click</span
 		> to upload
@@ -157,7 +177,7 @@
 							type="button"
 							class="text-red-500 hover:text-red-700"
 							aria-label="Remove file"
-							on:click={() => removeFile(idx)}
+							onclick={() => removeFile(idx)}
 						>
 						<TrashBinOutline class="shrink-0 h-6 w-6" />
 						</button>

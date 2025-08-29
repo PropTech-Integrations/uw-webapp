@@ -1,54 +1,53 @@
 <script lang="ts">
-	// 1. Import the SvelteKit Types for the Page Properties
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Props Section
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	
+	// Import the SvelteKit Types for the Page Properties
 	import type { PageProps } from './$types';
-
-	// Import realtime subscription setup and helper for extracting data at a path
-	import { setupAppSyncRealtime, subAtPath, gql } from '$lib/realtime/websocket/AppSyncWsClient';
-
-	// Import list operations for UserItem (upsert/remove helpers)
-	import { projectListOps } from '$lib/realtime/websocket/ListOperations';
-
-	// Import GraphQL subscription queries for create, update, and delete events
-	// import { S_CREATE, S_UPDATE, S_DELETE } from '$lib/realtime/graphql/UserItems/queryDefs';
-	import { M_CREATE_PROJECT, M_DELETE_PROJECT } from '$lib/realtime/graphql/Projects/mutations';
-	import { S_CREATE_PROJECT, S_UPDATE_PROJECT, S_DELETE_PROJECT } from '$lib/realtime/graphql/Projects/subscriptions';
-
-	// Import public environment variables for GraphQL endpoint and API key
-	import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from '$env/static/public';
-
-	// Import types for user items
-	import type { Project } from '$lib/types/Project';
-
-	// 2. Get the Props for the Component
+	
+	// Get the Props for the Component
 	let componentProps: PageProps = $props();
 
-	// 3. Get the authenticated current User from the Load Data
+	// Get the authenticated current User from the Load Data
 	let currentUser = $derived(componentProps.data?.currentUser);
 
 	// Get idToken from server-side load function
-	// TODO: The web socket should be enhanced so that the URL with the authentiation is created on the server side.
-	//       This will allow the server to not have to pass the idToken to the client
-	//       Expiration times should be set to 1 hour or less
 	let idToken = componentProps.data.idToken!;
-
-	// Debug: Log the idToken status
-	// console.log('idToken from props:', idToken ? 'present' : 'missing');
-	// console.log('componentProps.data:', componentProps.data);
-
+	
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	// State Section
+	// Realtime Section
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-	// 4. Make items reactive and deeply tracked for mutations (Svelte 5 $state)
+	// 1. Import public environment variables for GraphQL endpoint and API key
+	import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from '$env/static/public';
+
+	// 2. Import types for user items
+	import type { Project } from '$lib/types/Project';
+
+	// 3. Import realtime subscription setup and helper for extracting data at a path
+	import { setupAppSyncRealtime, subAtPath } from '$lib/realtime/websocket/AppSyncWsClient';
+
+	// 4. Import list operations for Project
+	import { createListOps } from '$lib/realtime/websocket/ListOperations';
+
+	// 5. Import GraphQL subscription queries for create, update, and delete events
+	// import { Q_LIST_USER_PROJECTS } from '$lib/realtime/graphql/Projects/queries';
+	// import { M_CREATE_PROJECT, M_DELETE_PROJECT } from '$lib/realtime/graphql/Projects/mutations';
+	import {
+		S_CREATE_PROJECT,
+		S_UPDATE_PROJECT,
+		S_DELETE_PROJECT
+	} from '$lib/realtime/graphql/Projects/subscriptions';
+
+	// 6. Create reactive state for Project list
 	let projects = $state<Project[]>(componentProps.data?.items);
-	// $inspect(items);
 
-	// let projects: Project[] = $derived(
-	// 	items.map((item) => {
-	// 		const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
-	// 		return { ...data, id: item.entityId };
-	// 	})
-	// );
+	// 6. Create list operations for Project
+	export const projectListOps = createListOps<Project>({
+		keyFor: (it) => it.id
+	});
+
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Effects Section
@@ -76,7 +75,7 @@
 				// Subscribe to "create" events and upsert new items into the list
 				subAtPath<Project>({
 					query: S_CREATE_PROJECT,
-					path: 'onProjectCreated',	
+					path: 'onProjectCreated',
 					next: (it) => projectListOps.upsertMutable(projects, it)
 				}),
 				// Subscribe to "update" events and upsert updated items into the list
@@ -101,11 +100,14 @@
 	// Reactive error message, initially null
 	let errorMsg = $state<string | null>(null);
 
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Flowbite Svelte Components
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 	import {
 		Avatar,
-		Breadcrumb,
-		BreadcrumbItem,
+		// Breadcrumb,
+		// BreadcrumbItem,
 		Button,
 		Checkbox,
 		Heading,
@@ -114,10 +116,10 @@
 
 	import { Input, Table, TableBody, TableBodyCell, TableBodyRow, TableHead } from 'flowbite-svelte';
 	import { TableHeadCell, Toolbar, ToolbarButton } from 'flowbite-svelte';
-	import { CogSolid, DotsVerticalOutline, DownloadSolid } from 'flowbite-svelte-icons';
+	// import { CogSolid, DotsVerticalOutline, DownloadSolid } from 'flowbite-svelte-icons';
 	import {
-		EditOutline,
-		ExclamationCircleSolid,
+		// EditOutline,
+		// ExclamationCircleSolid,
 		PlusOutline,
 		TrashBinSolid
 	} from 'flowbite-svelte-icons';
@@ -137,34 +139,6 @@
 	const description: string = 'My StratiqAI Projects';
 	const title: string = 'My StratiqAI Projects';
 	const subtitle: string = 'My StratiqAI Projects';
-
-	// Sample project data
-	const sampleProject = {
-		id: crypto.randomUUID?.() || Math.random().toString(36).slice(2),
-		name: 'Sample Project',
-		address: '123 Main St',
-		assetType: 'Office',
-		city: 'Sample City',
-		state: 'CA',
-		zip: '90001',
-		country: 'USA',
-		image: '',
-		description: 'A sample project for demonstration.',
-		ownerId: currentUser?.sub || '',
-		createdAt: new Date().toISOString(),
-		status: 'Active',
-		members: [],
-		tags: ['demo'],
-		isPublic: false,
-		isArchived: false,
-		isDeleted: false,
-		isActive: true,
-		id_token: '', // Fill in as needed
-		access_token: '',
-		refresh_token: ''
-	};
-
-	// Creation is handled inside ProjectModal
 </script>
 
 <MetaTag {path} {description} {title} {subtitle} />
@@ -185,7 +159,7 @@
 		{/if} -->
 
 		<Toolbar embedded class="w-full py-4 text-gray-500  dark:text-gray-300">
-			<Heading tag="h1" class="text-xl pr-8 font-semibold text-gray-900 sm:text-2xl dark:text-white"
+			<Heading tag="h1" class="pr-8 text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white"
 				>Investment Pipeline</Heading
 			>
 			<Input placeholder="Search for projects" class="me-4 w-80 border xl:w-96" />
@@ -243,10 +217,12 @@
 				<TableBodyRow class="border-gray-200 text-base">
 					<TableBodyCell class="w-4 p-4"><Checkbox /></TableBodyCell>
 					<TableBodyCell class="mr-12 flex items-center space-x-6 whitespace-nowrap p-4">
-						<a href={`/projects/workspace/${project.id}`} class="flex items-center space-x-6 group">
+						<a href={`/projects/workspace/${project.id}`} class="group flex items-center space-x-6">
 							<Avatar src={project.image || ''} size="lg" cornerStyle="rounded" />
 							<div class="text-sm font-normal text-gray-500 dark:text-gray-300">
-								<div class="text-base font-semibold text-gray-900 dark:text-white group-hover:underline">
+								<div
+									class="text-base font-semibold text-gray-900 group-hover:underline dark:text-white"
+								>
 									{project.name}
 								</div>
 								<div class="text-sm font-normal text-gray-500 dark:text-gray-300">

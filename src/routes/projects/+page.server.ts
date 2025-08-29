@@ -5,6 +5,7 @@
 
 // SvelteKit Imports
 import { error } from '@sveltejs/kit';
+
 // Import the type for the server load function
 import type { PageServerLoad } from './$types';
 

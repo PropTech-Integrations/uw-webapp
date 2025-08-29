@@ -2,17 +2,19 @@
     import { Button } from "flowbite-svelte";
     import type { Snippet } from 'svelte';
 
-    let { href, icon = false, children, className = '' } = $props<{
-        href: string;
+    let { href, icon = false, children, className = '', onclick } = $props<{
+        href?: string;
         icon?: boolean;
         children?: Snippet;
         className?: string;
+        onclick?: (e: MouseEvent) => void;
     }>();
 </script>
 
 <Button
     href={href}
     class={`flex space-x-2 rounded-lg border border-gray-300 bg-white px-4 py-2 shadow-sm transition hover:bg-gray-50 hover:border-gray-400 ${className}`}
+    onclick={onclick}
 >
     {#if icon}
 		<svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

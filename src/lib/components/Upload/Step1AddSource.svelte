@@ -1,7 +1,7 @@
 <script lang="ts">
-	import UploadArea from '../../../lib/components/Upload/UploadArea.svelte';
-	import SourceCard from '../../../lib/components/Upload/SourceCard.svelte';
-	import ProgressBar from '../../../lib/components/Upload/ProgressBar.svelte';
+	import UploadArea from '$lib/components/Upload/UploadArea.svelte';
+	import SourceCard from '$lib/components/Upload/SourceCard.svelte';
+	import ProgressBar from '$lib/components/Upload/ProgressBar.svelte';
 
 	const sourceCards = [
 		{

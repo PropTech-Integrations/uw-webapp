@@ -27,10 +27,10 @@ export async function gql<T>(
 		'content-type': 'application/json',
 		'Authorization': idToken
 	};
-	// console.log('GraphQL Request ------------------------------------');
-	// console.log('headers', headers);
-	// console.log('body', JSON.stringify({ query, variables }));
-	// console.log('----------------------------------------------------');
+	console.log('GraphQL Request ------------------------------------');
+	console.log('headers', headers);
+	console.log('body', JSON.stringify({ query, variables }));
+	console.log('----------------------------------------------------');
 	const res = await fetch(PUBLIC_GRAPHQL_HTTP_ENDPOINT, {
 		method: 'POST',
 		headers,
@@ -300,9 +300,9 @@ export function setupAppSyncRealtime(
 	clientOptions: RealtimeClientOptions,
 	subs: SubscriptionSpec<any>[]
 ): () => void {
-	// console.log('setupAppSyncRealtime');
-	// console.log('clientOptions', clientOptions);
-	// console.log('subs', subs);
+	console.log('setupAppSyncRealtime');
+	console.log('clientOptions', clientOptions);
+	console.log('subs', subs);
 	// Adapt auth to the WS client's supported modes
 	const { auth, ...rest } = clientOptions;
 	let wsAuth: AppSyncAuth;
@@ -374,5 +374,6 @@ export function subAtPath<T>(args: {
 	variables?: Record<string, unknown>;
 	error?: (e: unknown) => void;
 }): SubscriptionSpec<T> {
+	console.log('subAtPath', args);
 	return { ...args };
 }

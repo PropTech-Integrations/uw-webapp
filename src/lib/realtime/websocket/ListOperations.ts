@@ -16,6 +16,7 @@ export function createListOps<T>(opts: { keyFor: KeyFn<T>; normalize?: Normalize
 	const norm: NormalizeFn<T> = opts.normalize ?? ((x) => x);
 
 	function upsertMutable(items: T[], it: T): void {
+		console.log('upsertMutable', items, it);
 		it = norm(it);
 		const k = opts.keyFor(it);
 		const i = items.findIndex((x) => opts.keyFor(x) === k);
@@ -52,9 +53,3 @@ export function createListOps<T>(opts: { keyFor: KeyFn<T>; normalize?: Normalize
 	return { keyFor: opts.keyFor, normalize: norm, upsertMutable, removeMutable, upsert, remove };
 }
 
-// Example: Project list operations
-import type { Project } from '$lib/types/Project';
-
-export const projectListOps = createListOps<Project>({
-	keyFor: (it) => it.id
-});
