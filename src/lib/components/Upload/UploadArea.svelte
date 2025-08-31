@@ -147,7 +147,7 @@
 	<table class="min-w-full mt-4 text-sm text-left text-gray-500 border rounded-lg">
 		<thead class="bg-gray-50">
 			<tr>
-				<th class="px-4 py-2">File Name</th>
+				<th class="px-4 py-2">Your Documents</th>
 				<th class="px-4 py-2 w-12"></th>
 			</tr>
 		</thead>

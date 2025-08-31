@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { DarkMode } from "flowbite-svelte";
 	import Sidebar from '$lib/components/Sidebar/Sidebar.svelte';
 	import '../app.css';
 	import type { LayoutData } from './$types';

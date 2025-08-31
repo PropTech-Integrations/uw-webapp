@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button, Input, Label, Modal, Textarea, Checkbox, Select } from 'flowbite-svelte';
-	import type { UserModalProps } from './types';
+	import type { UserModalProps } from '../../../../uw-ai-plane/types';
 	import { gql } from '$lib/realtime/websocket/AppSyncWsClient';
 	import type { UserItem } from '$lib/types/UserItem';
 

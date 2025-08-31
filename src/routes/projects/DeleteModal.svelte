@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button, Modal } from 'flowbite-svelte';
 	import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
-	import type { DeleteModalProps } from './types';
+	import type { DeleteModalProps } from '../../../../uw-ai-plane/types';
 	import { gql } from '$lib/realtime/websocket/AppSyncWsClient';
 	import type { Project } from '$lib/types/Project';
 	import { M_DELETE_PROJECT } from '$lib/realtime/graphql/Projects/mutations';

@@ -46,6 +46,8 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 			error: 'getProject is null in response'
 		};
 	}
+
+	
 	return {
 		project: response.getProject,
 		idToken: idToken
