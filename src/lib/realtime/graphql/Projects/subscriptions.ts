@@ -1,4 +1,4 @@
-export const S_CREATE_PROJECT = `
+export const S_PROJECT_CREATED = `
 subscription subCreateProject {
   onProjectCreated {
     id
@@ -27,10 +27,43 @@ subscription subCreateProject {
     isPublic
   }
 }
-
 `;
 
-export const S_DELETE_PROJECT = `
+
+
+export const S_PROJECT_UPDATED = `
+  subscription OnProjectUpdated {
+    onProjectUpdated {
+      address
+      assetType
+      city
+      country
+      createdAt
+      description
+      documents {
+        filename
+        id
+      }
+      id
+      image
+      isActive
+      isArchived
+      isDeleted
+      isPublic
+      members
+      name
+      ownerId
+      state
+      status
+      tags
+      updatedAt
+      zip
+    }
+  }
+`;
+
+
+export const S_PROJECT_DELETED = `
   subscription subDeleteProject {
     onProjectDeleted {
     id
@@ -60,33 +93,35 @@ export const S_DELETE_PROJECT = `
   }
 }`;
 
-export const S_UPDATE_PROJECT = `
-  subscription subUpdateProject {
-    onProjectUpdated {
-      id
-      name
+
+
+export const S_PROJECT_UPDATED_BY_ID = `
+  subscription OnProjectUpdated($id: ID!) {
+    onProjectUpdated(id: $id) {
       address
+      assetType
       city
-      state
-      zip
       country
-      assetType 
       createdAt
       description
       documents {
-        id
         filename
+        id
       }
+      id
       image
       isActive
-      members
-      ownerId
-      status        
-      tags
-      updatedAt
       isArchived
       isDeleted
       isPublic
+      members
+      name
+      ownerId
+      state
+      status
+      tags
+      updatedAt
+      zip
     }
   }
 `;

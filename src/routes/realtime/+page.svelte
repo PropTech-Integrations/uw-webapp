@@ -12,8 +12,8 @@
 	// Import types for user items
 	import type { UserItem } from '$lib/types/UserItem';
 
-	// Import realtime subscription setup and helper for extracting data at a path
-	import { setupAppSyncRealtime, subAtPath } from '$lib/realtime/websocket/AppSyncWsClient';
+	// Import realtime subscription setup
+	import { AppSyncWsClient } from '$lib/realtime/websocket/AppSyncWsClient';
 
 	// Import list operations for UserItem (upsert/remove helpers)
 	import { userItemOps } from '$lib/realtime/websocket/ListOperations';
@@ -53,35 +53,33 @@
 		// Only run on the client (not during SSR)
 		if (typeof window === 'undefined') return;
 
-		const dispose = setupAppSyncRealtime(
-			{
-				graphqlHttpUrl: PUBLIC_GRAPHQL_HTTP_ENDPOINT,
-				auth: { mode: 'cognito', idToken }
-			},
-			[
+		const client = new AppSyncWsClient({
+			graphqlHttpUrl: PUBLIC_GRAPHQL_HTTP_ENDPOINT,
+			auth: { mode: 'cognito', idToken },
+			subscriptions: [
 				// Subscribe to "create" events and upsert new items into the list
-				subAtPath<UserItem>({
+				{
 					query: S_CREATE,
 					path: 'onCreateUserItem',
-					next: (it) => userItemOps.upsertMutable(items, it)
-				}),
+					next: (it: UserItem) => userItemOps.upsertMutable(items, it)
+				},
 				// Subscribe to "update" events and upsert updated items into the list
-				subAtPath<UserItem>({
+				{
 					query: S_UPDATE,
 					path: 'onUpdateUserItem',
-					next: (it) => userItemOps.upsertMutable(items, it)
-				}),
+					next: (it: UserItem) => userItemOps.upsertMutable(items, it)
+				},
 				// Subscribe to "delete" events and remove deleted items from the list
-				subAtPath<UserItem>({
+				{
 					query: S_DELETE,
 					path: 'onDeleteUserItem',
-					next: (it) => userItemOps.removeMutable(items, it)
-				})
+					next: (it: UserItem) => userItemOps.removeMutable(items, it)
+				}
 			]
-		);
+		});
 
 		// Return disposer to clean up subscriptions on component unmount/HMR
-		return dispose;
+		return () => client.disconnect();
 	});
 </script>
 

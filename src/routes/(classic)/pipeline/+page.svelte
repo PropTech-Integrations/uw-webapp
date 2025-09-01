@@ -8,7 +8,7 @@
 </script>
 
 <div
-	class="min-h-screen w-full space-y-6 bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 shadow-md"
+	class="min-h-screen w-full space-y-6 bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6  dark:bg-gray-900 dark:text-gray-100shadow-md"
 >
 	<!-- Header -->
 	<div class="flex items-center justify-between">

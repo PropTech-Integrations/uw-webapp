@@ -9,7 +9,7 @@
 </script>
 
 <div class="space-y-4">
-	<img src={card.image} alt={card.title} class="w-full h-auto max-w-xs mx-auto rounded-lg object-cover" />
+	<img src={card.image} alt={card.title} class="w-full h-auto rounded-lg object-cover" />
 	<!--<Card img={card.image} href="/" horizontal size="md">
 		<div class="m-6 overflow-hidden text-ellipsis">
 			<h5 class="mb-2 text-md font-bold tracking-tight text-gray-900 dark:text-white truncate">

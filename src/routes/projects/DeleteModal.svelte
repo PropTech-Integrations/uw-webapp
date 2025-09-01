@@ -14,7 +14,7 @@
 		idToken
 	}: DeleteModalProps = $props();
 
-	$inspect(data);
+	// $inspect(data);
 	async function deleteProject(id: string, idToken: string) {
 		const mutation = M_DELETE_PROJECT;
 		const input = { id };

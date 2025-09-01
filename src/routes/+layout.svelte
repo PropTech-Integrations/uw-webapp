@@ -28,7 +28,7 @@
 	}
 </script>
 
-<div class="h-screen bg-gray-50">
+<div class="h-screen bg-gray-50 dark:bg-gray-900">
 	<aside
 		class={`transition-width fixed inset-y-0 left-0 z-40 flex h-screen flex-col border-r border-gray-200 bg-white duration-300 dark:border-gray-700 dark:bg-gray-900 ${isSidebarOpen ? `${sidebarWidthExpanded}` : `${sidebarWidthCollapsed}`} `}
 	>

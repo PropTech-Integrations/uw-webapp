@@ -7,7 +7,7 @@
 </script>
 
 <section
-	class="space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 shadow-md"
+	class="space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6  dark:bg-gray-900 dark:text-gray-100shadow-md"
 >
 <h1>Notifications</h1>
 <!-- display all messages with fade-in effect -->

@@ -61,7 +61,7 @@
 
 <!-- Page layout: Display document data in a table -->
 <section
-	class="w-full space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 shadow-md"
+	class="w-full space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6  dark:bg-gray-900 dark:text-gray-100shadow-md"
 >
 	<Heading tag="h2" class="mb-8 text-2xl font-extrabold  md:text-3xl lg:text-4xl">
 		AI Document Analysis

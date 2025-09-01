@@ -1,3 +1,6 @@
+import type { Project } from "$lib/types/Project";
+import { gql } from "$lib/realtime/websocket/AppSyncWsClient";
+
 export const M_CREATE_PROJECT = `
     mutation createProject($input: CreateProjectInput!) {
         createProject(input: $input) {
@@ -90,3 +93,37 @@ export const M_DELETE_PROJECT = `
         }
     }
 `;
+
+
+export async function updateProject(project: Project, idToken: string) {
+    const mutation = M_UPDATE_PROJECT;
+    // Extract only the fields that can be updated according to UpdateProjectInput
+    const input = {
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        image: project.image,
+        address: project.address,
+        city: project.city,
+        state: project.state,
+        zip: project.zip,
+        country: project.country,
+        assetType: project.assetType,
+        status: project.status,
+        isActive: project.isActive,
+        isArchived: project.isArchived,
+        isDeleted: project.isDeleted,
+        isPublic: project.isPublic,
+        members: project.members,
+        documents: project.documents,
+        tags: project.tags
+    };
+    // console.log('input', JSON.stringify(input, null, 2));
+    try {
+        const res = await gql<{ updateProject: Project }>(mutation, { input }, idToken);
+        return res.updateProject;
+    } catch (e) {
+        console.error('Error updating project:', e);
+        throw e;
+    }
+}

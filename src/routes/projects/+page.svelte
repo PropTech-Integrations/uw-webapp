@@ -1,11 +1,13 @@
 <script lang="ts">
+	import { logger } from '$lib/logging/debug';
+
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Props Section
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	
+
 	// Import the SvelteKit Types for the Page Properties
 	import type { PageProps } from './$types';
-	
+
 	// Get the Props for the Component
 	let componentProps: PageProps = $props();
 
@@ -14,7 +16,7 @@
 
 	// Get idToken from server-side load function
 	let idToken = componentProps.data.idToken!;
-	
+
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Realtime Section
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -25,8 +27,8 @@
 	// 2. Import types for user items
 	import type { Project } from '$lib/types/Project';
 
-	// 3. Import realtime subscription setup and helper for extracting data at a path
-	import { setupAppSyncRealtime, subAtPath } from '$lib/realtime/websocket/AppSyncWsClient';
+	// 3. Import realtime subscription setup
+	import { AppSyncWsClient } from '$lib/realtime/websocket/AppSyncWsClient';
 
 	// 4. Import list operations for Project
 	import { createListOps } from '$lib/realtime/websocket/ListOperations';
@@ -35,9 +37,9 @@
 	// import { Q_LIST_USER_PROJECTS } from '$lib/realtime/graphql/Projects/queries';
 	// import { M_CREATE_PROJECT, M_DELETE_PROJECT } from '$lib/realtime/graphql/Projects/mutations';
 	import {
-		S_CREATE_PROJECT,
-		S_UPDATE_PROJECT,
-		S_DELETE_PROJECT
+		S_PROJECT_CREATED,
+		S_PROJECT_UPDATED,
+		S_PROJECT_DELETED
 	} from '$lib/realtime/graphql/Projects/subscriptions';
 
 	// 6. Create reactive state for Project list
@@ -47,7 +49,6 @@
 	export const projectListOps = createListOps<Project>({
 		keyFor: (it) => it.id
 	});
-
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Effects Section
@@ -64,37 +65,32 @@
 			return;
 		}
 
-		console.log('Setting up WebSocket with idToken:', idToken ? 'present' : 'missing');
+		logger('Setting up WebSocket with idToken:', idToken ? 'present' : 'missing');
 
-		const dispose = setupAppSyncRealtime(
-			{
-				graphqlHttpUrl: PUBLIC_GRAPHQL_HTTP_ENDPOINT,
-				auth: { mode: 'cognito', idToken }
-			},
-			[
-				// Subscribe to "create" events and upsert new items into the list
-				subAtPath<Project>({
-					query: S_CREATE_PROJECT,
+		const client = new AppSyncWsClient({
+			graphqlHttpUrl: PUBLIC_GRAPHQL_HTTP_ENDPOINT,
+			auth: { mode: 'cognito', idToken },
+			subscriptions: [
+				{
+					query: S_PROJECT_CREATED,
 					path: 'onProjectCreated',
-					next: (it) => projectListOps.upsertMutable(projects, it)
-				}),
-				// Subscribe to "update" events and upsert updated items into the list
-				subAtPath<Project>({
-					query: S_UPDATE_PROJECT,
+					next: (it: Project) => projectListOps.upsertMutable(projects, it)
+				},
+				{
+					query: S_PROJECT_UPDATED,
 					path: 'onProjectUpdated',
-					next: (it) => projectListOps.upsertMutable(projects, it)
-				}),
-				// Subscribe to "delete" events and remove deleted items from the list
-				subAtPath<Project>({
-					query: S_DELETE_PROJECT,
+					next: (it: Project) => projectListOps.upsertMutable(projects, it)
+				},
+				{
+					query: S_PROJECT_DELETED,
 					path: 'onProjectDeleted',
-					next: (it) => projectListOps.removeMutable(projects, it)
-				})
+					next: (it: Project) => projectListOps.removeMutable(projects, it)
+				}
 			]
-		);
+		});
 
 		// Return disposer to clean up subscriptions on component unmount/HMR
-		return dispose;
+		return () => client.disconnect();
 	});
 
 	// Reactive error message, initially null

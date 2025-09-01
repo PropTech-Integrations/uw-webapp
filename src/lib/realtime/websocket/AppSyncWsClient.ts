@@ -1,23 +1,77 @@
-// A tiny wrapper to wire multiple AppSync subscriptions with one call.
-// Works with your existing createAppSyncWsClient.
+/**
+ * AppSync WebSocket Client Implementation
+ *
+ * This module provides a TypeScript class-based implementation of an AppSync WebSocket client
+ * for real-time GraphQL subscriptions. It handles the WebSocket connection lifecycle,
+ * message routing, subscription management, and connection state tracking.
+ *
+ * Key Features:
+ * - WebSocket connection management with automatic reconnection handling
+ * - GraphQL subscription support with queuing for unready connections
+ * - Keep-alive management and connection timeout handling
+ * - Message type routing (connection_ack, ka, start_ack, data, error, complete)
+ * - Authentication support for both API key and Cognito JWT tokens
+ * - Promise-based connection ready state management
+ *
+ * Usage:
+ * ```typescript
+ * const client = createAppSyncWsClient({
+ *   graphqlHttpUrl: 'https://your-appsync-endpoint.appsync-api.region.amazonaws.com/graphql',
+ *   auth: { mode: 'cognito', idToken: 'your-jwt-token' }
+ * });
+ *
+ * await client.ready(); // Wait for connection to be established
+ *
+ * const subscription = client.subscribe({
+ *   query: 'subscription { onMessage { id content } }',
+ *   next: (data) => console.log('Received:', data),
+ *   error: (error) => console.error('Error:', error)
+ * });
+ *
+ * // Later, unsubscribe
+ * subscription.unsubscribe();
+ * ```
+ *
+ * Architecture:
+ * - AppSyncWsClientImpl: Main class implementing the WebSocket client
+ * - Message handlers for each AppSync protocol message type
+ * - Subscription queuing system for connections not yet ready
+ * - Keep-alive watchdog for connection health monitoring
+ *
+ * Dependencies:
+ * - WebSocket API (browser environment)
+ * - AppSync GraphQL WebSocket protocol
+ * - Cognito authentication tokens or API keys
+ *
+ * @author StratiqAI
+ * @version 1.0.0
+ * @since 2024
+ */
 
 // Import the public environment variables
 import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from '$env/static/public';
+import { logger } from '$lib/logging/debug';
 
-export type SubscribeOptions<T = unknown> = {
-	query: string;
-	variables?: Record<string, any>;
-	next: (data: T) => void;
-	error?: (e: any) => void;
-};
+// Websocket resources
+import type {
+	TAppSyncWsClient,
+	RealtimeClientOptions,
+	SubscriptionSpec,
+	AppSyncAuth,
+	SubscribeOptions
+} from './types';
+import { toRealtimeUrl, base64Url, safeJsonParse, uuid, pluck } from './utils';
 
-export type AppSyncWsClient = {
-	websocket: WebSocket;
-	subscribe<T = unknown>(opts: SubscribeOptions<T>): { id: string; unsubscribe(): void };
-	ready(): Promise<void>;
-};
-
-// ---- helpers ----
+/**
+ * Executes a GraphQL query or mutation against the AppSync HTTP endpoint.
+ *
+ * @template T - The expected shape of the response data.
+ * @param {string} query - The GraphQL query or mutation string.
+ * @param {Record<string, any>} [variables={}] - Variables for the GraphQL operation.
+ * @param {string} idToken - The Cognito ID token for authentication.
+ * @returns {Promise<T>} - Resolves with the data returned from the GraphQL endpoint.
+ * @throws {Error} - Throws if the response contains GraphQL errors.
+ */
 export async function gql<T>(
 	query: string,
 	variables: Record<string, any> = {},
@@ -25,12 +79,12 @@ export async function gql<T>(
 ): Promise<T> {
 	const headers: Record<string, string> = {
 		'content-type': 'application/json',
-		'Authorization': idToken
+		Authorization: idToken
 	};
-	console.log('GraphQL Request ------------------------------------');
-	console.log('headers', headers);
-	console.log('body', JSON.stringify({ query, variables }));
-	console.log('----------------------------------------------------');
+	// logger('GraphQL Request ------------------------------------');
+	// logger('headers', headers);
+	// logger('body', JSON.stringify({ query, variables }));
+	// logger('----------------------------------------------------');
 	const res = await fetch(PUBLIC_GRAPHQL_HTTP_ENDPOINT, {
 		method: 'POST',
 		headers,
@@ -41,186 +95,203 @@ export async function gql<T>(
 	return body.data as T;
 }
 
-// ---------- helpers ----------
-function toRealtimeUrl(httpUrl: URL): string {
-	// Standard AppSync domains:
-	// https://<id>.appsync-api.<region>.amazonaws.com/graphql
-	// -> wss://<id>.appsync-realtime-api.<region>.amazonaws.com/graphql
-	if (httpUrl.host.includes('appsync-api')) {
-		return `wss://${httpUrl.host.replace('appsync-api', 'appsync-realtime-api')}${httpUrl.pathname}`;
-	}
+export class AppSyncWsClient implements TAppSyncWsClient {
+	public websocket: WebSocket;
+	private isAcked = false;
+	private pendingStarts = new Map<string, any>();
+	private subs = new Map<string, { next: (data: any) => void; error?: (e: any) => void }>();
+	private lastKa = Date.now();
+	private connectionTimeoutMs = 5 * 60 * 1000;
+	private kaTimer: number | null = null;
+	private readyPromise: Promise<void>;
+	private resolveReady!: () => void;
+	private rejectReady!: (err: any) => void;
+	private httpHost: string;
+	private auth: AppSyncAuth;
+	private onEvent?: (frame: any) => void;
+	private subscriptionSpecs: SubscriptionSpec<any>[] = [];
+	private subscriptionHandles: Array<{ unsubscribe: () => void }> = [];
+	private specToHandleMap = new Map<SubscriptionSpec<any>, { unsubscribe: () => void }>();
 
-	// Custom domain case:
-	// https://api.example.com/graphql  -> wss://api.example.com/graphql/realtime
-	const basePath = httpUrl.pathname.replace(/\/graphql\/?$/, '');
-	return `wss://${httpUrl.host}${basePath}/graphql/realtime`;
-}
-
-function base64Url(s: string): string {
-	// Browser-safe base64url encode
-	// eslint-disable-next-line no-undef
-	return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function safeJsonParse(s: string): any | null {
-	try {
-		return JSON.parse(s);
-	} catch {
-		return null;
-	}
-}
-
-function uuid(): string {
-	// eslint-disable-next-line no-undef
-	if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-		// eslint-disable-next-line no-undef
-		return crypto.randomUUID();
-	}
-	return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-}
-
-export function createAppSyncWsClient(opts: {
-	graphqlHttpUrl: string;
-	auth: AppSyncAuth;
-	onEvent?: (frame: any) => void; // raw frame observer (optional)
-}): AppSyncWsClient {
-	if (typeof window === 'undefined') {
-		throw new Error('AppSync WS client must run in the browser');
-	}
-
-	const httpUrl = new URL(opts.graphqlHttpUrl);
-	const httpHost = httpUrl.host;
-
-	const realtimeUrl = toRealtimeUrl(httpUrl);
-	const headerObj =
-		opts.auth.mode === 'apiKey'
-			? { host: httpHost, 'x-api-key': opts.auth.apiKey }
-			: { host: httpHost, Authorization: opts.auth.idToken };
-
-	const headerSubproto = `header-${base64Url(JSON.stringify(headerObj))}`;
-
-	const ws = new WebSocket(realtimeUrl, ['graphql-ws', headerSubproto]);
-
-	// ---- connection gating / queueing ----
-	let isAcked = false;
-	const pendingStarts = new Map<string, any>();
-
-	let resolveReady!: () => void;
-	let rejectReady!: (err: any) => void;
-	const readyPromise = new Promise<void>((res, rej) => {
-		resolveReady = res;
-		rejectReady = rej;
-	});
-
-	// ---- subscribers ----
-	const subs = new Map<
-		string,
-		{
-			next: (data: any) => void;
-			error?: (e: any) => void;
+	constructor(options: {
+		graphqlHttpUrl: string;
+		auth: AppSyncAuth;
+		onEvent?: (frame: any) => void;
+		subscriptions?: SubscriptionSpec<any>[];
+	} | RealtimeClientOptions & { subscriptions?: SubscriptionSpec<any>[] }) {
+		// Only run on the client (not during SSR)
+		if (typeof window === 'undefined') {
+			throw new Error('AppSync WS client must run in the browser');
 		}
-	>();
 
-	// ---- keepalive management ----
-	let lastKa = Date.now();
-	let connectionTimeoutMs = 5 * 60 * 1000; // default overwritten by ACK
-	let kaTimer: number | null = null;
+		// Extract properties from the union type
+		const { graphqlHttpUrl, auth, onEvent, subscriptions } = options as any;
+		
+		this.auth = auth;
+		this.onEvent = onEvent;
+		this.subscriptionSpecs = subscriptions || [];
 
-	const send = (obj: any) => {
-		if (ws.readyState === WebSocket.OPEN) {
-			ws.send(JSON.stringify(obj));
+		// Create URL objects for HTTP and WebSocket endpoints
+		const httpUrl = new URL(graphqlHttpUrl);
+		this.httpHost = httpUrl.host;
+		const realtimeUrl = toRealtimeUrl(httpUrl);
+
+		// Create header object for authentication
+		const headerObj =
+			this.auth.mode === 'apiKey'
+				? { host: this.httpHost, 'x-api-key': this.auth.apiKey }
+				: { host: this.httpHost, Authorization: this.auth.idToken };
+
+		// Create header subprotocol
+		const headerSubproto = `header-${base64Url(JSON.stringify(headerObj))}`;
+
+		// Create WebSocket instance
+		this.websocket = new WebSocket(realtimeUrl, ['graphql-ws', headerSubproto]);
+
+		// Initialize the ready promise
+		this.readyPromise = new Promise<void>((res, rej) => {
+			this.resolveReady = res;
+			this.rejectReady = rej;
+		});
+
+		this.setupWebSocketEventListeners();
+	}
+
+	private setupWebSocketEventListeners(): void {
+		// Add event listener for open event
+		this.websocket.addEventListener('open', () => {
+			this.send({ type: 'connection_init' });
+		});
+
+		// Add event listener for message event
+		this.websocket.addEventListener('message', (evt) => {
+			this.handleMessage(evt);
+		});
+
+		this.websocket.addEventListener('close', () => {
+			this.handleClose();
+		});
+	}
+
+	private handleMessage(evt: MessageEvent): void {
+		// Parse the message
+		const msg = safeJsonParse(String(evt.data));
+
+		// If the message is not valid, return
+		if (!msg) return;
+
+		// Log the message
+		logger(`msg ${msg.type}`, msg);
+
+		// Call the onEvent callback
+		this.onEvent?.(msg);
+
+		// Handle different message types
+		switch (msg.type) {
+			case 'connection_ack':
+				this.handleConnectionAck(msg);
+				break;
+			case 'ka':
+				this.handleKeepAlive();
+				break;
+			case 'start_ack':
+				this.handleStartAck();
+				break;
+			case 'data':
+				this.handleData(msg);
+				break;
+			case 'error':
+				this.handleError(msg);
+				break;
+			case 'complete':
+				this.handleComplete(msg);
+				break;
+		}
+	}
+
+	private handleConnectionAck(msg: any): void {
+		this.isAcked = true;
+		this.connectionTimeoutMs = msg?.payload?.connectionTimeoutMs ?? this.connectionTimeoutMs;
+		this.resolveReady();
+
+		// start KA watchdog
+		if (this.kaTimer == null) {
+			this.kaTimer = window.setInterval(
+				() => {
+					if (Date.now() - this.lastKa > this.connectionTimeoutMs) {
+						try {
+							this.websocket.close(4000, 'KA timeout');
+						} catch {}
+					}
+				},
+				Math.max(1000, Math.floor(this.connectionTimeoutMs / 4))
+			);
+		}
+
+		// flush queued subscriptions
+		for (const [, frame] of this.pendingStarts) this.send(frame);
+		this.pendingStarts.clear();
+
+		// Set up subscriptions once connection is ready
+		this.setupSubscriptions();
+	}
+
+	private handleKeepAlive(): void {
+		this.lastKa = Date.now();
+	}
+
+	private handleStartAck(): void {
+		// nothing to do
+	}
+
+	private handleData(msg: any): void {
+		const sub = this.subs.get(msg.id);
+		sub?.next?.(msg.payload?.data);
+	}
+
+	private handleError(msg: any): void {
+		// per-subscription error (has id) or connection-level error (no id)
+		const sub = msg.id ? this.subs.get(msg.id) : undefined;
+		if (sub?.error) sub.error(msg.payload ?? msg);
+		else console.error('AppSync WS error', msg.payload ?? msg);
+	}
+
+	private handleComplete(msg: any): void {
+		this.subs.delete(msg.id);
+	}
+
+	private async setupSubscriptions(): Promise<void> {
+		for (const spec of this.subscriptionSpecs) {
+			this.setupSubscription(spec);
+		}
+	}
+
+	private handleClose(): void {
+		if (!this.isAcked) this.rejectReady(new Error('Socket closed before connection_ack'));
+		this.isAcked = false;
+		if (this.kaTimer != null) {
+			clearInterval(this.kaTimer);
+			this.kaTimer = null;
+		}
+	}
+
+	private send(obj: any): boolean {
+		if (this.websocket.readyState === WebSocket.OPEN) {
+			this.websocket.send(JSON.stringify(obj));
 			return true;
 		}
 		return false;
-	};
+	}
 
-	ws.addEventListener('open', () => {
-		send({ type: 'connection_init' });
-	});
-
-	ws.addEventListener('message', (evt) => {
-		const msg = safeJsonParse(String(evt.data));
-		if (!msg) return;
-		console.log('msg', msg);
-		opts.onEvent?.(msg);
-
-		switch (msg.type) {
-			case 'connection_ack': {
-				isAcked = true;
-				connectionTimeoutMs = msg?.payload?.connectionTimeoutMs ?? connectionTimeoutMs;
-				resolveReady();
-
-				// start KA watchdog
-				if (kaTimer == null) {
-					kaTimer = window.setInterval(
-						() => {
-							if (Date.now() - lastKa > connectionTimeoutMs) {
-								try {
-									ws.close(4000, 'KA timeout');
-								} catch {}
-							}
-						},
-						Math.max(1000, Math.floor(connectionTimeoutMs / 4))
-					);
-				}
-
-				// flush queued subscriptions
-				for (const [, frame] of pendingStarts) send(frame);
-				pendingStarts.clear();
-				break;
-			}
-
-			case 'ka': {
-				lastKa = Date.now();
-				break;
-			}
-
-			case 'start_ack': {
-				// nothing to do
-				break;
-			}
-
-			case 'data': {
-				const sub = subs.get(msg.id);
-				sub?.next?.(msg.payload?.data);
-				break;
-			}
-
-			case 'error': {
-				// per-subscription error (has id) or connection-level error (no id)
-				const sub = msg.id ? subs.get(msg.id) : undefined;
-				if (sub?.error) sub.error(msg.payload ?? msg);
-				else console.error('AppSync WS error', msg.payload ?? msg);
-				break;
-			}
-
-			case 'complete': {
-				subs.delete(msg.id);
-				break;
-			}
-		}
-	});
-
-	ws.addEventListener('close', () => {
-		if (!isAcked) rejectReady(new Error('Socket closed before connection_ack'));
-		isAcked = false;
-		if (kaTimer != null) {
-			clearInterval(kaTimer);
-			kaTimer = null;
-		}
-	});
-
-	function subscribe<T = unknown>(
-		params: SubscribeOptions<T>
-	): { id: string; unsubscribe(): void } {
+	public subscribe<T = unknown>(params: SubscribeOptions<T>): { id: string; unsubscribe(): void } {
 		const id = uuid();
 
-		subs.set(id, { next: params.next, error: params.error });
+		this.subs.set(id, { next: params.next, error: params.error });
 
 		const authExt =
-			opts.auth.mode === 'apiKey'
-				? { 'x-api-key': (opts.auth as any).apiKey, host: httpHost }
-				: { Authorization: (opts.auth as any).idToken, host: httpHost };
+			this.auth.mode === 'apiKey'
+				? { 'x-api-key': (this.auth as any).apiKey, host: this.httpHost }
+				: { Authorization: (this.auth as any).idToken, host: this.httpHost };
 
 		const frame = {
 			id,
@@ -234,146 +305,98 @@ export function createAppSyncWsClient(opts: {
 			}
 		};
 
-		if (isAcked) send(frame);
-		else pendingStarts.set(id, frame);
+		if (this.isAcked) this.send(frame);
+		else this.pendingStarts.set(id, frame);
 
 		return {
 			id,
 			unsubscribe: () => {
-				pendingStarts.delete(id); // if it never flushed, drop it
-				send({ type: 'stop', id });
-				subs.delete(id);
+				this.pendingStarts.delete(id); // if it never flushed, drop it
+				this.send({ type: 'stop', id });
+				this.subs.delete(id);
 			}
 		};
 	}
 
-	return {
-		websocket: ws,
-		subscribe,
-		ready: () => readyPromise
-	};
-}
-
-export type AppSyncAuth = { mode: 'apiKey'; apiKey: string } | { mode: 'cognito'; idToken: string }; // 'apiKey' | 'cognito'
-// | { mode: 'jwt'; jwt: string } // alias -> mapped to 'cognito'
-// | { mode: 'iam'; signer: unknown }; // Add your IAM signer or other modes here if your client supports them:
-
-export interface RealtimeClientOptions {
-	graphqlHttpUrl: string;
-	auth: AppSyncAuth;
-	onEvent?: (frame: unknown) => void;
-}
-
-/** A single subscription to register */
-export interface SubscriptionSpec<T> {
-	/** GraphQL subscription document (string or whatever your client expects) */
-	query: string;
-	/** Optional variables to pass with the subscription */
-	variables?: Record<string, unknown>;
-	/**
-	 * Where to find the data in the payload, e.g. "onCreateUserItem".
-	 * If provided, used as the default selector.
-	 */
-	path?: string;
-	/**
-	 * Custom selector to extract/shape the payload.
-	 * If omitted, we use `path` (if provided) or pass the whole payload through.
-	 */
-	select?: (payload: any) => T | undefined;
-	/** Handler for new data (after select/path extraction) */
-	next: (data: T) => void;
-	/** Optional error handler */
-	error?: (e: unknown) => void;
-}
-
-/** Utility: safe dot-path lookup ("a.b.c") */
-function pluck(obj: any, path?: string) {
-	if (!path) return obj;
-	return path.split('.').reduce((acc, key) => (acc == null ? acc : acc[key]), obj);
-}
-
-/**
- * Creates the socket, waits for ready, wires subscriptions, and returns a disposer.
- * Call this inside $effect.root in Svelte so cleanup runs on teardown/HMR.
- */
-export function setupAppSyncRealtime(
-	clientOptions: RealtimeClientOptions,
-	subs: SubscriptionSpec<any>[]
-): () => void {
-	console.log('setupAppSyncRealtime');
-	console.log('clientOptions', clientOptions);
-	console.log('subs', subs);
-	// Adapt auth to the WS client's supported modes
-	const { auth, ...rest } = clientOptions;
-	let wsAuth: AppSyncAuth;
-
-	switch (auth.mode) {
-		case 'apiKey':
-		case 'cognito':
-			wsAuth = auth as AppSyncAuth;
-			console.log('wsAuth', wsAuth);
-			break;
-		default:
-			throw new Error(`Unsupported auth mode for AppSync realtime: ${(auth as any)?.mode}`);
+	public ready(): Promise<void> {
+		return this.readyPromise;
 	}
 
-	const client = createAppSyncWsClient({ ...rest, auth: wsAuth });
-	let cancelled = false;
-	const handles: Array<{ unsubscribe: () => void }> = [];
+	public addSubscription<T>(spec: SubscriptionSpec<T>): void {
+		this.subscriptionSpecs.push(spec);
+		
+		// If already connected, set up the subscription immediately
+		if (this.isAcked) {
+			this.setupSubscription(spec);
+		}
+	}
 
-	(async () => {
-		try {
-			await client.ready();
-			if (cancelled) return;
-
-			for (const spec of subs) {
-				const selector =
-					spec.select ??
-					((payload: any) => pluck(payload, spec.path)) ??
-					((payload: any) => payload);
-
-				const h = client.subscribe({
-					query: spec.query,
-					variables: spec.variables,
-					next: (payload: any) => {
-						try {
-							const picked = selector(payload);
-							if (picked !== undefined) spec.next(picked);
-						} catch (e) {
-							(spec.error ?? console.error)('selector error', e);
-						}
-					},
-					error: spec.error ?? ((e: unknown) => console.error('subscription error', e))
-				});
-
-				handles.push(h);
+	public removeSubscription<T>(spec: SubscriptionSpec<T>): void {
+		const index = this.subscriptionSpecs.indexOf(spec);
+		if (index > -1) {
+			this.subscriptionSpecs.splice(index, 1);
+			
+			// Get the handle and unsubscribe
+			const handle = this.specToHandleMap.get(spec);
+			if (handle) {
+				handle.unsubscribe();
+				this.specToHandleMap.delete(spec);
+				
+				// Remove from handles array
+				const handleIndex = this.subscriptionHandles.indexOf(handle);
+				if (handleIndex > -1) {
+					this.subscriptionHandles.splice(handleIndex, 1);
+				}
 			}
-		} catch (e) {
-			console.warn('AppSync realtime setup failed', e);
 		}
-	})();
+	}
 
-	// disposer
-	return () => {
-		cancelled = true;
+	public getSubscriptions(): SubscriptionSpec<any>[] {
+		return [...this.subscriptionSpecs];
+	}
+
+	private setupSubscription<T>(spec: SubscriptionSpec<T>): void {
+		logger('Setting up subscription ---------------------->: ', spec);
+		const selector =
+			spec.select ??
+			((payload: any) => pluck(payload, spec.path)) ??
+			((payload: any) => payload);
+
+		const h = this.subscribe({
+			query: spec.query,
+			variables: spec.variables,
+			next: (payload: any) => {
+				try {
+					const picked = selector(payload);
+					if (picked !== undefined) spec.next(picked);
+				} catch (e) {
+					(spec.error ?? console.error)('selector error', e);
+				}
+			},
+			error: spec.error ?? ((e: unknown) => console.error('subscription error', e))
+		});
+
+		this.subscriptionHandles.push(h);
+		this.specToHandleMap.set(spec, h);
+	}
+
+	public disconnect(): void {
+		// Clean up subscriptions
+		for (const h of this.subscriptionHandles) {
+			h.unsubscribe?.();
+		}
+		this.subscriptionHandles = [];
+		this.specToHandleMap.clear();
+
+		if (this.kaTimer != null) {
+			clearInterval(this.kaTimer);
+			this.kaTimer = null;
+		}
 		try {
-			for (const h of handles) h.unsubscribe?.();
-		} finally {
-			try {
-				client.websocket?.close?.();
-			} catch {}
-		}
-	};
+			this.websocket?.close?.();
+		} catch {}
+	}
 }
 
-/** Convenience: typed factory for a path-based spec */
-export function subAtPath<T>(args: {
-	query: string;
-	path: string;
-	next: (data: T) => void;
-	variables?: Record<string, unknown>;
-	error?: (e: unknown) => void;
-}): SubscriptionSpec<T> {
-	console.log('subAtPath', args);
-	return { ...args };
-}
+
+

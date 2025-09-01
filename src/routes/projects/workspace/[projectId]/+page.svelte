@@ -1,13 +1,15 @@
 <script lang="ts">
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	// Props Section
+	// Define the Types for the Component
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-	// Import the SvelteKit Types for the Page Properties
 	import type { PageProps } from './$types';
 	import type { DocumentAndPages, Page } from '$lib/types/Document';
+	import type { Project } from '$lib/types/Project';
 
-	// Get the Props for the Component
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Props Section
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Define the Props for the Component
 	let componentProps: PageProps = $props();
 
 	// Get the authenticated current User from the Load Data
@@ -17,43 +19,26 @@
 	let idToken = componentProps.data.idToken!;
 
 	let project = $state(componentProps.data.project);
-	$inspect('The project is', project);
+	// $inspect('The project is', project);
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Realtime Section
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-	// 1. Import public environment variables for GraphQL endpoint and API key
+	// Define the public environment variables for GraphQL endpoint and API key
 	import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from '$env/static/public';
 
-	// 2. Import types for user items
-	import type { Project } from '$lib/types/Project';
-
 	// 3. Import realtime subscription setup and helper for extracting data at a path
-	import { gql, setupAppSyncRealtime, subAtPath } from '$lib/realtime/websocket/AppSyncWsClient';
+	import { AppSyncWsClient, gql } from '$lib/realtime/websocket/AppSyncWsClient';
 
 	// 4. Import list operations for Project
 	import { createListOps } from '$lib/realtime/websocket/ListOperations';
 
 	// 5. Import GraphQL subscription queries for create, update, and delete events
-	// import { Q_LIST_USER_PROJECTS } from '$lib/realtime/graphql/Projects/queries';
 	import { Q_GET_DOCUMENT_AND_PAGES } from '$lib/realtime/graphql/Documents/queries';
-	import { M_UPDATE_PROJECT } from '$lib/realtime/graphql/Projects/mutations';
-	import {
-		S_CREATE_PROJECT,
-		S_UPDATE_PROJECT,
-		S_DELETE_PROJECT
-	} from '$lib/realtime/graphql/Projects/subscriptions';
-	import {
-		S_CREATE_DOCUMENT,
-		S_UPDATE_DOCUMENT,
-		S_DELETE_DOCUMENT
-	} from '$lib/realtime/graphql/Documents/subscriptions';
-	import {
-		S_CREATE_PAGE,
-		S_UPDATE_PAGE,
-		S_DELETE_PAGE
-	} from '$lib/realtime/graphql/Pages/subscriptions';
+	import { updateProject } from '$lib/realtime/graphql/Projects/mutations';
+
+	import { S_PROJECT_UPDATED_BY_ID } from '$lib/realtime/graphql/Projects/subscriptions';
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Data Section
@@ -68,52 +53,18 @@
 		keyFor: (it) => it.id
 	});
 
-	async function updateProject(project: Project, idToken: string) {
-		const mutation = M_UPDATE_PROJECT;
-		// Extract only the fields that can be updated according to UpdateProjectInput
-		const input = {
-			id: project.id,
-			name: project.name,
-			description: project.description,
-			image: project.image,
-			address: project.address,
-			city: project.city,
-			state: project.state,
-			zip: project.zip,
-			country: project.country,
-			assetType: project.assetType,
-			status: project.status,
-			isActive: project.isActive,
-			isArchived: project.isArchived,
-			isDeleted: project.isDeleted,
-			isPublic: project.isPublic,
-			members: project.members,
-			documents: project.documents,
-			tags: project.tags
-		};
-		console.log('input', JSON.stringify(input, null, 2));
-		try {
-			const res = await gql<{ updateProject: Project }>(mutation, { input }, idToken);
-			return res.updateProject;
-		} catch (e) {
-			console.error('Error updating project:', e);
-			throw e;
-		}
-	}
-
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Effects Section
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 	// Watch for document changes and update project via GraphQL
 	$effect(() => {
-		console.log('in effect -=-=-=-=-=-=-=-=-= +++');
 		if (project?.documents && idToken) {
 			// Debounce the update to avoid excessive API calls
 			const timeoutId = setTimeout(async () => {
 				try {
 					await updateProject(project, idToken);
-					console.log('Project updated successfully after document change');
+					logger('Project updated successfully after document change');
 				} catch (error) {
 					console.error('Failed to update project:', error);
 				}
@@ -134,160 +85,32 @@
 			return;
 		}
 
-		console.log('Setting up WebSocket subscriptions for project:', project.id);
+		logger('Setting up WebSocket subscriptions for project:', project.id);
 
-		const dispose = setupAppSyncRealtime(
+		const client = new AppSyncWsClient(
 			{
 				graphqlHttpUrl: PUBLIC_GRAPHQL_HTTP_ENDPOINT,
-				auth: { mode: 'cognito', idToken }
-			},
-			[
-				// Subscribe to "create" events and upsert new items into the list
-				subAtPath<Project>({
-					query: S_CREATE_PROJECT,
-					path: 'onProjectCreated',
-					next: (it) => {
-						if (it && it.id) {
-							projectListOps.upsertMutable([project], it);
-						}
-					}
-				}),
-				// Subscribe to "update" events and upsert updated items into the list
-				subAtPath<Project>({
-					query: S_UPDATE_PROJECT,
-					path: 'onProjectUpdated',
-					next: (it) => {
-						if (it && it.id) {
-							projectListOps.upsertMutable([project], it);
-						}
-					}
-				}),
-				// Subscribe to "delete" events and remove deleted items from the list
-				subAtPath<Project>({
-					query: S_DELETE_PROJECT,
-					path: 'onProjectDeleted',
-					next: (it) => {
-						if (it && it.id) {
-							projectListOps.removeMutable([project], it);
-						}
-					}
-				}),
-				
-				// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-				// Document Subscriptions - Listen for document changes and refresh page data
-				// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-				
-				// Subscribe to document creation events
-				subAtPath<DocumentAndPages>({
-					query: S_CREATE_DOCUMENT,
-					path: 'onDocumentCreated',
-					next: (doc) => {
-						if (doc && doc.docHash) {
-							console.log('New document created:', doc);
-							// Refresh document data when a new document is created
-							if (project?.documents?.some(d => d.id === doc.docHash)) {
-								refreshDocumentPages();
+				auth: { mode: 'cognito', idToken },
+				subscriptions: [
+					{
+						query: S_PROJECT_UPDATED_BY_ID,
+						variables: { id: project.id },
+						path: 'onProjectUpdated',
+						next: (it: Project) => {
+							if (it && it.id) {
+								projectListOps.upsertMutable([project], it);
 							}
 						}
 					}
-				}),
-				// Subscribe to document update events
-				subAtPath<DocumentAndPages>({
-					query: S_UPDATE_DOCUMENT,
-					path: 'onDocumentUpdated',
-					next: (doc) => {
-						if (doc && doc.docHash) {
-							console.log('Document updated:', doc);
-							// Refresh document data when a document is updated
-							if (project?.documents?.some(d => d.id === doc.docHash)) {
-								refreshDocumentPages();
-							}
-						}
-					}
-				}),
-				// Subscribe to document deletion events
-				subAtPath<DocumentAndPages>({
-					query: S_DELETE_DOCUMENT,
-					path: 'onDocumentDeleted',
-					next: (doc) => {
-						if (doc && doc.docHash) {
-							console.log('Document deleted:', doc);
-							// Refresh document data when a document is deleted
-							if (project?.documents?.some(d => d.id === doc.docHash)) {
-								refreshDocumentPages();
-							}
-						}
-					}
-				}),
-				
-				// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-				// Page Subscriptions - Listen for page changes and refresh document data
-				// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-				
-				// Subscribe to page creation events
-				subAtPath<Page>({
-					query: S_CREATE_PAGE,
-					path: 'onPageCreated',
-					next: (page) => {
-						if (page && page.docHash) {
-							console.log('New page created:', page);
-							// Refresh document data when a new page is created
-							if (project?.documents?.some(d => d.id === page.docHash)) {
-								refreshDocumentPages();
-							}
-						}
-					}
-				}),
-				// Subscribe to page update events
-				subAtPath<Page>({
-					query: S_UPDATE_PAGE,
-					path: 'onPageUpdated',
-					next: (page) => {
-						if (page && page.docHash) {
-							console.log('Page updated:', page);
-							// Refresh document data when a page is updated
-							if (project?.documents?.some(d => d.id === page.docHash)) {
-								refreshDocumentPages();
-							}
-						}
-					}
-				}),
-				// Subscribe to page deletion events
-				subAtPath<Page>({
-					query: S_DELETE_PAGE,
-					path: 'onPageDeleted',
-					next: (page) => {
-						if (page && page.docHash) {
-							console.log('Page deleted:', page);
-							// Refresh document data when a page is deleted
-							if (project?.documents?.some(d => d.id === page.docHash)) {
-								refreshDocumentPages();
-							}
-						}
-					}
-				})
-			]
+				]
+			}
 		);
 
 		// Return disposer to clean up subscriptions on component unmount/HMR
-		return dispose;
+		return () => client.disconnect();
 	});
 
-	import { Tabs, TabItem } from 'flowbite-svelte';
-	import { Spinner } from 'flowbite-svelte';
-	import PdfViewer from 'svelte-pdf';
-
-	// Import Svelte Components
-	import UploadArea from '$lib/components/Upload/UploadArea.svelte';
-	import SourceCard from '$lib/components/Upload/SourceCard.svelte';
-	import ProgressBar from '$lib/components/Upload/ProgressBar.svelte';
-	import RightChatDrawer from '$lib/components/RightChatDrawer.svelte';
-	import { ui } from '$lib/stores/ui.svelte';
-	import WorkspaceHeaderBar from '$lib/components/workspace/WorkspaceHeaderBar.svelte';
-	import GetStarted from '$lib/components/workspace/GetStarted.svelte';
-	import { getPageS3Url } from '$lib/realtime/utils/s3urls';
-
-	// Data defined for this component
+	// Data defined for this component - Source Cards
 	const sourceCards = [
 		{
 			title: 'PDF Documents',
@@ -311,11 +134,11 @@
 	let documentAndPages: DocumentAndPages | null = $state(null);
 
 	async function getDocumentPages() {
-		console.log('getDocumentPages');
+		logger('getDocumentPages');
 
 		// Check if project has documents
 		if (!project?.documents?.length) {
-			console.log('No documents in project');
+			logger('No documents in project');
 			documentAndPages = null;
 			return;
 		}
@@ -340,7 +163,7 @@
 		}
 
 		documentAndPages = response.getDocument;
-		console.log('Document pages updated:', documentAndPages);
+		logger('Document pages updated:', documentAndPages);
 	}
 
 	// Helper function to refresh document pages when documents change
@@ -350,8 +173,22 @@
 		}
 	}
 
-	// let currentCount = 2;
-	// const maxCount = 20;
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Load the Flowbite Svelte components
+	import { Tabs, TabItem } from 'flowbite-svelte';
+	import { Spinner } from 'flowbite-svelte';
+	import PdfViewer from 'svelte-pdf';
+
+	// Import Application Svelte Components
+	import UploadArea from '$lib/components/Upload/UploadArea.svelte';
+	import SourceCard from '$lib/components/Upload/SourceCard.svelte';
+	import ProgressBar from '$lib/components/Upload/ProgressBar.svelte';
+	import RightChatDrawer from '$lib/components/RightChatDrawer.svelte';
+	import { ui } from '$lib/stores/ui.svelte';
+	import WorkspaceHeaderBar from '$lib/components/workspace/WorkspaceHeaderBar.svelte';
+	import GetStarted from '$lib/components/workspace/GetStarted.svelte';
+	import { getPageS3Url } from '$lib/realtime/utils/s3urls';
+	import { logger } from '$lib/logging/debug';
 </script>
 
 <!-- Full viewport split: main app + right chat drawer -->

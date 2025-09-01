@@ -53,3 +53,8 @@ export function createListOps<T>(opts: { keyFor: KeyFn<T>; normalize?: Normalize
 	return { keyFor: opts.keyFor, normalize: norm, upsertMutable, removeMutable, upsert, remove };
 }
 
+// Pre-configured list operations for UserItem
+export const userItemOps = createListOps({
+	keyFor: keyJoin('entityType', 'entityId')
+});
+

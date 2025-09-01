@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { ui } from '$lib/stores/ui.svelte';
 	import Button from '$lib/ui/Button.svelte';
+	import { DarkMode } from 'flowbite-svelte';
 
     let { projectName } = $props<{ projectName: string }>();
-    console.log('projectName', projectName);
 </script>
 
 <header
@@ -18,6 +18,7 @@
 	</div>
 	<div class="text-xs opacity-70"></div>
 	<div class="flex items-center gap-3">
+		<DarkMode class="text-primary-500 dark:text-primary-600 border dark:border-gray-800" />
 		<Button href="/support" icon>Help & Documentation</Button>
 
 		<Button onclick={() => (ui.sidebarOpen = !ui.sidebarOpen)}>

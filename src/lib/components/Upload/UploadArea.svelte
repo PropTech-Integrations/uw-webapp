@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { logger } from '$lib/logging/debug';
 	import { TrashBinOutline } from 'flowbite-svelte-icons';
 
 	type Document = {
@@ -7,10 +8,10 @@
 	};
 
 	let { documents = $bindable() } = $props<{ documents: Document[] }>();
-	// console.log('documents', documents);
+	// logger('documents', documents);
 
 	let files: { file: File; uploading: boolean; progress: number; result: { success: boolean; message: string; sha256?: string } | null }[] = $state([]);
-	$inspect(files);
+	// $inspect(files);
 
 	// If documents is not empty, set files to the documents
 	if (documents.length > 0) {
@@ -29,7 +30,7 @@
 		const input = e.currentTarget as HTMLInputElement;
 		if (!input.files?.length) return;
 		const fileList = Array.from(input.files);
-		console.log('fileList', fileList);
+		logger('fileList', fileList);
 		await addAndUploadFiles(fileList);
 		input.value = ''; // allow re-upload of same file(s)
 	}
@@ -120,7 +121,7 @@
 		bind:this={fileInput}
 		onchange={handleFileChange}
 	/>
-	<svg class="mb-4 h-10 w-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="mb-4 h-10 w-10  " fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -128,24 +129,24 @@
 			d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2m-4-4l-4-4m0 0l-4 4m4-4v12"
 		/>
 	</svg>
-	<p class="text-lg font-medium text-gray-700">Upload sources</p>
-	<p class="text-sm text-center text-gray-500">
+	<p class="text-lg font-medium  ">Upload sources</p>
+	<p class="text-sm text-center  ">
 		Drag & drop<br/>or <span
-			class="cursor-pointer text-blue-600 underline"
+			class="cursor-pointer underline"
 			onclick={() => fileInput.click()}
 			onkeydown={handleKeydown}
 			tabindex="0"
 			role="button">click</span
 		> to upload
 	</p>
-	<p class="mt-2 text-xs text-gray-400">
+	<p class="mt-2 text-xs  ">
 		Supported file types: PDF
 	</p>
 </div>
 
 {#if files.length}
-	<table class="min-w-full mt-4 text-sm text-left text-gray-500 border rounded-lg">
-		<thead class="bg-gray-50">
+	<table class="min-w-full mt-4 text-sm text-left  border rounded-lg">
+		<thead class="bg-gray-50 dark:bg-gray-800">
 			<tr>
 				<th class="px-4 py-2">Your Documents</th>
 				<th class="px-4 py-2 w-12"></th>

@@ -5,19 +5,18 @@ URL: https://flowbite.com/docs/components/typography/
 -->
 
 <main class="pb-16 lg:pb-24 bg-white dark:bg-gray-900 antialiased">
-    <header class="bg-[url('https://flowbite.s3.amazonaws.com/blocks/marketing-ui/articles/background.png')] w-full h-[460px] xl:h-[537px] bg-no-repeat bg-cover bg-center bg-blend-darken relative">
+    <header class="bg-[url('https://flowbite.s3.amazonaws.com/blocks/marketing-ui/articles/background.png')] w-full h-[390px] xl:h-[437px] bg-no-repeat bg-cover bg-center bg-blend-darken relative">
         <div class="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50"></div>
         <div class="absolute top-20 left-1/2 px-4 mx-auto w-full max-w-screen-xl -translate-x-1/2 xl:top-1/2 xl:-translate-y-1/2 xl:px-0">
-            <span class="block mb-4 text-gray-300">Published in <a href="#" class="font-semibold text-white hover:underline">World News</a></span>
-            <h1 class="mb-4 max-w-4xl text-2xl font-extrabold leading-none text-white sm:text-3xl lg:text-4xl">Flowbite Blocks Tutorial - Learn how to get started with custom sections using the Flowbite Blocks</h1>
-            <p class="text-lg font-normal text-gray-300">Before going digital, you might scribbling down some ideas in a sketchbook.</p>
+            <span class="block mb-4 text-gray-300">Published in <a href="#" class="font-semibold text-white hover:underline">StratiqAI Today</a></span>
+            <h1 class="mb-4 max-w-4xl text-2xl font-extrabold leading-none text-white sm:text-3xl lg:text-4xl">Getting Started with Valuation in Commercial Real Estate Investments</h1>
         </div>
     </header>
     <div class="flex relative z-20 justify-between p-6 -m-36 mx-4 max-w-screen-xl bg-white dark:bg-gray-800 rounded xl:-m-32 xl:p-9 xl:mx-auto">
         <article class="xl:w-[828px] w-full max-w-none format format-sm sm:format-base lg:format-lg format-blue dark:format-invert">
             <div class="flex flex-col lg:flex-row justify-between lg:items-center">
                 <div class="flex items-center space-x-3 text-gray-500 dark:text-gray-400 text-base mb-2 lg:mb-0">
-                    <span>By <a href="#" class="text-gray-900 dark:text-white hover:underline no-underline font-semibold">Jese Leos</a></span>
+                    <span>By <a href="#" class="text-gray-900 dark:text-white hover:underline no-underline font-semibold">A Classy Investor</a></span>
                     <span class="bg-gray-300 dark:bg-gray-400 w-2 h-2 rounded-full"></span>
                     <span><time class="font-normal text-gray-500 dark:text-gray-400" pubdate datetime="2022-03-08" title="August 3rd, 2022">August 3, 2022, 2:20am EDT</time></span>
                 </div>
@@ -99,15 +98,9 @@ URL: https://flowbite.com/docs/components/typography/
                     </div>
                 </aside>
             </div>
-            <p class="lead">Flowbite is an open-source library of UI components built with the utility-first
-                classes from Tailwind CSS. It also includes interactive elements such as dropdowns, modals,
-                datepickers.</p>
-            <p>Before going digital, you might benefit from scribbling down some ideas in a sketchbook. This way,
-                you can think things through before committing to an actual design project.</p>
-            <p>But then I found a <a href="https://flowbite.com">component library based on Tailwind CSS called
-                    Flowbite</a>. It comes with the most commonly used UI components, such as buttons, navigation
-                bars, cards, form elements, and more which are conveniently built with the utility classes from
-                Tailwind CSS.</p>
+            <p class="lead">Commercial real estate (CRE) can be one of the most rewarding asset classes for investors. From office buildings and retail centers to multifamily apartments and industrial warehouses, CRE offers both income potential and long-term appreciation. But before you commit capital, one of the most important skills you need is the ability to value a property accurately.</p>
+
+            <p>This guide will walk you through the fundamentals of getting started with CRE valuation.</p>
             <figure><img src="https://flowbite.s3.amazonaws.com/typography-plugin/typography-image-1.png" alt="" class="mx-auto">
                 <figcaption>Digital art by Anonymous</figcaption>
             </figure>
@@ -369,7 +362,7 @@ URL: https://flowbite.com/docs/components/typography/
                             <p class="inline-flex items-center mr-3 font-semibold text-sm text-gray-900 dark:text-white"><img
                                     class="mr-2 w-6 h-6 rounded-full"
                                     src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                                    alt="Jese Leos">Jese Leos</p>
+                                    alt="A Classy Investor">A Classy Investor</p>
                             <p class="text-sm text-gray-600 dark:text-gray-400"><time pubdate datetime="2022-02-12"
                                     title="February 12th, 2022">Feb. 12, 2022</time></p>
                         </div>
