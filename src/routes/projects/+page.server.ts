@@ -11,9 +11,9 @@ import type { PageServerLoad } from './$types';
 
 // ---------------------------------------------------------------------------------
 // Import the GraphQL helper for making HTTP requests to AppSync
-import { gql } from '$lib/realtime/websocket/AppSyncWsClient';
+import { gql } from '$lib/realtime/graphql/requestHandler';
 // Import the GraphQL query and mutation strings
-import { Q_LIST_USER_PROJECTS } from '$lib/realtime/graphql/Projects/queries';
+import { Q_LIST_USER_PROJECTS } from '$lib/realtime/graphql/queries/Project';
 
 // Import the UserItem type definition
 import type { Project } from '$lib/types/Project';

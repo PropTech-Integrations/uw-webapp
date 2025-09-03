@@ -62,39 +62,6 @@ import type {
 } from './types';
 import { toRealtimeUrl, base64Url, safeJsonParse, uuid, pluck } from './utils';
 
-/**
- * Executes a GraphQL query or mutation against the AppSync HTTP endpoint.
- *
- * @template T - The expected shape of the response data.
- * @param {string} query - The GraphQL query or mutation string.
- * @param {Record<string, any>} [variables={}] - Variables for the GraphQL operation.
- * @param {string} idToken - The Cognito ID token for authentication.
- * @returns {Promise<T>} - Resolves with the data returned from the GraphQL endpoint.
- * @throws {Error} - Throws if the response contains GraphQL errors.
- */
-export async function gql<T>(
-	query: string,
-	variables: Record<string, any> = {},
-	idToken: string
-): Promise<T> {
-	const headers: Record<string, string> = {
-		'content-type': 'application/json',
-		Authorization: idToken
-	};
-	// logger('GraphQL Request ------------------------------------');
-	// logger('headers', headers);
-	// logger('body', JSON.stringify({ query, variables }));
-	// logger('----------------------------------------------------');
-	const res = await fetch(PUBLIC_GRAPHQL_HTTP_ENDPOINT, {
-		method: 'POST',
-		headers,
-		body: JSON.stringify({ query, variables })
-	});
-	const body = await res.json();
-	if (body.errors?.length) throw new Error(body.errors.map((e: any) => e.message).join('; '));
-	return body.data as T;
-}
-
 export class AppSyncWsClient implements TAppSyncWsClient {
 	public websocket: WebSocket;
 	private isAcked = false;
@@ -113,12 +80,19 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 	private subscriptionHandles: Array<{ unsubscribe: () => void }> = [];
 	private specToHandleMap = new Map<SubscriptionSpec<any>, { unsubscribe: () => void }>();
 
-	constructor(options: {
-		graphqlHttpUrl: string;
-		auth: AppSyncAuth;
-		onEvent?: (frame: any) => void;
-		subscriptions?: SubscriptionSpec<any>[];
-	} | RealtimeClientOptions & { subscriptions?: SubscriptionSpec<any>[] }) {
+	private queue: any[] = [];
+	private scheduled = false;
+
+	constructor(
+		options:
+			| {
+					graphqlHttpUrl: string;
+					auth: AppSyncAuth;
+					onEvent?: (frame: any) => void;
+					subscriptions?: SubscriptionSpec<any>[];
+			  }
+			| (RealtimeClientOptions & { subscriptions?: SubscriptionSpec<any>[] })
+	) {
 		// Only run on the client (not during SSR)
 		if (typeof window === 'undefined') {
 			throw new Error('AppSync WS client must run in the browser');
@@ -126,7 +100,7 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 
 		// Extract properties from the union type
 		const { graphqlHttpUrl, auth, onEvent, subscriptions } = options as any;
-		
+
 		this.auth = auth;
 		this.onEvent = onEvent;
 		this.subscriptionSpecs = subscriptions || [];
@@ -157,6 +131,19 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 		this.setupWebSocketEventListeners();
 	}
 
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Ready State Management
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+	public ready(): Promise<void> {
+		return this.readyPromise;
+	}
+
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Setup WebSocket Event Listeners
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+	// The websocket has 3 event listeners: open, message, error and close
 	private setupWebSocketEventListeners(): void {
 		// Add event listener for open event
 		this.websocket.addEventListener('open', () => {
@@ -173,6 +160,38 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 		});
 	}
 
+	public disconnect(): void {
+		// Clean up subscriptions
+		for (const h of this.subscriptionHandles) {
+			h.unsubscribe?.();
+		}
+		this.subscriptionHandles = [];
+		this.specToHandleMap.clear();
+
+		if (this.kaTimer != null) {
+			clearInterval(this.kaTimer);
+			this.kaTimer = null;
+		}
+		try {
+			this.websocket?.close?.();
+		} catch {}
+	}
+
+	private handleClose(): void {
+		if (!this.isAcked) this.rejectReady(new Error('Socket closed before connection_ack'));
+		this.isAcked = false;
+
+		// Stop the keep-alive timer
+		if (this.kaTimer != null) {
+			clearInterval(this.kaTimer);
+			this.kaTimer = null;
+		}
+	}
+
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// WebSocket Message Dispatching Handlers
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 	private handleMessage(evt: MessageEvent): void {
 		// Parse the message
 		const msg = safeJsonParse(String(evt.data));
@@ -181,7 +200,9 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 		if (!msg) return;
 
 		// Log the message
-		logger(`msg ${msg.type}`, msg);
+		if (msg.type != 'ka') {
+			logger(`msg ${msg.type}`, msg);
+		}
 
 		// Call the onEvent callback
 		this.onEvent?.(msg);
@@ -198,7 +219,8 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 				this.handleStartAck();
 				break;
 			case 'data':
-				this.handleData(msg);
+				this.queue.push(msg);
+				this.scheduleFlush();
 				break;
 			case 'error':
 				this.handleError(msg);
@@ -208,6 +230,16 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 				break;
 		}
 	}
+
+	private scheduleFlush = () => {
+		if (this.scheduled) return;
+		this.scheduled = true;
+		queueMicrotask(() => {
+			for (const msg of this.queue) this.handleData(msg);
+			this.queue = [];
+			this.scheduled = false;
+		});
+	};
 
 	private handleConnectionAck(msg: any): void {
 		this.isAcked = true;
@@ -260,20 +292,9 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 		this.subs.delete(msg.id);
 	}
 
-	private async setupSubscriptions(): Promise<void> {
-		for (const spec of this.subscriptionSpecs) {
-			this.setupSubscription(spec);
-		}
-	}
-
-	private handleClose(): void {
-		if (!this.isAcked) this.rejectReady(new Error('Socket closed before connection_ack'));
-		this.isAcked = false;
-		if (this.kaTimer != null) {
-			clearInterval(this.kaTimer);
-			this.kaTimer = null;
-		}
-	}
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Send Message to the WebSocket
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 	private send(obj: any): boolean {
 		if (this.websocket.readyState === WebSocket.OPEN) {
@@ -281,6 +302,51 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 			return true;
 		}
 		return false;
+	}
+
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Subscriptions Management
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Create Subscriptions
+
+	public addSubscription<T>(spec: SubscriptionSpec<T>): void {
+		this.subscriptionSpecs.push(spec);
+
+		// If already connected, set up the subscription immediately
+		if (this.isAcked) {
+			this.setupSubscription(spec);
+		}
+	}
+
+	private async setupSubscriptions(): Promise<void> {
+		for (const spec of this.subscriptionSpecs) {
+			this.setupSubscription(spec);
+		}
+	}
+
+	private setupSubscription<T>(spec: SubscriptionSpec<T>): void {
+		logger('Setting up subscription ---------------------->: ', spec);
+		const selector =
+			spec.select ?? ((payload: any) => pluck(payload, spec.path)) ?? ((payload: any) => payload);
+
+		const h = this.subscribe({
+			query: spec.query,
+			variables: spec.variables,
+			next: (payload: any) => {
+				try {
+					const picked = selector(payload);
+					if (picked !== undefined) spec.next(picked);
+				} catch (e) {
+					(spec.error ?? console.error)('selector error', e);
+				}
+			},
+			error: spec.error ?? ((e: unknown) => console.error('subscription error', e))
+		});
+
+		this.subscriptionHandles.push(h);
+		this.specToHandleMap.set(spec, h);
 	}
 
 	public subscribe<T = unknown>(params: SubscribeOptions<T>): { id: string; unsubscribe(): void } {
@@ -318,30 +384,21 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 		};
 	}
 
-	public ready(): Promise<void> {
-		return this.readyPromise;
-	}
-
-	public addSubscription<T>(spec: SubscriptionSpec<T>): void {
-		this.subscriptionSpecs.push(spec);
-		
-		// If already connected, set up the subscription immediately
-		if (this.isAcked) {
-			this.setupSubscription(spec);
-		}
-	}
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Remove Subscriptions
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 	public removeSubscription<T>(spec: SubscriptionSpec<T>): void {
 		const index = this.subscriptionSpecs.indexOf(spec);
 		if (index > -1) {
 			this.subscriptionSpecs.splice(index, 1);
-			
+
 			// Get the handle and unsubscribe
 			const handle = this.specToHandleMap.get(spec);
 			if (handle) {
 				handle.unsubscribe();
 				this.specToHandleMap.delete(spec);
-				
+
 				// Remove from handles array
 				const handleIndex = this.subscriptionHandles.indexOf(handle);
 				if (handleIndex > -1) {
@@ -351,52 +408,10 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 		}
 	}
 
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Get Subscriptions
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	public getSubscriptions(): SubscriptionSpec<any>[] {
 		return [...this.subscriptionSpecs];
 	}
-
-	private setupSubscription<T>(spec: SubscriptionSpec<T>): void {
-		logger('Setting up subscription ---------------------->: ', spec);
-		const selector =
-			spec.select ??
-			((payload: any) => pluck(payload, spec.path)) ??
-			((payload: any) => payload);
-
-		const h = this.subscribe({
-			query: spec.query,
-			variables: spec.variables,
-			next: (payload: any) => {
-				try {
-					const picked = selector(payload);
-					if (picked !== undefined) spec.next(picked);
-				} catch (e) {
-					(spec.error ?? console.error)('selector error', e);
-				}
-			},
-			error: spec.error ?? ((e: unknown) => console.error('subscription error', e))
-		});
-
-		this.subscriptionHandles.push(h);
-		this.specToHandleMap.set(spec, h);
-	}
-
-	public disconnect(): void {
-		// Clean up subscriptions
-		for (const h of this.subscriptionHandles) {
-			h.unsubscribe?.();
-		}
-		this.subscriptionHandles = [];
-		this.specToHandleMap.clear();
-
-		if (this.kaTimer != null) {
-			clearInterval(this.kaTimer);
-			this.kaTimer = null;
-		}
-		try {
-			this.websocket?.close?.();
-		} catch {}
-	}
 }
-
-
-

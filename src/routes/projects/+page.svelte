@@ -40,7 +40,7 @@
 		S_PROJECT_CREATED,
 		S_PROJECT_UPDATED,
 		S_PROJECT_DELETED
-	} from '$lib/realtime/graphql/Projects/subscriptions';
+	} from '$lib/realtime/graphql/subscriptions/Project';
 
 	// 6. Create reactive state for Project list
 	let projects = $state<Project[]>(componentProps.data?.items);
@@ -213,7 +213,7 @@
 				<TableBodyRow class="border-gray-200 text-base">
 					<TableBodyCell class="w-4 p-4"><Checkbox /></TableBodyCell>
 					<TableBodyCell class="mr-12 flex items-center space-x-6 whitespace-nowrap p-4">
-						<a href={`/projects/workspace/${project.id}`} class="group flex items-center space-x-6">
+						<a href={`/projects/workspace/${project.id}/get-started`} class="group flex items-center space-x-6">
 							<Avatar src={project.image || ''} size="lg" cornerStyle="rounded" />
 							<div class="text-sm font-normal text-gray-500 dark:text-gray-300">
 								<div

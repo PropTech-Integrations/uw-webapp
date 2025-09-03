@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button, Input, Label, Modal, Textarea, Checkbox, Select } from 'flowbite-svelte';
 	import type { UserModalProps } from '../../../../uw-ai-plane/types';
-	import { gql } from '$lib/realtime/websocket/AppSyncWsClient';
+	import { gql } from '$lib/realtime/graphql/requestHandler';
 	import type { UserItem } from '$lib/types/UserItem';
 
 	// GraphQL mutations for create/update

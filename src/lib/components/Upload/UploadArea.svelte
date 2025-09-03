@@ -8,6 +8,7 @@
 	};
 
 	let { documents = $bindable() } = $props<{ documents: Document[] }>();
+	$inspect(documents);
 	// logger('documents', documents);
 
 	let files: { file: File; uploading: boolean; progress: number; result: { success: boolean; message: string; sha256?: string } | null }[] = $state([]);
@@ -106,7 +107,7 @@
 </script>
 
 <div
-	class="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-2 transition hover:border-gray-400"
+	class="flex cursor-pointer flex-col items-center justify-center border-2 border-dashed rounded-md border-gray-300 dark:border-gray-500 p-2 pb-4 transition hover:border-gray-300"
 	tabindex="0"
 	role="button"
 	onkeydown={handleKeydown}
@@ -121,7 +122,7 @@
 		bind:this={fileInput}
 		onchange={handleFileChange}
 	/>
-	<svg class="mb-4 h-10 w-10  " fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="mb-4 h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -145,8 +146,8 @@
 </div>
 
 {#if files.length}
-	<table class="min-w-full mt-4 text-sm text-left  border rounded-lg">
-		<thead class="bg-gray-50 dark:bg-gray-800">
+	<table class="min-w-full mt-4 text-sm text-left border border-gray-300 dark:border-gray-500">
+		<thead class="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-500">
 			<tr>
 				<th class="px-4 py-2">Your Documents</th>
 				<th class="px-4 py-2 w-12"></th>
@@ -154,7 +155,7 @@
 		</thead>
 		<tbody>
 			{#each files as f, idx}
-				<tr class="border-b last:border-b-0">
+				<tr class="border-b last:border-b-0 border border-gray-300 dark:border-gray-500">
 					<td class="px-4 py-2">
 						<div>
 							<span>{f.file.name}</span>
@@ -173,7 +174,7 @@
 							<progress class="w-full mt-1" max="100" value={f.progress}></progress>
 						{/if}
 					</td>
-					<td class="px-4 py-2 text-center">
+					<td class="px-4 py-2 text-center ">
 						<button
 							type="button"
 							class="text-red-500 hover:text-red-700"

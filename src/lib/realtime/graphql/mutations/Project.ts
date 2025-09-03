@@ -1,5 +1,5 @@
 import type { Project } from "$lib/types/Project";
-import { gql } from "$lib/realtime/websocket/AppSyncWsClient";
+import { gql } from "$lib/realtime/graphql/requestHandler";
 
 export const M_CREATE_PROJECT = `
     mutation createProject($input: CreateProjectInput!) {
