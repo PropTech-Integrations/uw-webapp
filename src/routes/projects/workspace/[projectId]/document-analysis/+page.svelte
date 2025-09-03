@@ -3,10 +3,11 @@
     import { getPageS3Url } from '$lib/utils/s3urls';
 	import type { DocumentAndPages } from '$lib/types/Document';
     import type { PageProps } from './$types';
-    // import { project } from '$lib/stores/project.svelte';
+    import { project as projectStore } from '$lib/stores/project.svelte';
     
     let { data }: PageProps = $props();
-    let project = $derived(data.project);
+    // Use reactive project store instead of static data
+    let project = $derived($projectStore);
 	// let documentAndPages: DocumentAndPages | null = $state(null);
 </script>
 

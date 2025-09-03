@@ -24,14 +24,17 @@
 	// The Workspace Layout uses the project store for reactive project data
 	let project = $derived(data.project);
 
-	// // Sync server data to client store (only in browser)
-	// if (browser) {
-	// 	$effect(() => {
-	// 		if (project) {
-	// 			setProject(project);
-	// 		}
-	// 	});
-	// }
+	// Import project store for synchronization
+	import { project as projectStore, setProject, updateProject } from '$lib/stores/project.svelte';
+
+	// Sync server data to client store (only in browser)
+	if (browser) {
+		$effect(() => {
+			if (project) {
+				setProject(project);
+			}
+		});
+	}
 
 	$inspect(project);
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -89,6 +92,10 @@
 					path: 'onProjectUpdated',
 					next: (it: Project) => {
 						project = it;
+						// Update the global project store so all child pages stay in sync
+						if (browser) {
+							setProject(it);
+						}
 						logger(`Project ${it.id} updated:`, it);
 					},
 					error: (err) => console.error('project sub error', err)
@@ -139,8 +146,7 @@
 					<TabButton href="investment-analysis">Investment Analysis</TabButton>
 					<TabButton href="reports">Reports</TabButton>
 				</div>
-				{@render children({ project: project })}
-                <!-- {@render children()} -->
+				{@render children()}
 			</div>
 		</div>
 	</div>
