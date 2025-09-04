@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Import Types and Data Stores
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -15,28 +16,26 @@
 
 	// The project store holds the state for the workspace. It's initialized from data loaded
 	// on the server side and passed to the client.
-	import { project as projectStore } from '$lib/stores/project.svelte';
-    console.log("projectStore: ", projectStore);
-	type PageItem = { id?: string; pageNumber?: number | null };
-	type Pages = { items?: PageItem[] | null };
-	type DocInput = {
-		s3Bucket: string;
-
-		docHash: string;
-		pages?: Pages | null;
-	};
+	import { project as projectStore, documents as documentsStore } from '$lib/stores/project.svelte';
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	// Props and State Variables
+	// Props, Stores, and State Variables
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	let { data }: PageProps = $props();
 	let { idToken } = data;
 
-	// Use reactive project store instead of static data
 	let project: Project = $derived($projectStore)!;
-	let documentAndPages: Document | null = $state(null);
-	let currentDocument = $state<string | null>(null);
+	let documents: Document[] = $derived($documentsStore);
+	let currentDocHash: string | null = $derived(documents?.[0]?.docHash ?? null);
+    $inspect('currentDocHash: ', currentDocHash);
+	let currentDocument: Document | null = $derived(
+		documents?.find((doc) => doc.docHash === currentDocHash) ?? null
+	);
 
+	// if (browser) {
+	//     $inspect('currentDocHash: ', currentDocHash);
+	// }
+	// $inspect('currentDocument: ', currentDocument);
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	// Import Application Utility Functions
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -64,74 +63,53 @@
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	// Svelte Component Functions
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-	function buildS3PageUrls(doc: DocInput, opts?: { region?: string }): string[] {
-		const region = opts?.region ?? 'us-west-2';
-		const bucket = (doc.s3Bucket || '').trim();
-		const docHash = (doc.docHash || '').trim();
 
-		if (!bucket) throw new Error('s3Bucket is required');
-		if (!docHash) throw new Error('docHash is required');
+	// const fetchDocument = async (id: string) => {
+	// 	console.log('Fetching document:', id);
+	// 	const response = await gql<{ document: Document }>(
+	// 		Q_DOCUMENT_BY_ID,
+	// 		{ id }, // Pass documentId as variable
+	// 		idToken
+	// 	);
+	// 	// Log the response for debugging
+	// 	console.log('Here is the response===========================:> ', response);
 
-		const items = doc.pages?.items ?? [];
-		if (!Array.isArray(items) || items.length === 0) return [];
+	// 	// If no response, throw 404 error
+	// 	if (!response) {
+	// 		throw new Error('Document not found');
+	// 	}
 
-		// Sort items by pageNumber (ascending), fallback to index if missing
-		const sorted = [...items].sort((a, b) => {
-			console.log('a, b: ', a.pageNumber, ' ', b.pageNumber);
-			const aNum = typeof a.pageNumber === 'number' && a.pageNumber > 0 ? a.pageNumber : 1;
-			const bNum = typeof b.pageNumber === 'number' && b.pageNumber > 0 ? b.pageNumber : 1;
-			// console.log("aNum, bNum: ", aNum, " ", bNum);
-			return aNum - bNum;
-		});
+	// 	// If document is missing in the response, throw 404 error
+	// 	if (!response.document) {
+	// 		throw new Error('Document not found');
+	// 	}
 
-		console.log('sorted: ', sorted);
-		return sorted.map((it, i) => {
-			const n = typeof it.pageNumber === 'number' && it.pageNumber > 0 ? it.pageNumber : i + 1;
-			return `https://${bucket}.s3.${region}.amazonaws.com/${encodeURIComponent(docHash)}/pages/${n}.pdf`;
-			console.log('n: ', n);
-		});
-	}
+	// 	const sortedPages = response.document.pages?.items?.sort((a, b) => a.pageNumber - b.pageNumber);
 
-	const fetchDocument = async (id: string) => {
-		console.log('Fetching document:', id);
-		const response = await gql<{ document: Document }>(
-			Q_DOCUMENT_BY_ID,
-			{ id }, // Pass documentId as variable
-			idToken
-		);
-		// Log the response for debugging
-		console.log('Here is the response===========================:> ', response);
+	// 	// Update the current document and store the fetched data
+	// 	currentDocument = id;
+	// 	currentDocument = response.document;
+	// };
 
-		// If no response, throw 404 error
-		if (!response) {
-			throw new Error('Document not found');
-		}
-
-		// If document is missing in the response, throw 404 error
-		if (!response.document) {
-			throw new Error('Document not found');
-		}
-
-		const sortedPages = response.document.pages?.items?.sort((a, b) => a.pageNumber - b.pageNumber);
-
-		// Update the current document and store the fetched data
-		currentDocument = id;
-		documentAndPages = response.document;
-	};
-
-	// Auto-fetch the first document when the page loads
-	$effect(() => {
-		if (project?.documents?.[0]?.id && !documentAndPages) {
-			currentDocument = project.documents[0].id;
-			fetchDocument(project.documents[0].id);
-		}
-	});
+	// // Auto-fetch the first document when the page loads
+	// $effect(() => {
+	// 	if (project?.documents?.[0]?.id && !currentDocument) {
+	// 		currentDocument = project.documents[0].id;
+	// 		fetchDocument(project.documents[0].id);
+	// 	}
+	// });
 </script>
 
 <Button
-	>Choose Document<ChevronDownOutline class="ms-2 h-6 w-6 text-white dark:text-white" /></Button
+	onclick={() => {
+		if (currentDocHash) {
+			currentDocHash = null;
+		} else {
+			currentDocHash = documents[0].docHash;
+		}
+	}}>Choose Document<ChevronDownOutline class="ms-2 h-6 w-6 text-white dark:text-white" /></Button
 >
-<Dropdown simple class="w-48 space-y-1 p-3 text-sm">
+<!-- <Dropdown simple class="w-48 space-y-1 p-3 text-sm">
 	{#each project?.documents as doc}
 		<DropdownItem class="rounded-sm p-2 hover:bg-gray-100 dark:hover:bg-gray-600">
 			<Checkbox checked={currentDocument === doc.id} onchange={() => fetchDocument(doc.id)}>
@@ -139,12 +117,12 @@
 			</Checkbox>
 		</DropdownItem>
 	{/each}
-</Dropdown>
+</Dropdown> -->
 
-{#if documentAndPages}
+{#if currentDocument}
 	<div class="my-4 space-y-8">
-		{#if documentAndPages?.pages?.items}
-			{#each documentAndPages.pages.items as page}
+		{#if currentDocument?.pages?.items}
+			{#each currentDocument.pages.items as page}
 				<div class="grid grid-cols-2 items-start gap-4">
 					<div>
 						<h3>Page {page.pageNumber}</h3>
@@ -153,16 +131,16 @@
 							showBorder={false}
 							showButtons={['']}
 							url={getPageS3Url(
-								documentAndPages?.s3Bucket,
-								documentAndPages?.docHash,
+								currentDocument?.s3Bucket,
+								currentDocument?.docHash,
 								page.pageNumber
 							)}
 						/>
 					</div>
 					<div>
-						{#if documentAndPages?.texts?.items}
-							{#each documentAndPages.texts.items.filter((t) => t.pageNumber+1 === page.pageNumber) as text}
-								<div class="mb-2">{page.pageNumber+1}: {text.content}</div>
+						{#if currentDocument?.texts?.items}
+							{#each currentDocument.texts.items.filter((t) => t.pageNumber + 1 === page.pageNumber) as text}
+								<div class="mb-2">{page.pageNumber + 1}: {text.content}</div>
 							{/each}
 						{:else}
 							<div class="text-gray-400">No text found for this page.</div>

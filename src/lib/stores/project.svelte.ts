@@ -1,8 +1,10 @@
 import { writable } from 'svelte/store';
 import type { Project } from '$lib/types/Project';
+import type { Document } from '$lib/types/Document';
 
 // Create writable stores for project state
 export const project = writable<Project | null>(null);
+export const documents = writable<Document[]>();
 export const loading = writable(false);
 export const error = writable<string | null>(null);
 
@@ -12,6 +14,7 @@ export const setProject = (projectData: Project) => {
 	error.set(null);
 };
 
+
 export const updateProject = (updates: Partial<Project>) => {
 	project.update(currentProject => {
 		if (currentProject) {
@@ -20,6 +23,7 @@ export const updateProject = (updates: Partial<Project>) => {
 		return currentProject;
 	});
 };
+
 
 export const setLoading = (loadingState: boolean) => {
 	loading.set(loadingState);
@@ -32,6 +36,7 @@ export const setError = (errorMessage: string | null) => {
 
 export const clear = () => {
 	project.set(null);
+	documents.set(null);
 	loading.set(false);
 	error.set(null);
 };

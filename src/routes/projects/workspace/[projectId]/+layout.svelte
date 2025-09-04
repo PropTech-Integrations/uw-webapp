@@ -1,5 +1,7 @@
 <!-- src/routes/(app)/+layout.svelte -->
 <script lang="ts">
+	import { browser } from '$app/environment';
+
 	// Type imports
 	import type { LayoutProps } from './$types';
 	import type { Project } from '$lib/types/Project';
@@ -13,7 +15,7 @@
 
 	// $props() returns whatever props are passed into the component
 	let { children, data }: LayoutProps = $props();
-	// $inspect('layout.svelte: data from server', data);
+	$inspect('layout.svelte: data from server', data);
 
 	// Authentication: Get the authenticated current User from the Load Data
 	let currentUser = $derived(data.currentUser);
@@ -23,9 +25,14 @@
 
 	// The Workspace Layout uses the project store for reactive project data
 	let project = $derived(data.project);
+	let documents = $derived(data.documents);
 
 	// Import project store for synchronization
-	import { project as projectStore, setProject, updateProject } from '$lib/stores/project.svelte';
+	import {
+		project as projectStore,
+		setProject,
+		documents as documentsStore
+	} from '$lib/stores/project.svelte';
 
 	// Sync server data to client store (only in browser)
 	if (browser) {
@@ -33,10 +40,13 @@
 			if (project) {
 				setProject(project);
 			}
+			if (documents) {
+				documentsStore.set(documents);
+			}
 		});
 	}
 
-	$inspect(project);
+	// $inspect(project);
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// GraphQL Endpoint, Queries, Mutations, and Subscriptions
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -55,7 +65,7 @@
 
 	import { ui } from '$lib/stores/ui.svelte';
 	// import { project, setProject } from '$lib/stores/project.svelte';
-	import { browser } from '$app/environment';
+
 	import RightChatDrawer from '$lib/components/RightChatDrawer.svelte';
 	import WorkspaceHeaderBar from '$lib/components/workspace/WorkspaceHeaderBar.svelte';
 	import SourceCards from '$lib/components/workspace/SourceCards.svelte';
@@ -95,6 +105,7 @@
 						// Update the global project store so all child pages stay in sync
 						if (browser) {
 							setProject(it);
+							documentsStore.set(documents);
 						}
 						logger(`Project ${it.id} updated:`, it);
 					},
