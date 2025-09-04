@@ -11,7 +11,7 @@
 // import { error } from '@sveltejs/kit';
 // import type { PageServerLoad } from './$types';
 // import { gql } from '$lib/realtime/graphql/requestHandler';
-// import { Q_DOCUMENT_AND_PAGES_BY_ID } from '$lib/realtime/graphql/queries/Document';
+// import { Q_DOCUMENT_BY_ID } from '$lib/realtime/graphql/queries/Document';
 // import type { DocumentAndPages } from '$lib/types/Document';
 
 // // Server-side load function for the Document Analysis page
@@ -26,7 +26,7 @@
 
 // 	// Call the GraphQL endpoint to fetch document and pages data
 // 	const response = await gql<{ document: DocumentAndPages }>(
-// 		Q_DOCUMENT_AND_PAGES_BY_ID,
+// 		Q_DOCUMENT_BY_ID,
 // 		{ id: projectId }, // Pass projectId as variable
 // 		idToken
 // 	);

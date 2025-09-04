@@ -6,13 +6,26 @@ export interface Page {
   updatedAt: string;
 }
 
-export interface DocumentAndPages {
+export interface Text {
+  id: string;
+  docHash: string;
+  pageId: string;
+  pageNumber: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+} 
+
+export interface Document {
   docHash: string;
   createdAt: string;
   updatedAt: string;
   s3Bucket: string;
   s3Key: string;
-  pages: {
+  pages?: {
     items: Page[];
+  };
+  texts?: {
+    items: Text[];
   };
 }

@@ -33,8 +33,8 @@ export const Q_LIST_USER_PROJECTS = `
   `;
 
 export const Q_GET_PROJECT_BY_ID = `
-    query getProject($id: ID!) {
-        getProject(id: $id) {
+    query project($id: ID!) {
+        project(id: $id) {
             id
             name
             address
