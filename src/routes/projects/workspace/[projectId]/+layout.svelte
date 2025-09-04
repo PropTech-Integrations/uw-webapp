@@ -117,7 +117,7 @@
 >
 	<!-- Main app area -->
 	<div class="flex min-w-0 flex-1 flex-col">
-		<WorkspaceHeaderBar projectName={project?.name ?? ''} />
+		<WorkspaceHeaderBar projectName={$projectStore?.name ?? ''} />
 
 		<div class="grid flex-1 grid-cols-6 gap-6 p-4">
 			<!-- Column 1 -->
@@ -125,11 +125,11 @@
 				<section
 					class="space-y-6 rounded-2xl bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-2 shadow-md dark:bg-gray-800 dark:bg-none"
 				>
-					{#if project?.documents}
-						{#each project.documents as document}
+					{#if $projectStore?.documents}
+						{#each $projectStore.documents as document}
 							<div>{document.filename}</div>
 						{/each}
-						<UploadArea bind:documents={project.documents} />
+						<UploadArea bind:documents={$projectStore.documents} />
 					{/if}
 					<SourceCards />
 				</section>
