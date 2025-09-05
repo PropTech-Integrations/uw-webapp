@@ -1,5 +1,6 @@
 <!-- src/routes/(app)/+layout.svelte -->
 <script lang="ts">
+    console.log("Starting layout.svelte")
 	import { browser } from '$app/environment';
 
 	// Type imports
@@ -15,7 +16,7 @@
 
 	// $props() returns whatever props are passed into the component
 	let { children, data }: LayoutProps = $props();
-	$inspect('layout.svelte: data from server', data);
+	// $inspect('layout.svelte: data from server', data);
 
 	// Authentication: Get the authenticated current User from the Load Data
 	let currentUser = $derived(data.currentUser);
@@ -155,7 +156,7 @@
 					<TabButton href="property-analysis">Property Analysis</TabButton>
 					<TabButton href="market-analysis">Market Analysis</TabButton>
 					<TabButton href="investment-analysis">Investment Analysis</TabButton>
-					<TabButton href="reports">Reports</TabButton>
+					<TabButton href="reports">Project Settings</TabButton>
 				</div>
 				{@render children()}
 			</div>

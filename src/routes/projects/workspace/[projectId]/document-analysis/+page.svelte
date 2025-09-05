@@ -1,4 +1,5 @@
 <script lang="ts">
+	console.log('Starting page.svelte');
 	import { browser } from '$app/environment';
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Import Types and Data Stores
@@ -27,7 +28,7 @@
 	let project: Project = $derived($projectStore)!;
 	let documents: Document[] = $derived($documentsStore);
 	let currentDocHash: string | null = $derived(documents?.[0]?.docHash ?? null);
-    $inspect('currentDocHash: ', currentDocHash);
+	// $inspect('currentDocHash: ', currentDocHash);
 	let currentDocument: Document | null = $derived(
 		documents?.find((doc) => doc.docHash === currentDocHash) ?? null
 	);
@@ -40,7 +41,6 @@
 	// Import Application Utility Functions
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	import { getPageS3Url } from '$lib/utils/s3urls';
-	import { gql } from '$lib/realtime/graphql/requestHandler';
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	// Import 3rd Party Svelte Components
@@ -59,6 +59,8 @@
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	import { Button, Dropdown, Checkbox, DropdownItem } from 'flowbite-svelte';
 	import { ChevronDownOutline } from 'flowbite-svelte-icons';
+	import { AccordionItem, Accordion } from 'flowbite-svelte';
+	import InsightTable from '$lib/components/workspace/InsightTable.svelte';
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	// Svelte Component Functions
@@ -100,7 +102,7 @@
 	// });
 </script>
 
-<Button
+<!-- <Button
 	onclick={() => {
 		if (currentDocHash) {
 			currentDocHash = null;
@@ -108,7 +110,7 @@
 			currentDocHash = documents[0].docHash;
 		}
 	}}>Choose Document<ChevronDownOutline class="ms-2 h-6 w-6 text-white dark:text-white" /></Button
->
+> -->
 <!-- <Dropdown simple class="w-48 space-y-1 p-3 text-sm">
 	{#each project?.documents as doc}
 		<DropdownItem class="rounded-sm p-2 hover:bg-gray-100 dark:hover:bg-gray-600">
@@ -127,7 +129,7 @@
 					<div>
 						<h3>Page {page.pageNumber}</h3>
 						<PdfViewer
-							scale={0.8}
+							scale={1.4}
 							showBorder={false}
 							showButtons={['']}
 							url={getPageS3Url(
@@ -137,10 +139,36 @@
 							)}
 						/>
 					</div>
-					<div>
+					<div class="space-y-4 mt-16">
+						{#if currentDocument?.insights?.items}
+							{#if currentDocument.insights.items.length === 0}
+								<div class="text-gray-400">No insights found for this page.</div>
+							{:else}
+								<!-- <div class="mb-2">{insight.name}: {insight.value}</div> -->
+								<InsightTable
+									insights={currentDocument.insights.items.filter(
+										(i) => Number(i.pageId) + 1 === Number(page.id)
+									)}
+								/>
+							{/if}
+						{:else}
+							<div class="text-gray-400">No insights found for this page.</div>
+						{/if}
+
 						{#if currentDocument?.texts?.items}
 							{#each currentDocument.texts.items.filter((t) => t.pageNumber + 1 === page.pageNumber) as text}
-								<div class="mb-2">{page.pageNumber + 1}: {text.content}</div>
+								<Accordion>
+									<AccordionItem>
+										{#snippet header()}Show Raw Text{/snippet}
+										<p class="mb-2 text-gray-500 dark:text-gray-400">
+											Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illo ab
+											necessitatibus sint explicabo ...
+										</p>
+										<p class="text-gray-500 dark:text-gray-400">
+											{page.pageNumber + 1}: {text.content}
+										</p>
+									</AccordionItem>
+								</Accordion>
 							{/each}
 						{:else}
 							<div class="text-gray-400">No text found for this page.</div>

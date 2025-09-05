@@ -1,3 +1,5 @@
+import type { Insight } from "./Insight";
+
 export interface Page {
   id: string;
   docHash: string;
@@ -27,5 +29,8 @@ export interface Document {
   };
   texts?: {
     items: Text[];
+  };
+  insights?: {
+    items: Insight[];
   };
 }
