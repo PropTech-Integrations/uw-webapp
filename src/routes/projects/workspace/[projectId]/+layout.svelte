@@ -138,10 +138,10 @@
 					class="space-y-6 rounded-2xl bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-2 shadow-md dark:bg-gray-800 dark:bg-none"
 				>
 					{#if $projectStore?.documents}
-						{#each $projectStore.documents as document}
+						<!-- {#each $projectStore.documents as document}
 							<div>{document.filename}</div>
-						{/each}
-						<UploadArea bind:documents={$projectStore.documents} />
+						{/each} -->
+						<UploadArea idToken={idToken} />
 					{/if}
 					<SourceCards />
 				</section>

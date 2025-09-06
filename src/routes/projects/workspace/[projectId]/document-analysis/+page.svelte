@@ -1,5 +1,4 @@
 <script lang="ts">
-	console.log('Starting page.svelte');
 	import { browser } from '$app/environment';
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Import Types and Data Stores
@@ -129,7 +128,7 @@
 					<div>
 						<h3>Page {page.pageNumber}</h3>
 						<PdfViewer
-							scale={1.4}
+							scale={0.8}
 							showBorder={false}
 							showButtons={['']}
 							url={getPageS3Url(

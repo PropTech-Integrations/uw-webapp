@@ -1,0 +1,61 @@
+mutation updateProject($input: UpdateProjectInput!) {
+  updateProject(input: $input) {
+    id
+    name
+    description
+    image
+    address
+    city
+    state
+    zip
+    country
+    assetType
+    status
+    isActive
+    isArchived
+    isDeleted
+    isPublic
+    members
+    documents {
+      id
+      filename
+    }
+    createdAt
+    updatedAt
+    ownerId
+    tags
+  }
+}
+
+# Variables
+{
+  "input": {
+    "id": "dea68923-d762-43e8-9216-346150346345",
+    "name": "Superior Living Apartments",
+    "address": "500 Main St",
+    "city": "Springfield",
+    "state": "IL",
+    "zip": "62701",
+    "country": "USA",
+    "assetType": "Multifamily",
+    "createdAt": "2025-08-29T03:34:05.750Z",
+    "description": "Renovation and lease-up of multifamily property",
+    "documents": [],
+    "image": "/images/skyline-apartments.jpg",
+    "isActive": true,
+    "members": [
+      "carol@example.com",
+      "dave@example.com"
+    ],
+    "ownerId": "48f1b3e0-e031-7046-f1c7-dcbaec13141a",
+    "status": "Active",
+    "tags": [
+      "Renovation",
+      "Lease-Up"
+    ],
+    "updatedAt": "2025-09-06T12:34:06.238Z",
+    "isArchived": false,
+    "isDeleted": false,
+    "isPublic": true
+  }
+}

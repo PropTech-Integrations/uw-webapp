@@ -1,4 +1,5 @@
 import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from "$env/static/public";
+import { logger } from "$lib/logging/debug";
 
 /**
  * Executes a GraphQL query or mutation against the AppSync HTTP endpoint.
@@ -19,10 +20,11 @@ export async function gql<T>(
 		'content-type': 'application/json',
 		Authorization: idToken
 	};
-	// console.log('GraphQL Request ------------------------------------');
-	// console.log('headers', headers);
-	// console.log('body', JSON.stringify({ query, variables }));
-	// console.log('----------------------------------------------------');
+	logger('GraphQL Request ------------------------------------');
+	logger('headers', headers);
+	logger('body', JSON.stringify({ query, variables }));
+	logger('variables', variables);
+	logger('----------------------------------------------------');
 	const res = await fetch(PUBLIC_GRAPHQL_HTTP_ENDPOINT, {
 		method: 'POST',
 		headers,

@@ -1,25 +1,69 @@
+<!-- // Todos
+// 1. Integrate GraphQL to update project.documents when files are uploaded or removed
+// 2. Integrate the Project Store to update the documents when files are uploaded or removed
+// 3. Create variable in the Project Store to represent a currently selected document -->
+
 <script lang="ts">
+	import { browser } from '$app/environment';
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Import Types and Data Stores
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+	import type { Project, ProjectDocument } from '$lib/types/Project';
+	import { project as projectStore, updateProject } from '$lib/stores/project.svelte';
+	import { gql } from '$lib/realtime/graphql/requestHandler';
+	import { M_UPDATE_PROJECT } from '$lib/realtime/graphql/mutations/Project';
+
+	let { idToken }: { idToken: string } = $props();
+	let project: Project = $derived($projectStore)!;
+	$inspect('project', project);
+	// Documents are derived from the project store
+	let documents = $derived(project?.documents || []);
+	$inspect('documents', documents);
+	// Files are derived from the documents and are local to the component
+	let files: {
+		file: File;
+		uploading: boolean;
+		progress: number;
+		result: { success: boolean; message: string; sha256?: string } | null;
+		documentId?: string;
+	}[] = $derived(
+		documents.map((doc: ProjectDocument) => ({
+			file: new File([], doc.filename),
+			uploading: false,
+			progress: 0,
+			result: null,
+			documentId: doc.id
+		}))
+	);
+
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Logging
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	import { logger } from '$lib/logging/debug';
-	import { TrashBinOutline } from 'flowbite-svelte-icons';
 
-	type Document = {
-		id: string;
-		filename: string;
-	};
 
-	let { documents = $bindable() } = $props<{ documents: Document[] }>();
-	$inspect(documents);
-	// logger('documents', documents);
-
-	let files: { file: File; uploading: boolean; progress: number; result: { success: boolean; message: string; sha256?: string } | null }[] = $state([]);
-	// $inspect(files);
-
-	// If documents is not empty, set files to the documents
-	if (documents.length > 0) {
-		files = documents.map((doc: Document) => ({ file: new File([], doc.filename), uploading: false, progress: 0, result: null }));
+   async function graphQLUpdateProjectDocuments(documents: ProjectDocument[]) {
+	try {
+			const res = await gql<{ updateProject: Project }>(
+				M_UPDATE_PROJECT,
+				{ input: { id: project.id, documents: documents } },
+				idToken
+			);
+		} catch (e) {
+			console.error('Error updating project documents:', e);
+			throw e;
+		}
 	}
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Svelte Component Functions
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	import { TrashBinOutline } from 'flowbite-svelte-icons';
+	import YesNoDialog from '$lib/components/Dialog/YesNoDialog.svelte';
 
 	let fileInput: HTMLInputElement;
+	let openDelete = $state(false);
+	let current_file: any = $state(null);
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' || event.key === ' ') {
@@ -49,9 +93,14 @@
 	}
 
 	function removeFile(idx: number) {
+		logger('idx: ', idx);
 		const removedFile = files[idx];
 		files = files.slice(0, idx).concat(files.slice(idx + 1));
-		documents = documents.filter((doc: Document) => doc.filename !== removedFile.file.name);
+		documents = documents.filter((doc: ProjectDocument) => doc.filename !== removedFile.file.name);
+	}
+
+	async function removeDocumentFromProject(documentId: string) {
+		await graphQLUpdateProjectDocuments(project.documents.filter((doc) => doc.id !== documentId));
 	}
 
 	async function addAndUploadFiles(fileList: File[]) {
@@ -77,10 +126,16 @@
 						files = [...files];
 					}
 				};
-				xhr.onload = () => {
+				xhr.onload = async () => {
 					files[idx].uploading = false;
 					if (xhr.status >= 200 && xhr.status < 300) {
-						files[idx].result = JSON.parse(xhr.responseText);
+						const result = JSON.parse(xhr.responseText);
+						const updatedDocuments = project.documents
+						logger('xhr.onload updatedDocuments: ', updatedDocuments);
+						updatedDocuments.push({ id: result.sha256, filename: files[idx].file.name });
+						await graphQLUpdateProjectDocuments(updatedDocuments);
+						files[idx].result = result;
+						logger('files[idx].result: ', files[idx].result);
 						files = [...files];
 						resolve();
 					} else {
@@ -97,7 +152,10 @@
 				};
 				xhr.send(form);
 			});
-			documents = [...documents, { id: files[idx].result?.sha256 || '1234567890', filename: files[idx].file.name }];
+			documents = [
+				...documents,
+				{ id: files[idx].result?.sha256 || '1234567890', filename: files[idx].file.name }
+			];
 		} catch (err) {
 			files[idx].uploading = false;
 			files[idx].result = { success: false, message: (err as Error).message };
@@ -107,7 +165,7 @@
 </script>
 
 <div
-	class="flex cursor-pointer flex-col items-center justify-center border-2 border-dashed rounded-md border-gray-300 dark:border-gray-500 p-2 pb-4 transition hover:border-gray-300"
+	class="flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-gray-300 p-2 pb-4 transition hover:border-gray-300 dark:border-gray-500"
 	tabindex="0"
 	role="button"
 	onkeydown={handleKeydown}
@@ -130,9 +188,10 @@
 			d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2m-4-4l-4-4m0 0l-4 4m4-4v12"
 		/>
 	</svg>
-	<p class="text-lg font-medium  ">Upload sources</p>
-	<p class="text-sm text-center  ">
-		Drag & drop<br/>or <span
+	<p class="text-lg font-medium">Upload sources</p>
+	<p class="text-center text-sm">
+		Drag & drop<br />or
+		<span
 			class="cursor-pointer underline"
 			onclick={() => fileInput.click()}
 			onkeydown={handleKeydown}
@@ -140,22 +199,22 @@
 			role="button">click</span
 		> to upload
 	</p>
-	<p class="mt-2 text-xs  ">
-		Supported file types: PDF
-	</p>
+	<p class="mt-2 text-xs">Supported file types: PDF</p>
 </div>
 
 {#if files.length}
-	<table class="min-w-full mt-4 text-sm text-left border border-gray-300 dark:border-gray-500">
-		<thead class="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-500">
+	<table class="mt-4 min-w-full border border-gray-300 text-left text-sm dark:border-gray-500">
+		<thead
+			class="border border-gray-300 bg-gray-50 text-gray-700 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-100"
+		>
 			<tr>
 				<th class="px-4 py-2">Your Documents</th>
-				<th class="px-4 py-2 w-12"></th>
+				<th class="w-12 px-4 py-2"></th>
 			</tr>
 		</thead>
 		<tbody>
 			{#each files as f, idx}
-				<tr class="border-b last:border-b-0 border border-gray-300 dark:border-gray-500">
+				<tr class="border border-b border-gray-300 last:border-b-0 dark:border-gray-500">
 					<td class="px-4 py-2">
 						<div>
 							<span>{f.file.name}</span>
@@ -171,17 +230,19 @@
 							{/if} -->
 						</div>
 						{#if f.uploading}
-							<progress class="w-full mt-1" max="100" value={f.progress}></progress>
+							<progress class="mt-1 w-full" max="100" value={f.progress}></progress>
 						{/if}
 					</td>
-					<td class="px-4 py-2 text-center ">
+					<td class="px-4 py-2 text-center">
 						<button
 							type="button"
 							class="text-red-500 hover:text-red-700"
 							aria-label="Remove file"
-							onclick={() => removeFile(idx)}
 						>
-						<TrashBinOutline class="shrink-0 h-6 w-6" />
+							<TrashBinOutline
+								class="h-6 w-6 shrink-0"
+								onclick={() => ((current_file = files[idx]), (openDelete = true))}
+							/>
 						</button>
 					</td>
 				</tr>
@@ -189,3 +250,9 @@
 		</tbody>
 	</table>
 {/if}
+<YesNoDialog
+	bind:open={openDelete}
+	data={current_file}
+	{idToken}
+	onConfirm={() => removeDocumentFromProject(current_file?.documentId || '')}
+/>

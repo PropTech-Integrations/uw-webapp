@@ -14,7 +14,6 @@ export const setProject = (projectData: Project) => {
 	error.set(null);
 };
 
-
 export const updateProject = (updates: Partial<Project>) => {
 	project.update(currentProject => {
 		if (currentProject) {
@@ -36,7 +35,6 @@ export const setError = (errorMessage: string | null) => {
 
 export const clear = () => {
 	project.set(null);
-	documents.set(null);
 	loading.set(false);
 	error.set(null);
 };

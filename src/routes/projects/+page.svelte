@@ -121,7 +121,7 @@
 	} from 'flowbite-svelte-icons';
 
 	// Local Components
-	import DeleteModal from './DeleteModal.svelte';
+	import DeleteModal from '../../lib/components/Dialog/YesNoDialog.svelte';
 	import ProjectModal from './ProjectModal.svelte';
 	import MetaTag from './MetaTag.svelte';
 

@@ -30,7 +30,7 @@ export const load: LayoutServerLoad = async ({ params, cookies }) => {
 	}
 
 	for (const document of response.project.documents) {
-		console.log("document", document);
+		// console.log("document", document);
 		const documentResponse = await gql<{ document: Document }>(
 			Q_DOCUMENT_BY_ID,
 			{ id: document.id },
@@ -75,10 +75,12 @@ export const load: LayoutServerLoad = async ({ params, cookies }) => {
 	}
 
 
-	console.log("documents", JSON.stringify(documents, null, 2));
+	// console.log("documents", JSON.stringify(documents, null, 2));
 	return {
 		project: response.project,
 		idToken: idToken,
 		documents: documents
 	};
 };
+
+
