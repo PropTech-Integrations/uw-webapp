@@ -13,14 +13,14 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 	console.log('In auth/login/+server.ts url:', url);
 	// 1. Generate a random PKCE code verifier
 	const verifier = generateCodeVerifier();
-	console.log('verifier:', verifier);
+	// console.log('verifier:', verifier);
 	// 2. Derive the code challenge from the verifier (SHA256 + base64-url)
 	const challenge = generateCodeChallenge(verifier);
-	console.log('challenge:', challenge);
+	// console.log('challenge:', challenge);
 	const state = uuidv4();
-	console.log('state:', state);
+	// console.log('state:', state);
 	const isProd = process.env.NODE_ENV === 'production';
-	console.log('isProd:', isProd);
+	// console.log('isProd:', isProd);
 	// Store both verifier and state
 	cookies.set('pkce_verifier', verifier, {
 		httpOnly: true,
@@ -47,7 +47,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 		// maxAge: 300
 	});
 
-    console.log("/auth/login cookies: ", cookies.getAll());
+    // console.log("/auth/login cookies: ", cookies.getAll());
 
 	const redirectUri = url.origin + '/auth/callback';
 	// const loginUrl = new URL(`${COGNITO_DOMAIN}/oauth2/authorize`);
@@ -74,7 +74,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 	// Specify the code challenge method
 	loginUrl.searchParams.set('code_challenge_method', 'S256');
 
-	console.log('loginUrl:', loginUrl);
+	// console.log('loginUrl:', loginUrl);
 
 	throw redirect(302, loginUrl.toString());
 };

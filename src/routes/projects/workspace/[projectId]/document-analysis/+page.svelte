@@ -21,21 +21,27 @@
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Props, Stores, and State Variables
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	let { data }: PageProps = $props();
-	let { idToken } = data;
+	// let { data }: PageProps = $props();
 
 	let project: Project = $derived($projectStore)!;
 	let documents: Document[] = $derived($documentsStore);
+	$inspect('documents: ', documents);
 	let currentDocHash: string | null = $derived(documents?.[0]?.docHash ?? null);
-	// $inspect('currentDocHash: ', currentDocHash);
+	$inspect('currentDocHash: ', currentDocHash);
 	let currentDocument: Document | null = $derived(
 		documents?.find((doc) => doc.docHash === currentDocHash) ?? null
 	);
-
-	// if (browser) {
-	//     $inspect('currentDocHash: ', currentDocHash);
-	// }
 	// $inspect('currentDocument: ', currentDocument);
+
+	// let dropdownOpen = $state(false);
+
+	// Initialize currentDocHash when documents are loaded
+	$effect(() => {
+		if (documents && documents.length > 0 && !currentDocHash) {
+			currentDocHash = documents[0].docHash;
+		}
+	});
+
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	// Import Application Utility Functions
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -46,7 +52,8 @@
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 	// PdfViewer is a component that is used to display the PDF document.
-	import PdfViewer from 'svelte-pdf';
+	// import PdfViewer from 'svelte-pdf';
+	import PDFViewer from '$lib/components/PDFViewer/PDFViewer.svelte';
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	// GraphQL Queries
@@ -60,90 +67,58 @@
 	import { ChevronDownOutline } from 'flowbite-svelte-icons';
 	import { AccordionItem, Accordion } from 'flowbite-svelte';
 	import InsightTable from '$lib/components/workspace/InsightTable.svelte';
-
-	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-	// Svelte Component Functions
-	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-	// const fetchDocument = async (id: string) => {
-	// 	console.log('Fetching document:', id);
-	// 	const response = await gql<{ document: Document }>(
-	// 		Q_DOCUMENT_BY_ID,
-	// 		{ id }, // Pass documentId as variable
-	// 		idToken
-	// 	);
-	// 	// Log the response for debugging
-	// 	console.log('Here is the response===========================:> ', response);
-
-	// 	// If no response, throw 404 error
-	// 	if (!response) {
-	// 		throw new Error('Document not found');
-	// 	}
-
-	// 	// If document is missing in the response, throw 404 error
-	// 	if (!response.document) {
-	// 		throw new Error('Document not found');
-	// 	}
-
-	// 	const sortedPages = response.document.pages?.items?.sort((a, b) => a.pageNumber - b.pageNumber);
-
-	// 	// Update the current document and store the fetched data
-	// 	currentDocument = id;
-	// 	currentDocument = response.document;
-	// };
-
-	// // Auto-fetch the first document when the page loads
-	// $effect(() => {
-	// 	if (project?.documents?.[0]?.id && !currentDocument) {
-	// 		currentDocument = project.documents[0].id;
-	// 		fetchDocument(project.documents[0].id);
-	// 	}
-	// });
 </script>
 
-<!-- <Button
-	onclick={() => {
-		if (currentDocHash) {
-			currentDocHash = null;
-		} else {
-			currentDocHash = documents[0].docHash;
-		}
-	}}>Choose Document<ChevronDownOutline class="ms-2 h-6 w-6 text-white dark:text-white" /></Button
-> -->
-<!-- <Dropdown simple class="w-48 space-y-1 p-3 text-sm">
+<Button>
+	Choose Document<ChevronDownOutline class="ms-2 h-6 w-6 text-white dark:text-white" />
+</Button>
+<Dropdown simple class="w-48 space-y-1 p-3 text-sm">
 	{#each project?.documents as doc}
-		<DropdownItem class="rounded-sm p-2 hover:bg-gray-100 dark:hover:bg-gray-600">
-			<Checkbox checked={currentDocument === doc.id} onchange={() => fetchDocument(doc.id)}>
-				{doc.filename}
-			</Checkbox>
+		<DropdownItem
+			class="rounded-sm p-2 hover:bg-gray-100 dark:hover:bg-gray-600 {currentDocHash === doc.id
+				? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
+				: ''}"
+			onclick={() => {
+				currentDocHash = doc.id;
+			}}
+		>
+			{doc.filename}
 		</DropdownItem>
 	{/each}
-</Dropdown> -->
+</Dropdown>
 
 {#if currentDocument}
 	<div class="my-4 space-y-8">
 		{#if currentDocument?.pages?.items}
 			{#each currentDocument.pages.items as page}
-				<div class="grid grid-cols-2 items-start gap-4">
-					<div>
+				<div class="grid gap-4 items-start grid-cols-1 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-8">
+					<div class="md:col-span-2 lg:col-span-3 xl:col-span-5">
 						<h3>Page {page.pageNumber}</h3>
-						<PdfViewer
-							scale={0.8}
-							showBorder={false}
-							showButtons={['']}
-							url={getPageS3Url(
-								currentDocument?.s3Bucket,
-								currentDocument?.docHash,
-								page.pageNumber
-							)}
-						/>
+						{#key currentDocument?.docHash}
+							<div style="overflow: clip;">
+								<!-- <PDFViewer
+									scale={1.0}
+							
+									url={`https://uw-dev-documents-e1tez94r.s3.us-west-2.amazonaws.com/c42fdf5d3d1e873c8ae713110424968eec1dded045067183a387c5ff5e1b11de/document.pdf`}
+								/> -->
+								<PDFViewer
+								scale={1.0}
+								showBorder={false}
+								showButtons={['']}
+								url={getPageS3Url(
+									currentDocument?.s3Bucket,
+									currentDocument?.docHash,
+									page.pageNumber
+								)}
+							/>
+							</div>
+						{/key}
 					</div>
-					<div class="space-y-4 mt-16">
+					<div class="md:col-span-1 lg:col-span-2 xl:col-span-3 md:mt-0 space-y-4">
 						{#if currentDocument?.insights?.items}
 							{#if currentDocument.insights.items.length === 0}
 								<div class="text-gray-400">No insights found for this page.</div>
 							{:else}
-								<!-- <div class="mb-2">{insight.name}: {insight.value}</div> -->
 								<InsightTable
 									insights={currentDocument.insights.items.filter(
 										(i) => Number(i.pageId) + 1 === Number(page.id)

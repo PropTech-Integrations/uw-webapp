@@ -1,0 +1,13 @@
+=SUMIFS(
+        GENERAL_LEDGER_AMOUNT,
+        GENERAL_LEDGER_ACCOUNT_1, 'Chart of Accounts'!$A7, 
+        GENERAL_LEDGER_ACTION_1, "Debit",
+        GENERAL_LEDGER_DATE, ">="&START_DATE,
+        GENERAL_LEDGER_DATE, "<="&END_DATE) 
++
+ SUMIFS(
+        GENERAL_LEDGER_AMOUNT,
+        GENERAL_LEDGER_ACCOUNT_2, 'Chart of Accounts'!$A7, 
+        GENERAL_LEDGER_ACTION_2, "Debit",
+        GENERAL_LEDGER_DATE, ">="&START_DATE,
+        GENERAL_LEDGER_DATE, "<="&END_DATE) 
