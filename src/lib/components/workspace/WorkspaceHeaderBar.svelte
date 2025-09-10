@@ -3,7 +3,7 @@
 	import Button from '$lib/ui/Button.svelte';
 	import { DarkMode } from 'flowbite-svelte';
 
-    let { projectName } = $props<{ projectName: string }>();
+	let { projectName } = $props<{ projectName: string }>();
 </script>
 
 <header
@@ -12,7 +12,7 @@
 	<div class="flex items-center gap-3">
 		<h1 class="text-base font-semibold">Workspace for {projectName}</h1>
 		<p class="hidden text-xs text-gray-500 md:block dark:text-gray-400">
-			Build Your AI Powered CRE Expert
+			Your AI Powered CRE Expert
 		</p>
 		<div class="flex-1"></div>
 	</div>

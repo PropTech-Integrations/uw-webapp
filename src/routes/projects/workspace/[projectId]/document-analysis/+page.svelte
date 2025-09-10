@@ -134,10 +134,10 @@
 								<Accordion>
 									<AccordionItem>
 										{#snippet header()}Show Raw Text{/snippet}
-										<p class="mb-2 text-gray-500 dark:text-gray-400">
+										<!-- <p class="mb-2 text-gray-500 dark:text-gray-400">
 											Lorem ipsum dolor sit amet, consectetur adipisicing elit. Illo ab
 											necessitatibus sint explicabo ...
-										</p>
+										</p> -->
 										<p class="text-gray-500 dark:text-gray-400">
 											{page.pageNumber + 1}: {text.content}
 										</p>
