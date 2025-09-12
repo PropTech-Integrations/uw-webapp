@@ -16,10 +16,10 @@
 
 	let { idToken }: { idToken: string } = $props();
 	let project: Project = $derived($projectStore)!;
-	$inspect('project', project);
+
 	// Documents are derived from the project store
 	let documents = $derived(project?.documents || []);
-	$inspect('documents', documents);
+
 	// Files are derived from the documents and are local to the component
 	let files: {
 		file: File;

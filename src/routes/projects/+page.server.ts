@@ -19,8 +19,8 @@ import { Q_LIST_USER_PROJECTS } from '$lib/realtime/graphql/queries/Project';
 import type { Project } from '$lib/types/Project';
 
 // Define the server-side load function for this page
-export const load: PageServerLoad = async ({ params, cookies }) => {
-	// console.log(cookies.getAll());
+export const load: PageServerLoad = async ({ params, cookies, url }) => {
+
 	try {
 		const idToken = cookies.get('id_token');
 		// console.log('idToken from cookies', idToken);

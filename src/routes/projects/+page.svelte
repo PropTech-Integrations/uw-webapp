@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { logger } from '$lib/logging/debug';
 
+	import { v4 as uuidv4 } from 'uuid';
+
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Props Section
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -121,7 +123,7 @@
 	} from 'flowbite-svelte-icons';
 
 	// Local Components
-	import DeleteModal from '../../lib/components/Dialog/YesNoDialog.svelte';
+	import DeleteModal from '../../lib/components/Dialog/DeleteModal.svelte';
 	import ProjectModal from './ProjectModal.svelte';
 	import MetaTag from './MetaTag.svelte';
 
@@ -184,13 +186,20 @@
 				>
 					<DotsVerticalOutline size="lg" />
 				</ToolbarButton>
-			</div> -->
+			</div>
+
+			onclick={() => {
+				const id = uuidv4();
+				window.location.href = `/projects/workspace/${id}/get-started?new=1`;
+			}}
+			
+			-->
 			{#snippet end()}
 				<div class="flex items-center space-x-2">
 					<Button
 						size="sm"
 						class="gap-2 whitespace-nowrap px-3"
-						onclick={() => (window.location.href = '/projects/workspace')}
+						onclick={() => (openProject = true)}
 					>
 						<PlusOutline size="sm" />Add Project
 					</Button>
@@ -213,7 +222,10 @@
 				<TableBodyRow class="border-gray-200 text-base">
 					<TableBodyCell class="w-4 p-4"><Checkbox /></TableBodyCell>
 					<TableBodyCell class="mr-12 flex items-center space-x-6 whitespace-nowrap p-4">
-						<a href={`/projects/workspace/${project.id}/get-started`} class="group flex items-center space-x-6">
+						<a
+							href={`/projects/workspace/${project.id}/get-started`}
+							class="group flex items-center space-x-6"
+						>
 							<Avatar src={project.image || ''} size="lg" cornerStyle="rounded" />
 							<div class="text-sm font-normal text-gray-500 dark:text-gray-300">
 								<div

@@ -2,32 +2,10 @@
 	import { Button, Input, Label, Modal, Textarea, Checkbox, Select } from 'flowbite-svelte';
 	import type { UserModalProps } from '../../../../uw-ai-plane/types';
 	import { gql } from '$lib/realtime/graphql/requestHandler';
-	import type { UserItem } from '$lib/types/UserItem';
+	import { M_CREATE_PROJECT, M_UPDATE_PROJECT } from '$lib/realtime/graphql/mutations/Project';
+	import { goto } from '$app/navigation';
 
-	// GraphQL mutations for create/update
-	const M_CREATE = `
-		mutation CreateProject($input: CreateUserItemInput!) {
-			createUserItem(input: $input) {
-				sk
-				entityType
-				entityId
-				data
-				createdAt
-			}
-		}
-	`;
-
-	const M_UPDATE = `
-		mutation UpdateProject($input: UpdateUserItemInput!) {
-			updateUserItem(input: $input) {
-				sk
-				entityType
-				entityId
-				data
-				createdAt
-			}
-		}
-	`;
+	// Using imported mutations from Project.ts
 	let { open = $bindable(true), data, idToken }: UserModalProps = $props();
 
 	let formEl: HTMLFormElement;
@@ -70,31 +48,51 @@
 		const merged = { ...data, ...project };
 
 		const id = merged.id || crypto.randomUUID?.() || Math.random().toString(36).slice(2);
-		const sk = "PROJECT#" + id;
 		const now = new Date().toISOString();
 
+		// Prepare input for create/update project mutations
 		const input = {
-			sk,
-			entityType: 'PROJECT',
-			entityId: id,
-			createdAt: merged.createdAt || now,
-			data: JSON.stringify({ ...merged, id, createdAt: merged.createdAt || now })
+			id: data && data.id ? data.id : id,
+			name: project.name,
+			description: project.description || '',
+			image: project.image || '',
+			address: project.address,
+			city: project.city || '',
+			state: project.state || '',
+			zip: project.zip || '',
+			country: project.country || '',
+			assetType: project.assetType,
+			status: project.status || 'Active',
+			isActive: project.status !== 'Deleted',
+			isArchived: project.status === 'Archived',
+			isDeleted: project.status === 'Deleted',
+			isPublic: project.isPublic || false,
+			members: project.members || [],
+			documents: project.documents || [],
+			tags: project.tags || []
 		};
 
 		console.log('input', JSON.stringify(input, null, 2));
 		let mutation: string;
 		let opName: string;
 		if (data && data.id) {
-			mutation = M_UPDATE;
-			opName = 'updateUserItem';
+			mutation = M_UPDATE_PROJECT;
+			opName = 'updateProject';
 		} else {
-			mutation = M_CREATE;
-			opName = 'createUserItem';
+			mutation = M_CREATE_PROJECT;
+			opName = 'createProject';
 		}
 
+		console.log('mutation', mutation);
+		console.log('input', input);
+		console.log('idToken', idToken);
 		try {
-			const res = await gql<{ items:UserItem }>(mutation, { input }, idToken);
+			const res = await gql<{ [key: string]: any }>(mutation, { input }, idToken);
 			open = false;
+			console.log('res', res);
+			console.log('opName', opName);
+			console.log('id', id);
+		await goto(`/projects/workspace/${id}/get-started`);
 		} catch (err) {
 			console.error('Error saving project:', err);
 			alert('Error saving project');

@@ -27,6 +27,7 @@
 	// The Workspace Layout uses the project store for reactive project data
 	let project = $derived(data.project);
 	let documents = $derived(data.documents);
+	let isNewProject = $derived(data.isNewProject);
 
 	// Import project store for synchronization
 	import {
@@ -38,10 +39,10 @@
 	// Sync server data to client store (only in browser)
 	if (browser) {
 		$effect(() => {
-			if (project) {
+			if (project && !isNewProject) {
 				setProject(project);
 			}
-			if (documents) {
+			if (documents && !isNewProject) {
 				documentsStore.set(documents);
 			}
 		});
@@ -86,6 +87,12 @@
 		console.log('Entered $effect.root');
 		if (typeof window === 'undefined') return; // SvelteKit guard
 
+		// Don't set up WebSocket for new projects
+		if (isNewProject) {
+			console.log('Skipping WebSocket setup for new project');
+			return;
+		}
+
 		// Tear down any previous client before creating a new one
 		if (client) {
 			console.log('Tearing down previous client');
@@ -129,7 +136,7 @@
 >
 	<!-- Main app area -->
 	<div class="flex min-w-0 flex-1 flex-col">
-		<WorkspaceHeaderBar projectName={$projectStore?.name ?? ''} />
+		<WorkspaceHeaderBar projectName={$projectStore?.name ?? (isNewProject ? 'New Project' : '')} />
 
 		<div class="grid flex-1 grid-cols-6 gap-6 p-4">
 			<!-- Column 1 -->
@@ -137,13 +144,13 @@
 				<section
 					class="space-y-6 rounded-2xl bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-2 shadow-md dark:bg-gray-800 dark:bg-none"
 				>
-					{#if $projectStore?.documents}
+					{#if $projectStore?.documents || isNewProject}
 						<!-- {#each $projectStore.documents as document}
 							<div>{document.filename}</div>
 						{/each} -->
 						<UploadArea idToken={idToken} />
 					{/if}
-					<SourceCards />
+					<SourceCards columns={1} />
 				</section>
 			</div>
 			<div class="col-span-5">

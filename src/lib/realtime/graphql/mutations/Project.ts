@@ -4,33 +4,31 @@ import { gql } from "$lib/realtime/graphql/requestHandler";
 export const M_CREATE_PROJECT = `
     mutation createProject($input: CreateProjectInput!) {
         createProject(input: $input) {
-            id
             name
             address
+            description
             city
             state
             zip
             country
             assetType
-            createdAt
-            description
             documents {
-            id
-            filename
+              id
+              filename
             }
             image
             isActive
-            members
-            ownerId
+            members            
             status
             tags
-            updatedAt
             isArchived
             isDeleted
             isPublic
         }
     }
 `;
+
+
 
 export const M_UPDATE_PROJECT = `
     mutation updateProject($input: UpdateProjectInput!) {

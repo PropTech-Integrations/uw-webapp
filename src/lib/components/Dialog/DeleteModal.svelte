@@ -10,9 +10,9 @@
 	}
 	import { Button, Modal } from 'flowbite-svelte';
 	import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
-	// import { gql } from '$lib/realtime/graphql/requestHandler';
-	// import type { Project } from '$lib/types/Project';
-	// import { M_DELETE_PROJECT } from '$lib/realtime/graphql/mutations/Project';
+	import { gql } from '$lib/realtime/graphql/requestHandler';
+	import type { Project } from '$lib/types/Project';
+	import { M_DELETE_PROJECT } from '$lib/realtime/graphql/mutations/Project';
 	let {
 		open = $bindable(true),
 		title = 'Are you sure you want to delete this?',
@@ -23,19 +23,19 @@
 		onConfirm
 	}: YesNoDialogProps = $props();
 
-	// // $inspect(data);
-	// async function deleteProject(id: string, idToken: string) {
-	// 	const mutation = M_DELETE_PROJECT;
-	// 	const input = { id };
-	// 	console.log('input', JSON.stringify(input, null, 2));
-	// 	try {
-	// 		const res = await gql<{ deleteProject: Project }>(mutation, { input }, idToken);
-	// 		return res.deleteProject;
-	// 	} catch (e) {
-	// 		console.error('Error deleting project:', e);
-	// 		throw e;
-	// 	}
-	// }
+	// $inspect(data);
+	async function deleteProject(id: string, idToken: string) {
+		const mutation = M_DELETE_PROJECT;
+		const input = { id };
+		console.log('input', JSON.stringify(input, null, 2));
+		try {
+			const res = await gql<{ deleteProject: Project }>(mutation, { input }, idToken);
+			return res.deleteProject;
+		} catch (e) {
+			console.error('Error deleting project:', e);
+			throw e;
+		}
+	}
 </script>
 
 <Modal bind:open size="sm">
@@ -61,10 +61,16 @@
 			color="red"
 			class="mr-2"
 			onclick={async () => {
-				if (onConfirm) {
-					await onConfirm();
-				} 
-				open = false;
+				try {
+					await deleteProject(data.id, idToken);
+					if (onConfirm) {
+						await onConfirm();
+					}
+					open = false;
+				} catch (error) {
+					console.error('Failed to delete project:', error);
+					alert('Failed to delete project. Please try again.');
+				}
 			}}>{yes}</Button
 		>
 		<Button color="alternative" onclick={() => (open = false)}>{no}</Button>

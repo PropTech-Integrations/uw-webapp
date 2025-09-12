@@ -1,6 +1,9 @@
 <script lang="ts">
 	import SourceCard from '$lib/components/Upload/SourceCard.svelte';
 
+	// Props
+	let { columns = 3 }: { columns?: number } = $props();
+
     	// Data defined for this component - Source Cards
 	const sourceCards = [
 		{
@@ -23,7 +26,7 @@
 	];
 </script>
 
-<div class="grid grid-cols-1 gap-4">
+<div class="grid gap-4" style="grid-template-columns: repeat({columns}, minmax(0, 1fr));">
     {#each sourceCards as card}
         <SourceCard {card} />
     {/each}

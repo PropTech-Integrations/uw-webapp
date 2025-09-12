@@ -1,20 +1,18 @@
 <!-- +page.svelte -->
 <script>
 	import { project as projectStore } from '$lib/stores/project.svelte';
-	
+
 	let { data } = $props();
 	// Use reactive project store instead of static data
 	let project = $derived($projectStore);
+	let isNewProject = $derived(data.isNewProject);
 </script>
-  
-
-
 
 <p class="text-sm text-gray-500 dark:text-gray-400">
 	<!-- Blog Section -->
 </p>
 <section class="mb-6 p-6 shadow">
-	<h2 class="mb-4 text-xl font-semibold">StratiqAI Blog   {project?.name}</h2>
+	<h2 class="mb-4 text-xl font-semibold">StratiqAI Blog {project?.name || (isNewProject ? 'New Project' : '')}</h2>
 	<article class="mb-6">
 		<h3 class="mb-2 text-lg font-bold">Welcome to the StratiqAI Blog!</h3>
 		<p class="mb-2">
