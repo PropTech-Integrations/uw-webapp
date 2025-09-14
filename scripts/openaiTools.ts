@@ -1,92 +1,156 @@
-import type { RequestHandler } from './$types';
-import { json } from '@sveltejs/kit';
-import { OPENAI_API_KEY, OPENAI_BASE_URL } from '$env/static/private';
+// src/creChat.ts
 import OpenAI from 'openai';
-import type { DemographicsResult, JobsAndCommutingResult, EconomyResult } from './types';
-// const DEFAULT_MODEL = 'gpt-4o-nano'; // change as you like
-const DEFAULT_MODEL = 'gpt-4o';
-const client = new OpenAI({
-	apiKey: OPENAI_API_KEY
-});
 
-// Valid roles for OpenAI API
-const VALID_ROLES = ['system', 'user', 'assistant', 'function', 'tool', 'developer'];
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+
+/** ────────────────────────────────────────────────────────────────────────────
+ *  Types the model will see in tool JSON (great for reliability & few-shot)
+ *  Replace fields or add more as your data sources evolve.
+ *  ────────────────────────────────────────────────────────────────────────────
+ */
+export type DemographicsRing = {
+	miles: number;
+	population: number | null;
+	medianAge: number | null;
+	medianHouseholdIncome: number | null;
+	households: number | null;
+	medianGrossRent: number | null;
+	ownerOccRate: number | null; // 0–1
+	eduAttainmentPctBA: number | null; // % age 25+ with BA or higher (0–1)
+	raceEthnicity?: {
+		white: number | null;
+		black: number | null;
+		asian: number | null;
+		hispanic: number | null;
+		other: number | null; // 0–1 shares
+	};
+};
+
+export type DemographicsResult = {
+	address: string;
+	geocoded: { lat: number; lon: number } | null;
+	rings: DemographicsRing[];
+	asOf: string; // ISO date
+	sources: string[]; // e.g., ["US Census ACS 5-year 2023"]
+};
+
+export type JobsODFlow = {
+	origin: { geoId: string; name: string };
+	destination: { geoId: string; name: string };
+	jobs: number;
+};
+
+export type JobsIndustryMix = { naics2: string; name: string; jobsShare: number }; // 0–1
+export type JobsCommuteSummary = {
+	inflowJobs: number;
+	outflowWorkers: number;
+	jobToWorkerRatio: number | null;
+	medianCommuteMinutes: number | null;
+};
+
+export type JobsAndCommutingResult = {
+	anchor: { address?: string; geoId?: string; name?: string };
+	summary: JobsCommuteSummary;
+	topFlowsIn: JobsODFlow[]; // top origins of inbound workers
+	topFlowsOut: JobsODFlow[]; // top destinations where residents work
+	industryMix: JobsIndustryMix[];
+	asOf: string;
+	sources: string[]; // e.g., ["LEHD LODES 2021", "ACS 2023"]
+};
+
+export type EconomyResult = {
+	anchor: {
+		address?: string;
+		geoId?: string;
+		name?: string;
+		msa?: string;
+		county?: string;
+		state?: string;
+	};
+	unemploymentRate: number | null; // 0–1
+	unemploymentYoYChangePts: number | null;
+	payrollJobsYoY: number | null; // % change, -1..+1
+	gdpPerCapita: number | null; // e.g., USD
+	medianHHIncome: number | null; // USD
+	cpiYoY: number | null; // % change, -1..+1 (national or regional CPI-U)
+	buildingPermitsYoY: number | null; // optional
+	asOf: string;
+	sources: string[]; // ["BLS LAUS 2024-12", "BEA 2023", "ACS 2023", ...]
+};
 
 /** ────────────────────────────────────────────────────────────────────────────
  *  Tools: let the model call these with arguments it decides on.
  *  Keep descriptions concise but specific so the model knows when to use them.
  *  ────────────────────────────────────────────────────────────────────────────
  */
-const tools = [
+const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 	// Existing calc tools (optional, keep if you use them)
 	{
 		type: 'function',
-
-		name: 'calc_cap_rate',
-		description: 'Calculate capitalization rate given NOI and purchase price.',
-		parameters: {
-			type: 'object',
-			properties: { noi: { type: 'number' }, price: { type: 'number' } },
-			required: ['noi', 'price']
+		function: {
+			name: 'calc_cap_rate',
+			description: 'Calculate capitalization rate given NOI and purchase price.',
+			parameters: {
+				type: 'object',
+				properties: { noi: { type: 'number' }, price: { type: 'number' } },
+				required: ['noi', 'price']
+			}
 		}
 	},
 	{
 		type: 'function',
-
-		name: 'calc_dscr',
-		description: 'Debt Service Coverage Ratio = NOI / annual_debt_service.',
-		parameters: {
-			type: 'object',
-			properties: { noi: { type: 'number' }, annual_debt_service: { type: 'number' } },
-			required: ['noi', 'annual_debt_service']
+		function: {
+			name: 'calc_dscr',
+			description: 'Debt Service Coverage Ratio = NOI / annual_debt_service.',
+			parameters: {
+				type: 'object',
+				properties: { noi: { type: 'number' }, annual_debt_service: { type: 'number' } },
+				required: ['noi', 'annual_debt_service']
+			}
 		}
 	},
 
 	// NEW: Demographics within rings of an address
 	{
 		type: 'function',
-
-		name: 'get_demographics_within_radius',
-		description:
-			'Demographic stats for concentric rings around an address (e.g., 1/3/5 miles): population, median age, income, rent, tenure, education, race/ethnicity share.',
-		parameters: {
-			type: 'object',
-			properties: {
-				address: { type: 'string', description: 'Street, city, state or full address.' },
-				rings_miles: {
-					type: 'array',
-					items: { type: 'number' },
-					description: 'Ring radii in miles, e.g., [1,3,5]'
+		function: {
+			name: 'get_demographics_within_radius',
+			description:
+				'Demographic stats for concentric rings around an address (e.g., 1/3/5 miles): population, median age, income, rent, tenure, education, race/ethnicity share.',
+			parameters: {
+				type: 'object',
+				properties: {
+					address: { type: 'string', description: 'Street, city, state or full address.' },
+					rings_miles: {
+						type: 'array',
+						items: { type: 'number' },
+						description: 'Ring radii in miles, e.g., [1,3,5]'
+					},
+					year: { type: 'integer', description: 'ACS 5-year end year (e.g., 2023). Optional.' }
 				},
-				year: { type: 'integer', description: 'ACS 5-year end year (e.g., 2023). Optional.' }
-			},
-			required: ['address', 'rings_miles']
+				required: ['address', 'rings_miles']
+			}
 		}
 	},
 
 	// NEW: Jobs and commuting flows around a place
 	{
 		type: 'function',
-
-		name: 'get_jobs_and_commuting_flows',
-		description:
-			'Work ↔ home flows and industry mix around an address or geo. Returns inflow/outflow, job-worker balance, top OD flows, NAICS mix, commute time.',
-		parameters: {
-			type: 'object',
-			properties: {
-				address: {
-					type: 'string',
-					description: 'Street, city, state or full address. Optional if geoId provided.'
-				},
-				geoId: {
-					type: 'string',
-					description: 'Census tract/block group/county/CBSA. Optional if address provided.'
-				},
-				radius_miles: {
-					type: 'number',
-					description: 'Optional search radius for clustering flows.'
-				},
-				year: { type: 'integer', description: 'LODES/ACS reference year if supported. Optional.' }
+		function: {
+			name: 'get_jobs_and_commuting_flows',
+			description:
+				'Work ↔ home flows and industry mix around an address or geo. Returns inflow/outflow, job-worker balance, top OD flows, NAICS mix, commute time.',
+			parameters: {
+				type: 'object',
+				properties: {
+					address: { type: 'string', description: 'Street, city, state or full address. Optional if geoId provided.' },
+					geoId: { type: 'string', description: 'Census tract/block group/county/CBSA. Optional if address provided.' },
+					radius_miles: {
+						type: 'number',
+						description: 'Optional search radius for clustering flows.'
+					},
+					year: { type: 'integer', description: 'LODES/ACS reference year if supported. Optional.' }
+				}
 			}
 		}
 	},
@@ -94,22 +158,17 @@ const tools = [
 	// NEW: Economy snapshot (labor, GDP, CPI, income)
 	{
 		type: 'function',
-
-		name: 'get_economy_snapshot',
-		description:
-			'Local macro snapshot around a location: unemployment, payroll jobs YoY, GDP per capita, median HH income, CPI YoY, permits if available.',
-		parameters: {
-			type: 'object',
-			properties: {
-				address: {
-					type: 'string',
-					description: 'Street, city, state or full address. Optional if geoId provided.'
-				},
-				geoId: {
-					type: 'string',
-					description: 'County/CBSA/state FIPS/CBSA code. Optional if address provided.'
-				},
-				prefer_msa: { type: 'boolean', description: 'Prefer CBSA if resolvable from address.' }
+		function: {
+			name: 'get_economy_snapshot',
+			description:
+				'Local macro snapshot around a location: unemployment, payroll jobs YoY, GDP per capita, median HH income, CPI YoY, permits if available.',
+			parameters: {
+				type: 'object',
+				properties: {
+					address: { type: 'string', description: 'Street, city, state or full address. Optional if geoId provided.' },
+					geoId: { type: 'string', description: 'County/CBSA/state FIPS/CBSA code. Optional if address provided.' },
+					prefer_msa: { type: 'boolean', description: 'Prefer CBSA if resolvable from address.' }
+				}
 			}
 		}
 	}
@@ -291,152 +350,82 @@ When a user asks about a location or market:
 - Include "Not financial/legal advice." at the end when giving investment views.
 `;
 
-const tools2 = [
-	{
-		type: 'function',
-		name: 'get_weather',
-		description: 'Get current temperature for a given location.',
-		parameters: {
-			type: 'object',
-			properties: {
-				location: {
-					type: 'string',
-					description: 'City and country e.g. Bogotá, Colombia'
-				}
-			},
-			required: ['location'],
-			additionalProperties: false
-		},
-		strict: true
+/** ────────────────────────────────────────────────────────────────────────────
+ *  Chat entrypoint (unchanged pattern)
+ *  ────────────────────────────────────────────────────────────────────────────
+ */
+export async function creChat(
+	userMessage: string,
+	history: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = []
+) {
+	if (!(await passesModeration(userMessage))) {
+		return 'Sorry—your message didn’t pass safety checks.';
 	}
-];
 
-export const POST: RequestHandler = async ({ request }) => {
-	try {
-		const { messages, model = DEFAULT_MODEL } = await request.json();
+	let messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+		{ role: 'system', content: SYSTEM_PROMPT },
+		...history,
+		{ role: 'user', content: userMessage }
+	];
 
-		if (!OPENAI_API_KEY) {
-			return json({ error: 'Server misconfigured: OPENAI_API_KEY is missing.' }, { status: 500 });
-		}
+    console.log("Messages: ", messages);
 
-		// Filter out messages with invalid roles and log them for debugging
-		const validMessages = [
-			{ role: 'system', content: SYSTEM_PROMPT },
-			...messages.filter((msg: any) => {
-				if (!VALID_ROLES.includes(msg.role)) {
-					console.warn(`Filtering out message with invalid role: ${msg.role}`, msg);
-					return false;
-				}
-				return true;
-			})
-		];
+	let completion = await openai.chat.completions.create({
+		model: 'gpt-4o', // or your preferred model (e.g., gpt-5)
+		messages,
+		tools,
+		tool_choice: 'auto'
+	});
 
-		// console.log('validMessages: ', validMessages);
 
-		// OpenAI Chat Completions (simple non-streaming for reliability)
-		const respTools = await fetch(`${OPENAI_BASE_URL}/v1/responses`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${OPENAI_API_KEY}`
-			},
-			body: JSON.stringify({
-				model,
-				input: validMessages,
-				tools: tools,
-				tool_choice: 'auto'
-			})
-		});
-
-		// console.log('respTools: ', respTools);
-
-		if (!respTools.ok) {
-			const errText = await respTools.text().catch(() => '');
-			return json({ error: `Upstream error: ${respTools.status} ${errText}` }, { status: 500 });
-		}
-
-		const data = await respTools.json();
-
-		console.log('data.output: ', JSON.stringify(data.output, null, 2));
-		console.log('==============================================')
-		const toolCalls = data.output;
-
-		if (toolCalls.length) {
-			const toolMessages = [];
-			for (const call of toolCalls) {
-				if (call.type !== 'function_call') continue;
-				const args = call.arguments ? JSON.parse(call.arguments) : {};
-				const result = await handleToolCall(call.name, args);
-				console.log('result: ', JSON.stringify(result, null, 2));
-				console.log('==============================================')
-				toolMessages.push({
-					role: 'assistant',
-					content: JSON.stringify(result)
-				});
-			}
-
-			console.log('toolMessages: ', JSON.stringify(toolMessages, null, 2));
-			console.log('==============================================')
-			validMessages.push(...toolMessages);
-			console.log('validMessages: ', JSON.stringify(validMessages, null, 2));
-			console.log('==============================================')
-
-			const resp = await fetch(`${OPENAI_BASE_URL}/v1/responses`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${OPENAI_API_KEY}`
-				},
-				body: JSON.stringify({
-					model,
-					input: validMessages
-				})
+    console.log("Tools Completion: ", JSON.stringify(completion, null, 2));
+	const toolCalls = completion.choices[0].message.tool_calls ?? [];
+	if (toolCalls.length) {
+		const toolMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+		for (const call of toolCalls) {
+			if (call.type !== 'function') continue;
+			const args = call.function.arguments ? JSON.parse(call.function.arguments) : {};
+			const result = await handleToolCall(call.function.name, args);
+			toolMessages.push({
+				role: 'tool',
+				tool_call_id: call.id,
+				content: JSON.stringify(result)
 			});
-			// completion = await openai.chat.completions.create({
-			// 	model: 'gpt-4o',
-			// 	messages
-			// });
-			if (!resp.ok) {
-				const errText = await resp.text().catch(() => '');
-				return json({ error: `Upstream error: ${resp.status} ${errText}` }, { status: 500 });
-			}
-
-			const responseData = await resp.json();
-			const reply = responseData.output
-				.map((o: any) => o.content?.map((c: any) => c.text).join(' ') ?? '')
-				.join(' ');
-			console.log('reply: ', reply);
-			return json({ reply });
 		}
 
-		// console.log('reply: ', JSON.stringify(reply, null, 2));
 
-		// // OpenAI Chat Completions (simple non-streaming for reliability)
-		// const resp = await fetch(`${OPENAI_BASE_URL}/v1/responses`, {
-		// 	method: 'POST',
-		// 	headers: {
-		// 		'Content-Type': 'application/json',
-		// 		Authorization: `Bearer ${OPENAI_API_KEY}`
-		// 	},
-		// 	body: JSON.stringify({
-		// 		model,
-		// 		input: validMessages
-		// 	})
-		// });
+        console.log("completion.choices[0].message: ", JSON.stringify(completion.choices[0].message, null, 2));
+        console.log("================================================")
+        console.log("Tool Messages: ", JSON.stringify(toolMessages, null, 2));
+		messages.push(completion.choices[0].message, ...toolMessages);
 
-		// console.log('resp: ', resp);
+        console.log("Messages: ", JSON.stringify(messages, null, 2));
 
-		// if (!resp.ok) {
-		// 	const errText = await resp.text().catch(() => '');
-		// 	return json({ error: `Upstream error: ${resp.status} ${errText}` }, { status: 500 });
-		// }
-
-		// const data = await resp.json();
-		// const reply = data.output
-		// 	.map((o: any) => o.content?.map((c: any) => c.text).join(' ') ?? '')
-		// 	.join(' ');
-		// return json({ reply });
-	} catch (err: any) {
-		return json({ error: err?.message ?? 'Unknown server error' }, { status: 500 });
+		completion = await openai.chat.completions.create({
+			model: 'gpt-4o',
+			messages
+		});
 	}
-};
+
+	return completion.choices[0].message.content;
+}
+
+async function main() {
+	// // 1) Demographics rings
+    // const res = await creChat("Give me 1/3/5-mile demographics around 198 NE Combs Flat Rd, Prineville OR.");
+    // console.log(res);
+
+	// // 2) Jobs & commuting
+	// const res = await creChat("Where do workers come from and what industries dominate near 350 5th Ave, NYC?");
+	// console.log(res);
+
+	// // 3) Economy snapshot
+	// const res = await creChat("What does the local economy look like around 30301 (Atlanta)?");
+	// console.log(res);
+
+	// 4) Combined ask
+	const res = await creChat("For 123 Main St, Austin TX—1/3/5-mile demographics, top job flows, and unemployment trend.");
+	console.log(res);
+}
+
+main();

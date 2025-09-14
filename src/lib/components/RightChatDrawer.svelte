@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { v4 as uuid } from 'uuid';
+	import { marked } from 'marked';
 	import type { ChatMessage, AIAction } from '$lib/types/chat';
 	import { parseActionsFromReply } from '$lib/types/chat';
 	import { ui } from '$lib/stores/ui.svelte';
@@ -58,6 +59,15 @@
 		{ key: 'doing', title: 'In progress' },
 		{ key: 'done', title: 'Done' }
 	];
+
+	// Configure marked for synchronous parsing
+	marked.setOptions({
+		async: false
+	});
+
+	function renderMarkdown(content: string): string {
+		return marked.parse(content) as string;
+	}
 
 	function addQuick(status: Task['status']) {
 		const title = prompt('Task title?');
@@ -269,7 +279,7 @@
 					<div class="mb-1 text-[11px] opacity-70">
 						{m.role} · {m.ts ? new Date(m.ts).toLocaleTimeString() : ''}
 					</div>
-					<div class="whitespace-pre-wrap text-sm">{m.content}</div>
+					<div class="prose prose-sm max-w-none text-sm dark:prose-invert">{@html renderMarkdown(m.content)}</div>
 				</div>
 			</div>
 		{/each}

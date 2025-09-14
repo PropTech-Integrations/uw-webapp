@@ -9,16 +9,16 @@ import { Q_INSIGHT_BY_DOCHASH } from '$lib/realtime/graphql/queries/Insight';
 import type { Insight } from '$lib/types/Insight';
 
 export const load: LayoutServerLoad = async ({ params, cookies, url }) => {
-	console.log('Starting layout.server.ts');
-	console.log('url', url);
-	console.log('params', params);
+	// console.log('Starting layout.server.ts');
+	// console.log('url', url);
+	// console.log('params', params);
 	let { projectId } = params;
 
 	const newProject = url.searchParams.get('new');
 	// const projectId = url.pathname.split('/').at(-2);
 
-	console.log('projectId', projectId);
-	console.log('newProject', newProject);
+	// console.log('projectId', projectId);
+	// console.log('newProject', newProject);
 
 	let documents: Document[] = [];
 
