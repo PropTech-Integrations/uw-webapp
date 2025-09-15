@@ -62,7 +62,7 @@ export const GET: RequestHandler = async (params) => {
 	// Parse the response to extract tokens
 	const tokens = await response.json();
 
-	console.log('tokens: ', tokens);
+	// console.log('tokens: ', tokens);
 	// Clean up cookies related to the authentication process
 	cookies.delete('auth_state', { path: '/auth' });
 	cookies.delete('pkce_verifier', { path: '/auth' });

@@ -100,7 +100,7 @@
           <DollarOutline class="w-6 h-6 text-gray-500 dark:text-gray-400" />
         </div>
         <div>
-          <h5 class="leading-none text-2xl font-bold text-gray-900 dark:text-white pb-1">Rent Schedule</h5>
+          <h5 class="leading-none text-2xl font-bold text-gray-900 dark:text-white pb-1 mt-3">Rent Schedule</h5>
           <p class="text-sm font-normal text-gray-500 dark:text-gray-400">Numbers are from the lease rent schedule</p>
         </div>
       </div>

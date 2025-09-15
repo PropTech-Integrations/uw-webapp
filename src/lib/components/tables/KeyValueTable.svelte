@@ -8,7 +8,6 @@
 		TableHeadCell
 	} from 'flowbite-svelte';
 	let { title, data } = $props();
-
 </script>
 
 <Table shadow>
@@ -18,13 +17,11 @@
 		</tr>
 	</TableHead>
 	<TableBody class="divide-y">
-        {#each data as {key, val}}
-		<TableBodyRow>
-			<TableBodyCell>{key}</TableBodyCell>
-			<TableBodyCell>{val}</TableBodyCell>
-		</TableBodyRow>
-        {/each}
+		{#each data as { key, val }}
+			<TableBodyRow>
+				<TableBodyCell>{key}</TableBodyCell>
+				<TableBodyCell>{val}</TableBodyCell>
+			</TableBodyRow>
+		{/each}
 	</TableBody>
 </Table>
-
-

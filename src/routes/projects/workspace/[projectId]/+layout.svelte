@@ -158,12 +158,10 @@
 				<div class="mb-4 flex flex-wrap gap-2">
 					<TabButton href="get-started">Get Started</TabButton>
 					<TabButton href="document-analysis">Document Analysis</TabButton>
-					<TabButton href="ai-data-labeling">AI Data Labeling</TabButton>
-					<TabButton href="insights">Insights</TabButton>
+					<!-- <TabButton href="ai-data-labeling">AI Data Labeling</TabButton> -->
 					<TabButton href="property-analysis">Property Analysis</TabButton>
 					<TabButton href="market-analysis">Market Analysis</TabButton>
 					<TabButton href="investment-analysis">Investment Analysis</TabButton>
-					<TabButton href="reports">Project Settings</TabButton>
 				</div>
 				{@render children()}
 			</div>

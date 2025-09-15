@@ -1,6 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
-import { DOCUMENT_BUCKET, DOCUMENTS_TABLE, REGION, FILE_UPLOADS_BUCKET } from '$env/static/private';
+import { DOCUMENTS_BUCKET, DOCUMENTS_TABLE, REGION, FILE_UPLOADS_BUCKET } from '$env/static/private';
 
 import type { PageServerLoad } from './$types';
 
@@ -94,7 +94,7 @@ export const load: PageServerLoad = async () => {
 		return Object.entries(highlightMap).map(([hash, highlights]) => {
 			const property: any = { 
 				id: hash,
-				thumbnailUrl: `https://${DOCUMENT_BUCKET}.s3.us-west-2.amazonaws.com/${hash}/images/img-0.jpeg`
+				thumbnailUrl: `https://${DOCUMENTS_BUCKET}.s3.us-west-2.amazonaws.com/${hash}/images/img-0.jpeg`
 			};
 			let createdAt = '';
 			highlights.forEach((highlight) => {
