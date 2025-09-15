@@ -1,6 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
-import { DOCUMENTS_BUCKET, DOCUMENTS_TABLE, REGION, FILE_UPLOADS_BUCKET } from '$env/static/private';
+import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { DOCUMENTS_BUCKET, DOCUMENTS_TABLE, REGION } from '$env/static/private';
 
 import type { PageServerLoad } from './$types';
 

@@ -207,10 +207,10 @@
 	<!-- Left-edge drag handle -->
 	<div
 		title="Drag to resize"
-		on:pointerdown={beginResize}
-		on:pointermove={onResizeMove}
-		on:pointerup={endResize}
-		on:pointercancel={endResize}
+		onpointerdown={beginResize}
+		onpointermove={onResizeMove}
+		onpointerup={endResize}
+		onpointercancel={endResize}
 		class="group absolute left-0 top-0 h-full w-1 cursor-col-resize"
 	>
 		<!-- a slightly easier-to-grab invisible area -->
@@ -248,7 +248,7 @@
 
 			<button
 				type="button"
-				on:click={toggle}
+				onclick={toggle}
 				class="rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
 			>
 				Close
@@ -256,7 +256,7 @@
 
 			<button
 				type="button"
-				on:click={clearMessages}
+				onclick={clearMessages}
 				class="rounded-lg border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-200 dark:hover:bg-red-800"
 			>
 				Clear
@@ -292,16 +292,18 @@
 	<!-- Composer -->
 	<div class="border-t border-gray-200 p-3 dark:border-gray-800">
 		<div class="flex gap-2">
-			<textarea
+			<textarea 
+			aria-label="Chat input"
 				bind:value={input}
 				rows="1"
-				on:keydown={key}
+				onkeydown={key}
 				placeholder="Ask the AI to help…"
 				class="w-full flex-1 resize-none rounded-2xl border border-gray-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 				disabled={loading}
-			/>
+			></textarea>
 			<button
-				on:click={send}
+				aria-label="Send message"
+				onclick={send}
 				disabled={loading}
 				class="rounded-2xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
 			>
@@ -315,7 +317,7 @@
 {#if !ui.sidebarOpen}
 	<button
 		title="Open chat"
-		on:click={() => (ui.sidebarOpen = true)}
+		onclick={() => (ui.sidebarOpen = true)}
 		class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full rounded-l-xl bg-blue-600 px-3 py-2 text-white shadow"
 	>
 		Chat

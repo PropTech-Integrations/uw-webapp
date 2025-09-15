@@ -14,7 +14,7 @@
 			<svg class="mx-1 h-4 w-4 text-gray-400 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 			  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
 			</svg>
-			<a href="#" class="ms-1 text-sm font-medium text-gray-700 hover:text-primary-700 dark:text-gray-400 dark:hover:text-white md:ms-2">User</a>
+			<a href="/" class="ms-1 text-sm font-medium text-gray-700 hover:text-primary-700 dark:text-gray-400 dark:hover:text-white md:ms-2">User</a>
 		  </div>
 		</li>
 		<li aria-current="page">
@@ -66,7 +66,7 @@
 			  id="username"
 			  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
 			  placeholder="Ex. BonnieG"
-			  required=""
+			  required
 			/>
 		  </div>
 		  <div>
@@ -77,7 +77,7 @@
 			  id="fullname"
 			  class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
 			  placeholder="Ex. Bonnie Green"
-			  required=""
+			  required
 			/>
 		  </div>
 		  <div>
@@ -95,7 +95,7 @@
 				id="email"
 				class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 ps-10 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
 				placeholder="name@example.com"
-				required=""
+				required
 			  />
 			</div>
 		  </div>
@@ -246,7 +246,7 @@
 				id="current-password"
 				class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
 				placeholder="Enter your current password"
-				required=""
+				required
 			  />
 			</div>
 			<div>
@@ -257,7 +257,7 @@
 				id="new-password"
 				class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
 				placeholder="Enter your new password"
-				required=""
+				required
 			  />
 			</div>
 			<div>
@@ -268,7 +268,7 @@
 				id="confirm-password"
 				class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-600 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
 				placeholder="Confirm new password"
-				required=""
+				required
 			  />
 			</div>
 		  </div>

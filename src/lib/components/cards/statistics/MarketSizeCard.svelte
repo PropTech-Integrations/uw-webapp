@@ -15,7 +15,7 @@
 				</p>
 			</div>
 			<div class="flex items-center space-x-1 ml-4">
-				<button
+				<button aria-label="View more"
 					class="p-1 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
 				>
 					<svg
@@ -32,7 +32,7 @@
 						></path></svg
 					>
 				</button>
-				<button
+				<button aria-label="View less"
 					class="p-1 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
 				>
 					<svg

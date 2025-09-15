@@ -14,7 +14,7 @@
 			<svg class="mx-1 h-4 w-4 text-gray-400 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 			  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" />
 			</svg>
-			<a href="#" class="ms-1 text-sm font-medium text-gray-700 hover:text-primary-700 dark:text-gray-400 dark:hover:text-white md:ms-2">User</a>
+			<a href="/" class="ms-1 text-sm font-medium text-gray-700 hover:text-primary-700 dark:text-gray-400 dark:hover:text-white md:ms-2">User</a>
 		  </div>
 		</li>
 		<li aria-current="page">
@@ -34,7 +34,7 @@
 	  <h2 class="mb-4 md:mb-6 text-xl font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-4">Notifications</h2>
 	  <div class="mb-4 flex items-center justify-between">
 		<h3 class="text-lg font-bold text-gray-900 dark:text-white">Alerts & Notifications</h3>
-		<a href="#" class="text-base font-medium text-primary-700 hover:underline dark:text-primary-500">Select all</a>
+		<a href="/" class="text-base font-medium text-primary-700 hover:underline dark:text-primary-500">Select all</a>
 	  </div>
 	  <div class="mb-4 sm:mb-6">
 		<label class="relative mb-4 flex cursor-pointer">
@@ -90,7 +90,7 @@
 	  </div>
 	  <div class="mb-4 flex items-center justify-between">
 		<h3 class="text-lg font-bold text-gray-900 dark:text-white">Email me when:</h3>
-		<a href="#" class="text-base font-medium text-primary-700 hover:underline dark:text-primary-500">Select all</a>
+		<a href="/" class="text-base font-medium text-primary-700 hover:underline dark:text-primary-500">Select all</a>
 	  </div>
 	  <div class="mb-4 sm:mb-6">
 		<div class="mb-4 flex items-center">
@@ -143,7 +143,7 @@
 	  </div>
 	  <div class="mb-4 flex items-center justify-between">
 		<h3 class="text-lg font-bold text-gray-900 dark:text-white">Subscribe me to:</h3>
-		<a href="#" class="text-base font-medium text-primary-700 hover:underline dark:text-primary-500">Select all</a>
+		<a href="/" class="text-base font-medium text-primary-700 hover:underline dark:text-primary-500">Select all</a>
 	  </div>
 	  <div class="mb-4 sm:mb-6">
 		<div class="mb-4 flex">
