@@ -67,7 +67,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   try {
 		// Generate a presigned URL valid for 3600 seconds (1 hour)
 		const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-    // console.log('url', url);
+    	console.log('url', url);
+		console.log('key', key);
+		console.log('contentType', contentType);
+		console.log('filename', filename);
+		console.log('fileHash', fileHash);
+		console.log('currentUser', currentUser);
+		
 		// Return JSON containing the URL and object key for client-side upload
 		return json({ url, key });
 	} catch (err) {
