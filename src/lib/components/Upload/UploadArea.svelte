@@ -29,6 +29,10 @@
 	// Documents are derived from the project store
 	let documents = $derived(project?.documents || []);
 
+	let fileInput: HTMLInputElement;
+	let openDelete = $state(false);
+	let current_file: any = $state(null);
+
 	// Files are derived from the documents and are local to the component
 	let files: {
 		file: File;
@@ -58,10 +62,6 @@
 			throw e;
 		}
 	}
-
-	let fileInput: HTMLInputElement;
-	let openDelete = $state(false);
-	let current_file: any = $state(null);
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' || event.key === ' ') {
@@ -121,14 +121,14 @@
 		const idx = files.length - 1;
 
 		try {
-			logger('File hash calculation:', {
-				filename: file.name,
-				fileSize: file.size
-			});
+			// logger('File hash calculation:', {
+			// 	filename: file.name,
+			// 	fileSize: file.size
+			// });
 
 			// Step 1: Calculate SHA-256 hash of the file
 			const sha256 = await calculateSHA256(file);
-			logger('SHA-256:', sha256);
+			// logger('SHA-256:', sha256);
 
 			// Step 2: Get presigned URL from server with file hash
 			const presignedResponse = await fetch('/api/s3-presigned', {
@@ -143,18 +143,18 @@
 				})
 			});
 
-			logger('presignedResponse', presignedResponse);
+			// logger('presignedResponse', presignedResponse);
 			if (!presignedResponse.ok) {
 				const errorText = await presignedResponse.text();
 				throw new Error(`Failed to get presigned URL: ${presignedResponse.status} - ${errorText}`);
 			}
 
 			const { url, key } = await presignedResponse.json();
-			logger('Presigned URL received:', { url, key });
+			// logger('Presigned URL received:', { url, key });
 
 			// Step 3: Upload file directly to S3
 			await new Promise<void>((resolve, reject) => {
-				logger('Uploading file to S3:', { url, key });
+				// logger('Uploading file to S3:', { url, key });
 				const xhr = new XMLHttpRequest();
 				xhr.open('PUT', url);
 
@@ -175,7 +175,7 @@
 						await graphQLUpdateProjectDocuments(updatedDocuments);
 						files[idx].result = result;
 
-						logger('files[idx].result: ', files[idx].result);
+						// logger('files[idx].result: ', files[idx].result);
 						files = [...files];
 						resolve();
 					} else {
@@ -184,6 +184,7 @@
 						reject(new Error(`Upload failed (${xhr.status})`));
 					}
 				};
+				
 				xhr.onerror = () => {
 					files[idx].uploading = false;
 					files[idx].result = { success: false, message: 'Network error' };
