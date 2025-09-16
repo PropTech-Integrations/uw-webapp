@@ -32,36 +32,48 @@ const s3 = new S3Client({ region: REGION });
  * constructs an S3 key under the user's namespace, and returns a presigned URL.
  */
 export const POST: RequestHandler = async ({ request, locals }) => {
-  console.log("Entering Server side POST function: /api/s3-presigned");
-  // Parse JSON body for required fields
-  const { filename, contentType } = await request.json();
+	console.log('Entering Server side POST function: /api/s3-presigned');
+	// Parse JSON body for required fields
+	const { filename, contentType, fileHash } = await request.json();
 
-  // Ensure the user is authenticated
-  const username = locals.user;
-  if (!username) {
-    // Respond with 401 if no user context is found
-    throw svelteError(401, 'Unauthorized');
-  }
+  // console.log('filename', filename);
+  // console.log('contentType', contentType);
+  // console.log('fileHash', fileHash);
 
-  // Define the S3 object key; could include username prefix if desired
-  const key = `${filename}`; // e.g., 'user123/myfile.png'
+	// Ensure the user is authenticated
+	const currentUser = locals.currentUser;
 
-  // Prepare S3 PutObjectCommand with bucket, key, and MIME type
-  const command = new PutObjectCommand({
-    Bucket: FILE_UPLOADS_BUCKET,
-    Key: key,
-    ContentType: contentType
-  });
+  if (!currentUser?.isAuthenticated || !currentUser.username) {
+		// Respond with 401 if no user context is found
+		throw svelteError(401, 'Unauthorized');
+	}
+  // console.log('fileHash', fileHash);
+	// Use the file hash as the S3 key and append .pdf extension
+	const key = `${fileHash}.pdf`; // e.g., 'a1b2c3d4e5f6...pdf'
+  // console.log('key', key);
+	
+  console.log('FILE_UPLOADS_BUCKET', FILE_UPLOADS_BUCKET);
+  console.log('key', key);
+  console.log('contentType', contentType);
+  // Prepare S3 PutObjectCommand with bucket, key, MIME type, and SHA256 hash
+	const command = new PutObjectCommand({
+		Bucket: FILE_UPLOADS_BUCKET,
+		Key: key,
+		ContentType: contentType,
+	});
 
+  // console.log('command', command);
+	
   try {
-    // Generate a presigned URL valid for 3600 seconds (1 hour)
-    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-    // Return JSON containing the URL and object key for client-side upload
-    return json({ url, key });
-  } catch (err) {
-    // Log the error for diagnostics
-    console.error('Error generating presigned URL:', err);
-    // Return 500 when signing fails
-    throw svelteError(500, 'Could not generate upload URL');
-  }
+		// Generate a presigned URL valid for 3600 seconds (1 hour)
+		const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    // console.log('url', url);
+		// Return JSON containing the URL and object key for client-side upload
+		return json({ url, key });
+	} catch (err) {
+		// Log the error for diagnostics
+		console.error('Error generating presigned URL:', err);
+		// Return 500 when signing fails
+		throw svelteError(500, 'Could not generate upload URL');
+	}
 };

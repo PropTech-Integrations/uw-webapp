@@ -60,8 +60,8 @@
 				const xhr = new XMLHttpRequest();
 				xhr.open('PUT', url);
 				xhr.setRequestHeader('Content-Type', file!.type);
-				// xhr.setRequestHeader('x-amz-checksum-algorithm', 'SHA256');
-				// xhr.setRequestHeader('x-amz-checksum-sha256', checksum!);                          // :contentReference[oaicite:2]{index=2}
+				xhr.setRequestHeader('x-amz-checksum-algorithm', 'SHA256');
+				xhr.setRequestHeader('x-amz-checksum-sha256', checksum!);                          // :contentReference[oaicite:2]{index=2}
 
 				xhr.upload.onprogress = e => {
 					if (e.lengthComputable) {
