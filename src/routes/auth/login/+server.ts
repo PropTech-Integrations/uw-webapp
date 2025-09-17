@@ -10,18 +10,23 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 export const GET: RequestHandler = async ({ cookies, url }) => {
-	// console.log('In auth/login/+server.ts url:', url);
+	console.log('In auth/login/+server.ts url:', url);
+
 	// 1. Generate a random PKCE code verifier
 	const verifier = generateCodeVerifier();
 	// console.log('verifier:', verifier);
+
 	// 2. Derive the code challenge from the verifier (SHA256 + base64-url)
 	const challenge = generateCodeChallenge(verifier);
 	// console.log('challenge:', challenge);
+
 	const state = uuidv4();
 	// console.log('state:', state);
+
 	const isProd = process.env.NODE_ENV === 'production';
 	// console.log('isProd:', isProd);
 	// Store both verifier and state
+
 	cookies.set('pkce_verifier', verifier, {
 		httpOnly: true,
 		secure: isProd,      
@@ -34,6 +39,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 		// path: '/auth', // <-- broader path
 		// maxAge: 300 // 5 minutes
 	});
+	
 	cookies.set('auth_state', state, {
 		httpOnly: true,
 		secure: isProd,      

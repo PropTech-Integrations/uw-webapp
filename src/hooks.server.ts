@@ -44,7 +44,7 @@ function claimsToCurrentUser(payload: JWTPayload) {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-	console.log('In hooks.server.ts event.url.pathname:', event.url.pathname);
+	// console.log('In hooks.server.ts event.url.pathname:', event.url.pathname);
 	// Don't protect the /auth/login and /auth/callback routes
 	if (
 		// event.url.pathname.startsWith('/') ||
@@ -61,7 +61,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const refresh_token = event.cookies.get('refresh_token');
 
 
-	console.log('id_token:', id_token);
+	// console.log('id_token:', id_token);
 	// console.log('access_token:', access_token);
 	// console.log('refresh_token:', refresh_token);
 
