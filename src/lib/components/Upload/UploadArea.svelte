@@ -206,7 +206,7 @@
 </script>
 
 <div
-	class="flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-gray-300 p-2 pb-4 transition hover:border-gray-300 dark:border-gray-500"
+	class="hidden lg:flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-gray-300 p-2 pb-4 transition hover:border-gray-300 dark:border-gray-500"
 	tabindex="0"
 	role="button"
 	onkeydown={handleKeydown}
@@ -244,21 +244,29 @@
 </div>
 
 {#if files.length}
-	<table class="mt-4 min-w-full border border-gray-300 text-left text-sm dark:border-gray-500">
+	<table class="mt-4 w-full table-fixed border border-gray-300 text-left text-sm dark:border-gray-500 hidden lg:table">
 		<thead
 			class="border border-gray-300 bg-gray-50 text-gray-700 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-100"
 		>
 			<tr>
-				<th class="px-4 py-2">Your Documents</th>
 				<th class="w-12 px-4 py-2"></th>
+				<th class="px-4 py-2 break-words">Your Documents</th>
 			</tr>
 		</thead>
 		<tbody>
 			{#each files as f, idx}
 				<tr class="border border-b border-gray-300 last:border-b-0 dark:border-gray-500">
+					<td class="px-4 py-2 text-center">
+						<button type="button" class="text-red-500 hover:text-red-700" aria-label="Remove file">
+							<TrashBinOutline
+								class="h-6 w-6 shrink-0"
+								onclick={() => ((current_file = files[idx]), (openDelete = true))}
+							/>
+						</button>
+					</td>
 					<td class="px-4 py-2">
-						<div>
-							<span>{f.file.name}</span>
+						<div class="break-words">
+							<span class="block">{f.file.name}</span>
 							{#if f.uploading}
 								<span class="ml-2 text-xs text-blue-500">Uploading… {f.progress}%</span>
 							{/if}
@@ -273,14 +281,6 @@
 						{#if f.uploading}
 							<progress class="mt-1 w-full" max="100" value={f.progress}></progress>
 						{/if}
-					</td>
-					<td class="px-4 py-2 text-center">
-						<button type="button" class="text-red-500 hover:text-red-700" aria-label="Remove file">
-							<TrashBinOutline
-								class="h-6 w-6 shrink-0"
-								onclick={() => ((current_file = files[idx]), (openDelete = true))}
-							/>
-						</button>
 					</td>
 				</tr>
 			{/each}

@@ -64,7 +64,6 @@ export function generateEnvExample(
 
   // Write to .env.example (overwrites if it already exists)
   fs.writeFileSync(path.resolve(process.cwd(), outputPath), outputLines.join('\n'));
-  console.log(`✅ Generated ${outputPath}`);
 }
 
 // Example usage:

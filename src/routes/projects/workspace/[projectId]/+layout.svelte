@@ -1,7 +1,19 @@
 <!-- src/routes/(app)/+layout.svelte -->
 <script lang="ts">
-    console.log("Starting layout.svelte")
+	console.log('Starting layout.svelte');
 	import { browser } from '$app/environment';
+
+	// Import project store for synchronization
+	import {
+		project as projectStore,
+		setProject,
+		documents as documentsStore,
+		addDocument,
+		addPageToDocument,
+		addTextToDocument,
+		addImageToDocument,
+		addInsightToDocument
+	} from '$lib/stores/project.svelte';
 
 	// Type imports
 	import type { LayoutProps } from './$types';
@@ -29,13 +41,6 @@
 	let documents = $derived(data.documents);
 	let isNewProject = $derived(data.isNewProject);
 
-	// Import project store for synchronization
-	import {
-		project as projectStore,
-		setProject,
-		documents as documentsStore
-	} from '$lib/stores/project.svelte';
-
 	// Sync server data to client store (only in browser)
 	if (browser) {
 		$effect(() => {
@@ -57,6 +62,11 @@
 
 	// Import GraphQL Queries, Mutations, and Subscriptions
 	import { S_PROJECT_UPDATED_BY_ID } from '$lib/realtime/graphql/subscriptions/Project';
+	import { S_CREATE_DOCUMENT } from '$lib/realtime/graphql/subscriptions/Document';
+	import { S_CREATE_PAGE } from '$lib/realtime/graphql/subscriptions/Page';
+	import { S_CREATE_TEXT } from '$lib/realtime/graphql/subscriptions/Text';
+	import { S_CREATE_IMAGE } from '$lib/realtime/graphql/subscriptions/Image';
+	import { S_CREATE_INSIGHT } from '$lib/realtime/graphql/subscriptions/Insight';
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Application Svelte Components Section
@@ -100,26 +110,106 @@
 			client = null;
 		}
 
+		// Build subscription array dynamically based on project documents
+		const subscriptions = [
+			{
+				query: S_PROJECT_UPDATED_BY_ID,
+				variables: { id: project?.id },
+				path: 'onProjectUpdated',
+				next: (it: Project) => {
+					project = it;
+					// Update the global project store so all child pages stay in sync
+					if (browser) {
+						setProject(it);
+						console.log('Setting documents: ', it.documents);
+						documentsStore.set(documents);
+					}
+					logger(`Project ${it.id} updated:`, it);
+				},
+				error: (err: any) => console.error('project sub error', err)
+			}
+		];
+
+		// Add document-specific subscriptions for each document in the project
+		if (project?.documents) {
+			for (const projectDoc of project.documents) {
+				// Subscribe to document creation (global)
+				subscriptions.push({
+					query: S_CREATE_DOCUMENT,
+					variables: {} as any,
+					path: 'onCreateDocument',
+					next: (newDocument: any) => {
+						if (browser) {
+							addDocument(newDocument);
+							logger('Document created:', newDocument);
+						}
+					},
+					error: (err: any) => console.error('document creation sub error', err)
+				});
+
+				// Subscribe to page creation for this document
+				subscriptions.push({
+					query: S_CREATE_PAGE,
+					variables: { docHash: projectDoc.id } as any,
+					path: 'onCreatePage',
+					next: (newPage: any) => {
+						if (browser) {
+							addPageToDocument(projectDoc.id, newPage);
+							logger('Page created:', newPage);
+						}
+					},
+					error: (err: any) => console.error('page creation sub error', err)
+				});
+
+				// Subscribe to text creation for this document (we'll need to get page IDs)
+				// For now, we'll subscribe globally and filter by docHash in the handler
+				subscriptions.push({
+					query: S_CREATE_TEXT,
+					variables: {} as any, // Subscribe to all text creation
+					path: 'onCreateText',
+					next: (newText: any) => {
+						if (browser && newText.docHash === projectDoc.id) {
+							addTextToDocument(projectDoc.id, newText);
+							logger('Text created:', newText);
+						}
+					},
+					error: (err: any) => console.error('text creation sub error', err)
+				});
+
+				// Subscribe to image creation for this document
+				subscriptions.push({
+					query: S_CREATE_IMAGE,
+					variables: {} as any, // Subscribe to all image creation
+					path: 'onCreateImage',
+					next: (newImage: any) => {
+						if (browser && newImage.docHash === projectDoc.id) {
+							addImageToDocument(projectDoc.id, newImage);
+							logger('Image created:', newImage);
+						}
+					},
+					error: (err: any) => console.error('image creation sub error', err)
+				});
+
+				// Subscribe to insight creation for this document
+				subscriptions.push({
+					query: S_CREATE_INSIGHT,
+					variables: { docHash: projectDoc.id } as any,
+					path: 'onCreateInsight',
+					next: (newInsight: any) => {
+						if (browser) {
+							addInsightToDocument(projectDoc.id, newInsight);
+							logger('Insight created:', newInsight);
+						}
+					},
+					error: (err: any) => console.error('insight creation sub error', err)
+				});
+			}
+		}
+
 		client = new AppSyncWsClient({
 			graphqlHttpUrl: PUBLIC_GRAPHQL_HTTP_ENDPOINT,
 			auth: { mode: 'cognito', idToken: idToken },
-			subscriptions: [
-				{
-					query: S_PROJECT_UPDATED_BY_ID,
-					variables: { id: project?.id },
-					path: 'onProjectUpdated',
-					next: (it: Project) => {
-						project = it;
-						// Update the global project store so all child pages stay in sync
-						if (browser) {
-							setProject(it);
-							documentsStore.set(documents);
-						}
-						logger(`Project ${it.id} updated:`, it);
-					},
-					error: (err) => console.error('project sub error', err)
-				}
-			]
+			subscriptions
 		});
 
 		return () => {
@@ -140,20 +230,17 @@
 
 		<div class="grid flex-1 grid-cols-6 gap-6 p-4">
 			<!-- Column 1 -->
-			<div class="col-span-1">
+			<div class="hidden xl:block lg:col-span-1">
 				<section
 					class="space-y-6 rounded-2xl bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-2 shadow-md dark:bg-gray-800 dark:bg-none"
 				>
 					{#if $projectStore?.documents || isNewProject}
-						<!-- {#each $projectStore.documents as document}
-							<div>{document.filename}</div>
-						{/each} -->
-						<UploadArea idToken={idToken} />
+						<UploadArea {idToken} />
 					{/if}
 					<SourceCards columns={1} />
 				</section>
 			</div>
-			<div class="col-span-5">
+			<div class="col-span-6 xl:col-span-5">
 				<!-- Workspace Navigation -->
 				<div class="mb-4 flex flex-wrap gap-2">
 					<TabButton href="get-started">Get Started</TabButton>

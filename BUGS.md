@@ -1,1 +1,0 @@
-- The PageMetadataClient and PageService starts indexing pages by the number 1, but images and texts start at page 0

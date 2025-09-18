@@ -5,6 +5,7 @@ import { redirect } from '@sveltejs/kit';
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
 
 import { REGION, COGNITO_USER_POOL_ID } from '$env/static/private';
+import { logger } from '$lib/logging/debug';
 
 const JWKS = createRemoteJWKSet(
 	new URL(`https://cognito-idp.${REGION}.amazonaws.com/${COGNITO_USER_POOL_ID}/.well-known/jwks.json`)
@@ -44,7 +45,6 @@ function claimsToCurrentUser(payload: JWTPayload) {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// console.log('In hooks.server.ts event.url.pathname:', event.url.pathname);
 	// Don't protect the /auth/login and /auth/callback routes
 	if (
 		// event.url.pathname.startsWith('/') ||
@@ -60,17 +60,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const access_token = event.cookies.get('access_token');
 	const refresh_token = event.cookies.get('refresh_token');
 
-
-	// console.log('id_token:', id_token);
-	// console.log('access_token:', access_token);
-	// console.log('refresh_token:', refresh_token);
+	// logger('id_token:', id_token);
 
 	// If user is not logged in, redirect to login
 	if (!id_token || !access_token || !refresh_token) {
-		// console.log('User is not logged in, redirecting to login');
-		// console.log('id_token:', id_token);
-		// console.log('access_token:', access_token);
-		// console.log('refresh_token:', refresh_token);
 		event.locals.currentUser = { isAuthenticated: false };
 		throw redirect(302, '/auth/login');
 	}

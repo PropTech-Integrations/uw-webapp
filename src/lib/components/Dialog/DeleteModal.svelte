@@ -27,7 +27,7 @@
 	async function deleteProject(id: string, idToken: string) {
 		const mutation = M_DELETE_PROJECT;
 		const input = { id };
-		console.log('input', JSON.stringify(input, null, 2));
+
 		try {
 			const res = await gql<{ deleteProject: Project }>(mutation, { input }, idToken);
 			return res.deleteProject;
