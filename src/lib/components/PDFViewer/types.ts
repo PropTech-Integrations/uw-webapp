@@ -1,7 +1,9 @@
+import type { ProjectDocument } from "$lib/types/Project";
+
 // Type definitions
 export interface PDFViewerProps {
-	url?: string;
 	data?: Uint8Array | null;
+	documents?: ProjectDocument[];
 	scale?: number;
 	pageNum?: number;
 	flipTime?: number;
@@ -9,6 +11,7 @@ export interface PDFViewerProps {
 	showBorder?: boolean;
 	totalPage?: number;
 	currentPage?: number;
+	currentDocHash?: string;
 	downloadFileName?: string;
 	showTopButton?: boolean;
 	onProgress?: (progress: { loaded: number; total: number }) => void;

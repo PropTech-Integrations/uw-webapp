@@ -1,16 +1,12 @@
 <script lang="ts">
-	import { ButtonGroup, Button } from 'flowbite-svelte';
-	import {
-		ArrowLeftOutline,
-		ArrowRightOutline,
-		ZoomOutOutline,
-		ZoomInOutline
-	} from 'flowbite-svelte-icons';
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Import Environment Variables
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	import { PUBLIC_DOCUMENTS_BUCKET, PUBLIC_REGION } from '$env/static/public';
 
-	import * as pdfjs from 'pdfjs-dist';
-	import { onDestroy, tick } from 'svelte';
-	import { calcRT, getPageText, onPrint, savePDF } from './utils/Helper.svelte';
-	import Tooltip from './utils/Tooltip.svelte';
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Import Component Types
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	import type {
 		PDFViewerProps,
 		PDFAnnotation,
@@ -21,26 +17,18 @@
 		DownloadOptions
 	} from './types';
 
-	import RotateRight from './RotateRight.svelte';
-	import RotateLeft from './RotateLeft.svelte';
-
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// Import Component Props
+	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	let {
-		url,
 		data,
-		scale = 1.8,
+		documents,
+		scale = 1.0,
 		pageNum = 1,
 		flipTime = 120,
-		showButtons = [
-			'navigation',
-			'zoom',
-			'print',
-			'rotate',
-			'download',
-			'autoflip',
-			'timeInfo',
-			'pageInfo'
-		],
+		showButtons = ['navigation', 'zoom', 'rotate', 'download'],
 		currentPage = $bindable(1),
+		currentDocHash = $bindable(''),
 		totalPage = 0,
 		downloadFileName = '',
 		showTopButton = true,
@@ -48,13 +36,44 @@
 		externalLinksTarget
 	}: PDFViewerProps = $props();
 
+	import { ButtonGroup, Button, Dropdown, DropdownItem } from 'flowbite-svelte';
+	import {
+		ArrowLeftOutline,
+		ArrowRightOutline,
+		ZoomOutOutline,
+		ZoomInOutline,
+		ChevronDownOutline
+	} from 'flowbite-svelte-icons';
+
+	import * as pdfjs from 'pdfjs-dist';
+	import { onDestroy, tick } from 'svelte';
+	import { calcRT, getPageText, onPrint, savePDF } from './utils/Helper.svelte';
+	import Tooltip from './utils/Tooltip.svelte';
+
+	import RotateRight from './RotateRight.svelte';
+	import RotateLeft from './RotateLeft.svelte';
+
+	// Svelte 5 rune for reactive state
+	let openDropdown = $state(false);
+
+	let docs = $derived(documents ?? []);
+
+	let url = $derived(
+		`https://${PUBLIC_DOCUMENTS_BUCKET}.s3.${PUBLIC_REGION}.amazonaws.com/${currentDocHash}/document.pdf`
+	);
+	$inspect('URL ====================================================: ', url);
+	let currentDocFilename = $derived(docs.find((doc) => doc.id === currentDocHash)?.filename ?? '');
+
+	let hasDocuments: boolean = $derived((documents?.length ?? 0) > 0);
+
+	$inspect('documents ====================================================: ', docs);
 	pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 		'pdfjs-dist/build/pdf.worker.mjs',
 		import.meta.url
 	).toString();
 
 	// Internal state variables with proper typing
-	let canvas: HTMLCanvasElement | undefined;
+	let canvas: HTMLCanvasElement | undefined = $state();
 
 	let pageCount: number = 0;
 	let pdfDoc: PDFDocument | null = null;
@@ -68,14 +87,15 @@
 	let secondInterval: NodeJS.Timeout | undefined;
 	let seconds: number = flipTime;
 	let pages: HTMLCanvasElement[] = [];
-	let password: string = '';
-	let passwordError: boolean = false;
-	let passwordMessage: string = '';
+	let password = $state('');
+	let passwordError = $state(false);
+	let passwordMessage = $state('');
 	let isInitialized: boolean = false;
 	const minScale: number = 1.0;
 	const maxScale: number = 2.3;
 
 	const renderPage = async (num: number): Promise<void> => {
+		console.log('renderPage ====================================================: ', num);
 		if (num < 1 || num > pageCount || !pdfDoc || !canvas) return;
 		pageRendering = true;
 		try {
@@ -182,13 +202,11 @@
 	};
 
 	const onPrevPage = (): void => {
-		console.log('onPrevPage', currentPage);
 		if (currentPage <= 1) return;
 		queueRenderPage(currentPage - 1);
 	};
 
 	const onNextPage = (): void => {
-		console.log('onNextPage', currentPage);
 		if (!pdfDoc || currentPage >= pageCount) return;
 		queueRenderPage(currentPage + 1);
 	};
@@ -229,7 +247,6 @@
 
 	const initialLoad = async (): Promise<void> => {
 		try {
-
 			const loadingTask = pdfjs.getDocument({
 				...(url && { url }),
 				...(data && { data }),
@@ -299,7 +316,6 @@
 	};
 
 	const downloadPdf = ({ url: fileUrl, data }: DownloadOptions): void => {
-		console.log('downloadPdf', { url: fileUrl, data });
 		const fileName =
 			downloadFileName ||
 			(fileUrl && fileUrl.substring(fileUrl.lastIndexOf('/') + 1)) ||
@@ -308,14 +324,20 @@
 	};
 
 	onDestroy(() => {
-		console.log('onDestroy');
 		clearInterval(interval);
 		clearInterval(secondInterval);
 	});
 
+	const onDocumentChange = (documentId: string): void => {
+		currentDocHash = documentId;
+		currentPage = 1
+		openDropdown = false;
+		initialLoad();
+	};
+
 	// Window dimensions
-	let pageWidth: number;
-	let pageHeight: number;
+	let pageWidth = $state(0);
+	let pageHeight = $state(0);
 
 	// Event handler types
 	const handleKeyDown = (event: KeyboardEvent): void => {
@@ -330,8 +352,19 @@
 </script>
 
 <svelte:window bind:innerWidth={pageWidth} bind:innerHeight={pageHeight} />
-<div class="flex items-center mb-2">
+<div class="mb-2 flex items-center">
 	<ButtonGroup>
+		<Button outline color="dark">
+			{currentDocFilename}
+			<ChevronDownOutline class="text-primary ms-2 h-6 w-6 text-gray-700 dark:text-gray-300" />
+		</Button>
+		<Dropdown class="list-none">
+			{#each docs as document}
+				<DropdownItem class="text-gray-700 dark:text-gray-300" onclick={() => onDocumentChange(document.id)}>
+					{document.filename}
+				</DropdownItem>
+			{/each}
+		</Dropdown>
 		<Button outline color="dark" onclick={() => onPrevPage()}>
 			<ArrowLeftOutline class="h-6 w-6 shrink-0" />
 		</Button>
@@ -350,22 +383,34 @@
 		<Button outline color="dark" onclick={() => antiClockwiseRotate()}>
 			<RotateLeft />
 		</Button>
+		<Button outline color="dark">
+			Page {currentPage} of {totalPage}<ChevronDownOutline
+				class="text-primary ms-2 h-6 w-6 dark:text-gray-200"
+			/>
+			<Dropdown class="list-none">
+				{#each Array(totalPage)
+					.fill(0)
+					.map((_, i) => i + 1) as num}
+					<DropdownItem class="text-gray-700 dark:text-gray-300" onclick={() => queueRenderPage(num)}>
+						Page {num}
+					</DropdownItem>
+				{/each}
+			</Dropdown>
+		</Button>
 	</ButtonGroup>
-	<span class="ml-4 text-gray-500 dark:text-gray-200">Page {currentPage} of {totalPage}</span>
 </div>
 
-{#if passwordError === true}
-	<div>
-		<p>This document requires a password to open:</p>
-		<p>{passwordMessage}</p>
+<div>
+	{#if passwordError === true}
 		<div>
-			<input type="password" bind:value={password} />
-			<button onclick={onPasswordSubmit}> Submit </button>
+			<p>This document requires a password to open:</p>
+			<p>{passwordMessage}</p>
+			<div>
+				<input type="password" bind:value={password} />
+				<button onclick={onPasswordSubmit}> Submit </button>
+			</div>
 		</div>
-	</div>
-{:else}
-	<canvas bind:this={canvas}></canvas>
-{/if}
-
-<style>
-</style>
+	{:else}
+		<canvas bind:this={canvas}></canvas>
+	{/if}
+</div>
