@@ -230,7 +230,7 @@
 
 		<div class="grid flex-1 grid-cols-6 gap-6 p-4">
 			<!-- Column 1 -->
-			<div class="hidden xl:block lg:col-span-1">
+			<!-- <div class="hidden xl:block lg:col-span-1">
 				<section
 					class="space-y-6 rounded-2xl bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-2 shadow-md dark:bg-gray-800 dark:bg-none"
 				>
@@ -239,16 +239,19 @@
 					{/if}
 					<SourceCards columns={1} />
 				</section>
-			</div>
+			</div> -->
 			<div class="col-span-6 xl:col-span-5">
 				<!-- Workspace Navigation -->
 				<div class="mb-4 flex flex-wrap gap-2">
 					<TabButton href="get-started">Get Started</TabButton>
 					<TabButton href="document-analysis">Document Analysis</TabButton>
-					<!-- <TabButton href="ai-data-labeling">AI Data Labeling</TabButton> -->
-					<TabButton href="property-analysis">Property Analysis</TabButton>
+					<!-- <TabButton href="ai-data-labeling">AI Data Labeling</TabButton> -->					
 					<TabButton href="market-analysis">Market Analysis</TabButton>
-					<TabButton href="investment-analysis">Investment Analysis</TabButton>
+					<TabButton href="property-analysis">Financial Analysis</TabButton>
+					<TabButton href="investment-analysis">Location/Site</TabButton>
+					<TabButton href="investment-analysis">Political/Legal</TabButton>
+					<TabButton href="investment-analysis">Insight/Sensitivity</TabButton>
+					<TabButton href="investment-analysis">Reports</TabButton>
 				</div>
 				{@render children()}
 			</div>

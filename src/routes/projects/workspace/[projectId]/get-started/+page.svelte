@@ -1,40 +1,34 @@
 <!-- +page.svelte -->
 <script>
-	import { project as projectStore } from '$lib/stores/project.svelte';
+	import UploadArea from '$lib/components/Upload/UploadArea.svelte';
+	import SourceCards from '$lib/components/workspace/SourceCards.svelte';
+	import { project as projectStore } from '$lib/stores/project.svelte.js';
 
 	let { data } = $props();
+	let idToken = data.idToken;
 	// Use reactive project store instead of static data
 	let project = $derived($projectStore);
 	let isNewProject = $derived(data.isNewProject);
 </script>
 
-<p class="text-sm text-gray-500 dark:text-gray-400">
-	<!-- Blog Section -->
-</p>
-<section class="mb-6 p-6 shadow">
-	<h2 class="mb-4 text-xl font-semibold">StratiqAI Blog {project?.name || (isNewProject ? 'New Project' : '')}</h2>
-	<article class="mb-6">
-		<h3 class="mb-2 text-lg font-bold">Welcome to the StratiqAI Blog!</h3>
-		<p class="mb-2">
-			Stay up to date with the latest news, product updates, and industry insights from the
-			StratiqAI team.
+<section class="shadow">
+	<h2 class="text-xl font-semibold">Welcome to Your StratiqAI Workspace for  {project?.name || (isNewProject ? 'New Project' : '')}</h2>
+	<article class="my-4">	<p class="mb-2">
+			Get started by uploading your first property or document.
 		</p>
-		<a href="/blog/welcome" class="text-sm hover:underline">Read more →</a>
+		<a href="/blog/uploading-your-first-property" class="text-sm hover:underline">Read more →</a>
 	</article>
-	<article class="mb-6">
-		<h3 class="mb-2 text-lg font-bold">How AI is Transforming Property Analysis</h3>
-		<p class="mb-2">
-			Discover how artificial intelligence is streamlining underwriting and property evaluation for
-			real estate professionals.
-		</p>
-		<a href="/blog/ai-property-analysis" class="text-sm hover:underline">Read more →</a>
-	</article>
-	<article>
-		<h3 class="mb-2 text-lg font-bold">Tips for Uploading Your First Property</h3>
-		<p class="mb-2">
-			Get started quickly with our step-by-step guide to uploading and analyzing your first property
-			in StratiqAI.
-		</p>
-		<a href="/blog/first-property-tips" class="text-sm hover:underline">Read more →</a>
-	</article>
+
 </section>
+
+<div class="width-full">
+	<section
+		class="space-y-6 rounded-2xl bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-2 shadow-md dark:bg-gray-800 dark:bg-none"
+	>
+		{#if $projectStore?.documents || isNewProject}
+			<UploadArea {idToken} />
+		{/if}
+		<SourceCards columns={3} />
+	</section>
+</div>
+

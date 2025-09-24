@@ -42,6 +42,7 @@
   let output = $state('');
   let index = $state(0);
   let isTyping = $state(false);
+  let hasStarted = $state(false);
 
   // used to cancel an in-flight run when inputs change/unmount
   let runToken = 0;
@@ -116,13 +117,17 @@
   $effect(() => {
     if (!browser) return;
     if (!autoplay) return;
+    if (!text) return;
+    if (hasStarted) return; // Prevent infinite loops
 
+    hasStarted = true;
     ++runToken;
     run(runToken);
   });
 
   // Public controls (optional)
   export function play() {
+    hasStarted = true;
     ++runToken;
     run(runToken);
   }
@@ -132,6 +137,7 @@
     isTyping = false;
   }
   export function skip() {
+    hasStarted = true;
     ++runToken;
     output = text ?? '';
     index = output.length;

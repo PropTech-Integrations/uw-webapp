@@ -11,14 +11,15 @@
 	import { Button, Card, CardPlaceholder, Heading, P, Toggle } from 'flowbite-svelte';
 	import { ArrowRightOutline } from 'flowbite-svelte-icons';
 	import Sidebar from '$lib/components/properties/sidebar/Sidebar.svelte';
-	import { project as projectStore } from '$lib/stores/project.svelte';
+	import { project as projectStore } from '$lib/stores/project.svelte.js';
+	import TypeWriter from '$lib/components/TypeWriter/TypeWriter.svelte';
+	import TitleParagraph from '$lib/components/dashboad/widgets/titleParagraph.svelte';
 
 	let { data } = $props();
 	// Use reactive project store instead of static data
 	let project = $derived($projectStore);
 
 	let vCard = false;
-	// let imageUrl = 'https://pti-demo-web-assets.s3.us-west-2.amazonaws.com/images/aarons.png';
 	let imageUrl = 'https://pti-demo-web-assets.s3.us-west-2.amazonaws.com/images/aaronmap.png';
 	const city_data = [
 		{
@@ -56,8 +57,6 @@
 	];
 </script>
 
-<!-- <div class="flex h-full">
-	<Sidebar  /> -->
 <section
 	class="dark:text-gray-100shadow-md w-full space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 dark:bg-gray-900"
 >
@@ -84,6 +83,35 @@
 		</Card>
 		<!-- <Toggle bind:checked={vCard} class="italic dark:text-gray-500">Reverse</Toggle> -->
 	</div>
+
+	<TitleParagraph
+		title="Employment"
+		paragraph="As of 2023, the workforce of Hillsboro is about 59,200 people. Employment grew ~ 1.8% from 2022 to 2023. The labor force participation rate (i.e. percent of working-age population that is working or seeking work) in Hillsboro is around 73%, which is higher than both the Portland MSA (~67%) and Oregon overall (~62.4%). In terms of industries employing residents, the top sectors are: Manufacturing (≈14,254 jobs), Health Care & Social Assistance (≈6,822), and Retail Trade (≈6,661). Regarding earnings: — Median household income in Hillsboro is ~$103,207. — Among industries, Manufacturing is one of the highest paying, with about $100,297 average/typical earnings. Utilities and Management of Companies & Enterprises are also high. Educational attainment is relatively strong: ~ 42% of residents over 25 have a bachelor's degree or higher."
+	/>
+
+	<!-- <P class="mb-3 text-xl font-normal leading-tight text-gray-700 dark:text-gray-400">
+		<TypeWriter
+			text="Testing TypeWriter component..."
+			speed={100}
+			autoplay={true}
+		/>
+	</P> -->
+	<!-- <P class="mb-3 text-xl font-normal leading-tight text-gray-700 dark:text-gray-400">
+		<TypeWriter
+			text="As of 2023, the workforce of Hillsboro is about 59,200 people. Employment grew ~ 1.8% from 2022 to 2023. The labor force participation rate (i.e. percent of working-age population that is working or seeking work) in Hillsboro is around 73%, which is higher than both the Portland MSA (~67%) and Oregon overall (~62.4%). In terms of industries employing residents, the top sectors are: Manufacturing (≈14,254 jobs), Health Care & Social Assistance (≈6,822), and Retail Trade (≈6,661). Regarding earnings: — Median household income in Hillsboro is ~$103,207. — Among industries, Manufacturing is one of the highest paying, with about $100,297 average/typical earnings. Utilities and Management of Companies & Enterprises are also high. Educational attainment is relatively strong: ~ 42% of residents over 25 have a bachelor's degree or higher."
+			speed={10}
+			autoplay={true}
+		/>
+	</P> -->
+
+	<!-- <Heading tag="h3" class="text-md mb-4 font-extrabold  md:text-lg lg:text-xl">Population</Heading>
+	<P class="mb-3 text-xl font-normal leading-tight text-gray-700 dark:text-gray-400">
+		<TypeWriter
+			text="Hillsboro, Oregon has a population of about 110,000–111,000 as of 2025. It’s the largest city in Washington County and continues to grow steadily, though at a modest annual rate."
+			speed={10}
+			autoplay={true}
+		/>
+	</P> -->
 
 	<div class="grid grid-cols-5 gap-4">
 		<StatCard label="MANUFACTURING" val="10%" />

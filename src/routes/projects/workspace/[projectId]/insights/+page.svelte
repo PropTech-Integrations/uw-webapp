@@ -1,6 +1,6 @@
 <!-- +page.svelte -->
 <script>
-    import { project as projectStore } from '$lib/stores/project.svelte';
+    import { project as projectStore } from '$lib/stores/project.svelte.js';
     
     let { data } = $props();
     // Use reactive project store instead of static data
