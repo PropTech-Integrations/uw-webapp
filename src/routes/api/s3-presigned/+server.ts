@@ -6,7 +6,7 @@ import { REGION, FILE_UPLOADS_BUCKET, COGNITO_IDENTITY_POOL_ID, COGNITO_USER_POO
 import { fromCognitoIdentityPool } from '@aws-sdk/credential-provider-cognito-identity';
 
 export const POST: RequestHandler = async ({ request, locals, cookies }) => {
-  const { filename, contentType } = await request.json();
+  const { filename, contentType, projectId } = await request.json();
 
   const currentUser = locals.currentUser;
   if (!currentUser?.isAuthenticated || !currentUser.username) {
@@ -33,7 +33,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
   const s3 = new S3Client({ region: REGION, credentials });
 
   // Create key
-  const key = `${currentUser.username}/${filename}.pdf`;
+  const key = `${currentUser.username}/${projectId}/${filename}`;
 
   try {
     // Use the same presigner logic in all environments for consistency
@@ -43,7 +43,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
     const cmd = new PutObjectCommand ({
       Bucket: FILE_UPLOADS_BUCKET,
       Key: key,
-      ContentType: 'application/pdf',
+      ContentType: contentType,
       // Optional: ServerSideEncryption: "AES256",
       // Optional: ChecksumSHA256: "<BASE64_SHA256>"
     });

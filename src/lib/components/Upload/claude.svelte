@@ -175,7 +175,7 @@
 		const response = await fetch('/api/s3-presigned', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ filename, contentType, fileHash, projectId: project.id })
+			body: JSON.stringify({ filename, contentType, fileHash })
 		});
 
 		if (!response.ok) {

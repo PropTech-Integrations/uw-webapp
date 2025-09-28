@@ -21,6 +21,16 @@
 
 	let vCard = false;
 	let imageUrl = 'https://pti-demo-web-assets.s3.us-west-2.amazonaws.com/images/aaronmap.png';
+
+	const conversations = [
+		{
+			category: 'Market Analysis',
+			title: 'Employment',
+			paragraph:
+				"As of 2023, the workforce of Hillsboro is about 59,200 people. Employment grew ~ 1.8% from 2022 to 2023. The labor force participation rate (i.e. percent of working-age population that is working or seeking work) in Hillsboro is around 73%, which is higher than both the Portland MSA (~67%) and Oregon overall (~62.4%). In terms of industries employing residents, the top sectors are: Manufacturing (≈14,254 jobs), Health Care & Social Assistance (≈6,822), and Retail Trade (≈6,661). Regarding earnings: — Median household income in Hillsboro is ~$103,207. — Among industries, Manufacturing is one of the highest paying, with about $100,297 average/typical earnings. Utilities and Management of Companies & Enterprises are also high. Educational attainment is relatively strong: ~ 42% of residents over 25 have a bachelor's degree or higher."
+		}
+	];
+
 	const city_data = [
 		{
 			key: 'State',
@@ -84,10 +94,9 @@
 		<!-- <Toggle bind:checked={vCard} class="italic dark:text-gray-500">Reverse</Toggle> -->
 	</div>
 
-	<TitleParagraph
-		title="Employment"
-		paragraph="As of 2023, the workforce of Hillsboro is about 59,200 people. Employment grew ~ 1.8% from 2022 to 2023. The labor force participation rate (i.e. percent of working-age population that is working or seeking work) in Hillsboro is around 73%, which is higher than both the Portland MSA (~67%) and Oregon overall (~62.4%). In terms of industries employing residents, the top sectors are: Manufacturing (≈14,254 jobs), Health Care & Social Assistance (≈6,822), and Retail Trade (≈6,661). Regarding earnings: — Median household income in Hillsboro is ~$103,207. — Among industries, Manufacturing is one of the highest paying, with about $100,297 average/typical earnings. Utilities and Management of Companies & Enterprises are also high. Educational attainment is relatively strong: ~ 42% of residents over 25 have a bachelor's degree or higher."
-	/>
+	{#each conversations as conversation}
+		<TitleParagraph title={conversation.title} paragraph={conversation.paragraph} />
+	{/each}
 
 	<!-- <P class="mb-3 text-xl font-normal leading-tight text-gray-700 dark:text-gray-400">
 		<TypeWriter

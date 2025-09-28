@@ -29,8 +29,6 @@ subscription subCreateProject {
 }
 `;
 
-
-
 export const S_PROJECT_UPDATED = `
   subscription OnProjectUpdated {
     onProjectUpdated {
@@ -62,7 +60,6 @@ export const S_PROJECT_UPDATED = `
   }
 `;
 
-
 export const S_PROJECT_DELETED = `
   subscription subDeleteProject {
     onProjectDeleted {
@@ -92,8 +89,6 @@ export const S_PROJECT_DELETED = `
     isPublic
   }
 }`;
-
-
 
 export const S_PROJECT_UPDATED_BY_ID = `
   subscription OnProjectUpdated($id: ID!) {

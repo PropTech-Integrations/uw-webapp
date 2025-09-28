@@ -211,8 +211,8 @@
 		</Toolbar>
 	</div>
 	<Table>
-		<TableHead class="border-y border-gray-200 bg-gray-100 dark:border-gray-700">
-			<TableHeadCell class="w-4 p-4"><Checkbox /></TableHeadCell>
+		<TableHead class="border border-gray-200 bg-gray-100 dark:border-gray-700">
+			<!-- <TableHeadCell class="w-4 p-4"><Checkbox /></TableHeadCell> -->
 			{#each ['Name', 'Address', 'Asset Type', 'Status', 'Actions'] as title}
 				<TableHeadCell class="p-4 font-medium">{title}</TableHeadCell>
 			{/each}
@@ -220,7 +220,7 @@
 		<TableBody>
 			{#each projects as project}
 				<TableBodyRow class="border-gray-200 text-base">
-					<TableBodyCell class="w-4 p-4"><Checkbox /></TableBodyCell>
+					<!-- <TableBodyCell class="w-4 p-4"><Checkbox /></TableBodyCell> -->
 					<TableBodyCell class="mr-12 flex items-center space-x-6 whitespace-nowrap p-4">
 						<a
 							href={`/projects/workspace/${project.id}/get-started`}
@@ -243,13 +243,14 @@
 						class="max-w-sm overflow-hidden truncate p-4 text-base font-normal text-gray-500 xl:max-w-xs dark:text-gray-300"
 					>
 						<div class="text-base font-semibold text-gray-900 dark:text-white">
-							{project.address}
+							{project.address || ''}
 						</div>
+
 						<div class="text-sm font-normal text-gray-500 dark:text-gray-300">
-							{project.city + ', ' + project.state + ' ' + project.zip}
+							{(project.city || '') + ' ' + (project.state || '') + ' ' + (project.zip || '')}
 						</div>
 					</TableBodyCell>
-					<TableBodyCell class="p-4">{project.assetType}</TableBodyCell>
+					<TableBodyCell class="p-4">{project.assetType || ''}</TableBodyCell>
 					<TableBodyCell class="p-4 font-normal">
 						<div class="flex items-center gap-2">
 							<Indicator
@@ -259,7 +260,7 @@
 										? 'blue'
 										: 'red'}
 							/>
-							{project.status}
+							{project.status || ''}
 						</div>
 					</TableBodyCell>
 					<TableBodyCell class="space-x-2 p-4">
@@ -276,7 +277,7 @@
 							class="gap-2 px-3"
 							onclick={() => ((current_project = project), (openDelete = true))}
 						>
-							<TrashBinSolid size="sm" /> Delete
+							<TrashBinSolid size="sm" />
 						</Button>
 					</TableBodyCell>
 				</TableBodyRow>

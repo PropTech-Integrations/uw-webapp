@@ -12,6 +12,7 @@ const JWKS = createRemoteJWKSet(
 );
 
 const verify = async (token: string) => {
+	console.log("JWT token: -----------------------2222222222222222222222222222222>>>>>>>>>>>", token)
 	const { payload } = await jwtVerify(token, JWKS);
 	return claimsToCurrentUser(payload);
 };
@@ -58,9 +59,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Read token from HttpOnly cookies
 	const id_token = event.cookies.get('id_token');
 	const access_token = event.cookies.get('access_token');
+	console.log("access_token: -----------------------3333333333333333333333333333333>>>>>>>>>>>", access_token)
 	const refresh_token = event.cookies.get('refresh_token');
 
-	// logger('id_token:', id_token);
+	logger('id_token:', id_token);
 
 	// If user is not logged in, redirect to login
 	if (!id_token || !access_token || !refresh_token) {

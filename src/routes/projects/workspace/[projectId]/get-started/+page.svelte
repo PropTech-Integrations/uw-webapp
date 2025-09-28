@@ -2,7 +2,7 @@
 <script>
 	import UploadArea from '$lib/components/Upload/UploadArea.svelte';
 	import SourceCards from '$lib/components/workspace/SourceCards.svelte';
-	import { project as projectStore } from '$lib/stores/project.svelte.js';
+	import { project as projectStore } from '$lib/stores/project.svelte';
 
 	let { data } = $props();
 	let idToken = data.idToken;

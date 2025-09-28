@@ -10,7 +10,7 @@
 	class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white/70 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/60"
 >
 	<div class="flex items-center gap-3">
-		<h1 class="text-base font-semibold">Workspace for {projectName}</h1>
+		<h1 class="text-base font-semibold">{projectName}</h1>
 		<p class="hidden text-xs text-gray-500 md:block dark:text-gray-400">
 			Your AI Powered CRE Expert
 		</p>
