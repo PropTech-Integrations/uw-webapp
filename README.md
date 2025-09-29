@@ -180,3 +180,11 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ## Acknowledgments
 
 List any resources, libraries, tutorials, or people who helped you build this project.
+
+## Tasks for Today
+
+### 2025/09/28
+
+- [ ] Implement a notification system that sends updates to the web browser
+- [ ] Complete the project documents to OpenAI VectorStore integration
+- [ ] Create a widget that updates from AI Insights

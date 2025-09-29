@@ -14,10 +14,13 @@
 		addImageToDocument,
 		addInsightToDocument
 	} from '$lib/stores/project.svelte';
+	import { mapStore } from '$lib/stores/mapStore';
+	import { setContext } from 'svelte';
 
 	// Type imports
 	import type { LayoutProps } from './$types';
 	import type { Project } from '$lib/types/Project';
+
 
 	// Import Logging
 	import { logger } from '$lib/logging/debug';
@@ -41,6 +44,9 @@
 	let documents = $derived(data.documents);
 	let isNewProject = $derived(data.isNewProject);
 
+	// Make mapStore available to all child pages via context
+	setContext('mapStore', mapStore);
+
 	// Sync server data to client store (only in browser)
 	if (browser) {
 		$effect(() => {
@@ -53,7 +59,6 @@
 		});
 	}
 
-	// $inspect(project);
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// GraphQL Endpoint, Queries, Mutations, and Subscriptions
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -141,6 +146,7 @@
 					next: (newDocument: any) => {
 						if (browser) {
 							addDocument(newDocument);
+							mapStore.addToKey('documents', newDocument);
 							logger('Document created:', newDocument);
 						}
 					},

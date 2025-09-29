@@ -16,8 +16,13 @@
 	import TitleParagraph from '$lib/components/dashboad/widgets/titleParagraph.svelte';
 
 	let { data } = $props();
+	console.log('data ------>: ', data);
 	// Use reactive project store instead of static data
 	let project = $derived($projectStore);
+	// Access mapStore from parent layout context
+	import { getContext } from 'svelte';
+	// Get mapStore from parent layout context
+	const mapStore = getContext('mapStore') as any;
 
 	let vCard = false;
 	let imageUrl = 'https://pti-demo-web-assets.s3.us-west-2.amazonaws.com/images/aaronmap.png';
@@ -65,8 +70,33 @@
 			val: '33 ft above sea level'
 		}
 	];
+
+	import ComponentA from '$lib/components/mapStore/componentA.svelte';
+	import ComponentB from '$lib/components/mapStore/componentB.svelte';
+	import ComponentC from '$lib/components/mapStore/componentC.svelte';
+
+	// Initialize with some data
+	mapStore.setKey('fruits', ['apple', 'banana']);
+	mapStore.setKey('colors', ['red', 'blue']);
+	mapStore.setKey('animals', ['cat', 'dog']);
 </script>
 
+<main>
+	<h1>Map Store Demo</h1>
+
+	<div class="info">
+		<p>Each component subscribes to different keys in the map.</p>
+		<p>Component A only re-renders when "fruits" changes.</p>
+		<p>Component B only re-renders when "colors" changes.</p>
+		<p>Component C can monitor any key dynamically.</p>
+	</div>
+
+	<div class="grid">
+		<ComponentA />
+		<ComponentB />
+		<ComponentC />
+	</div>
+</main>
 <section
 	class="dark:text-gray-100shadow-md w-full space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 dark:bg-gray-900"
 >
@@ -196,3 +226,18 @@
 </div>
 
  -->
+
+<style>
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 1rem;
+	}
+
+	.info {
+		padding: 1rem;
+		background: #e8f5e9;
+		border-radius: 8px;
+		margin: 1rem 0;
+	}
+</style>

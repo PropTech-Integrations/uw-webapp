@@ -8,7 +8,9 @@
 	// The project store holds the state for the workspace. 
 	// It's initialized from data loaded on the server side and passed to the client.
 	import { project as projectStore, documents as documentsStore } from '$lib/stores/project.svelte';
-
+	
+	// Access mapStore from parent layout context
+	import { getContext } from 'svelte';
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Import Application Defined Components
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -26,6 +28,9 @@
 	// Initialize the state variables for this component
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	let currentPage: number = $state(1);
+	
+	// Get mapStore from parent layout context
+	const mapStore = getContext('mapStore') as any;
 
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// Component Variables that are Derived from the Stores
@@ -43,6 +48,10 @@
 	let currentDocument: Document | null = $derived(
 		documents?.find((doc) => doc.docHash === currentDocHash) ?? null
 	);
+
+	// Example: Subscribe to specific keys in mapStore
+	// You can use mapStore.subscribeToKey('keyName') to get a reactive store for a specific key
+	// Example usage in template: {#each $mapStore.subscribeToKey('documentsLayout') as item}
 </script>
 
 {#if currentDocHash}

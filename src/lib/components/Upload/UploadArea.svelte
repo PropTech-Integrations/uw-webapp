@@ -275,7 +275,7 @@
 			files = [...files];
 
 			const updatedDocuments = [...project.documents, { id: sha256, filename: file.name }];
-			await updateProjectDocuments(updatedDocuments);
+			// await updateProjectDocuments(updatedDocuments);
 
 			// Mark as complete
 			files[fileIndex] = {
