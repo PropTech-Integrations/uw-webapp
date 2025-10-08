@@ -20,7 +20,6 @@
 	import type { LayoutProps } from './$types';
 	import type { Project } from '$lib/types/Project';
 
-
 	// Import Logging
 	import { logger } from '$lib/logging/debug';
 
