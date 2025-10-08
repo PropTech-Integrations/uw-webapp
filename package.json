@@ -21,7 +21,9 @@
 		"@tailwindcss/forms": "^0.5.9",
 		"@tailwindcss/typography": "^0.5.15",
 		"@tailwindcss/vite": "^4.0.0",
+		"@types/d3": "^7.4.3",
 		"@types/node": "^22.15.17",
+		"@types/topojson-client": "^3.1.5",
 		"amplify-adapter": "^1.1.0",
 		"dotenv": "^16.5.0",
 		"prettier": "^3.4.2",
@@ -45,6 +47,9 @@
 		"@aws-sdk/util-dynamodb": "^3.806.0",
 		"@turf/turf": "^7.2.0",
 		"aws-lambda": "^1.0.7",
+		"d3": "^7.9.0",
+		"d3-array": "^3.2.4",
+		"d3-scale": "^4.0.2",
 		"flowbite-svelte": "^1.0.0-next.20",
 		"flowbite-svelte-icons": "^2.1.1",
 		"jose": "^6.0.12",
@@ -54,6 +59,8 @@
 		"openai": "^5.20.2",
 		"runes-meta-tags": "^0.4.4",
 		"svelte-pdf": "^1.0.28",
+		"topojson-client": "^3.1.0",
+		"world-atlas": "^2.0.2",
 		"zod": "^3.24.4"
 	}
 }
