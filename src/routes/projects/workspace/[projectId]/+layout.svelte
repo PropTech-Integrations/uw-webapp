@@ -1,6 +1,5 @@
 <!-- src/routes/(app)/+layout.svelte -->
 <script lang="ts">
-	console.log('Starting layout.svelte');
 	import { browser } from '$app/environment';
 
 	// Import project store for synchronization
