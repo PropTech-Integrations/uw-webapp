@@ -1,152 +1,155 @@
 // Widget type definitions
-export type WidgetType = 
-  | 'table' 
-  | 'title' 
-  | 'paragraph' 
-  | 'image' 
-  | 'lineChart' 
-  | 'barChart' 
-  | 'metric';
+export type WidgetType =
+	| 'table'
+	| 'title'
+	| 'paragraph'
+	| 'image'
+	| 'lineChart'
+	| 'barChart'
+	| 'metric';
 
 export interface Position {
-  gridColumn: number;
-  gridRow: number;
+	gridColumn: number;
+	gridRow: number;
 }
 
 export interface Size {
-  colSpan: number;
-  rowSpan: number;
+	colSpan: number;
+	rowSpan: number;
 }
 
 export interface WidgetConstraints {
-  minWidth?: number;
-  minHeight?: number;
-  maxWidth?: number;
-  maxHeight?: number;
+	minWidth?: number;
+	minHeight?: number;
+	maxWidth?: number;
+	maxHeight?: number;
 }
 
 export interface BaseWidget extends Position, Size, WidgetConstraints {
-  id: string;
-  type: WidgetType;
-  locked?: boolean;
-  title?: string; // Optional widget title for display
-  description?: string; // Optional widget description
+	id: string;
+	type: WidgetType;
+	locked?: boolean;
+	title?: string; // Optional widget title for display
+	description?: string; // Optional widget description
 }
 
 // Widget Action Types
-export type WidgetAction = 
-  | 'edit'
-  | 'duplicate' 
-  | 'lock' 
-  | 'unlock'
-  | 'bringToFront'
-  | 'sendToBack'
-  | 'exportData'
-  | 'refresh'
-  | 'settings'
-  | 'remove';
+export type WidgetAction =
+	| 'edit'
+	| 'duplicate'
+	| 'lock'
+	| 'unlock'
+	| 'bringToFront'
+	| 'sendToBack'
+	| 'exportData'
+	| 'refresh'
+	| 'settings'
+	| 'remove';
 
 // Rest of the widget interfaces remain the same...
 export interface TableWidget extends BaseWidget {
-  type: 'table';
-  data: {
-    headers: string[];
-    rows: Array<Record<string, any>>;
-    sortable?: boolean;
-    paginated?: boolean;
-  };
+	type: 'table';
+	data: {
+		title?: string;
+		headers: string[];
+		rows: Array<Record<string, any>>;
+		sortable?: boolean;
+		paginated?: boolean;
+	};
 }
 
 export interface TitleWidget extends BaseWidget {
-  type: 'title';
-  data: {
-    title: string;
-    subtitle?: string;
-    alignment?: 'left' | 'center' | 'right';
-  };
+	type: 'title';
+	data: {
+		title: string;
+		subtitle?: string;
+		alignment?: 'left' | 'center' | 'right';
+	};
 }
 
 export interface ParagraphWidget extends BaseWidget {
-  type: 'paragraph';
-  data: {
-    content: string;
-    markdown?: boolean;
-  };
+	type: 'paragraph';
+	data: {
+		title?: string;
+		content: string;
+		markdown?: boolean;
+	};
 }
 
 export interface ImageWidget extends BaseWidget {
-  type: 'image';
-  data: {
-    src: string;
-    alt: string;
-    objectFit?: 'cover' | 'contain' | 'fill';
-  };
+	type: 'image';
+	data: {
+		title?: string;
+		src: string;
+		alt: string;
+		objectFit?: 'cover' | 'contain' | 'fill';
+	};
 }
 
 export interface LineChartWidget extends BaseWidget {
-  type: 'lineChart';
-  data: {
-    datasets: Array<{
-      label: string;
-      data: number[];
-      color?: string;
-    }>;
-    labels: string[];
-    options?: {
-      responsive?: boolean;
-      maintainAspectRatio?: boolean;
-    };
-  };
+	type: 'lineChart';
+	data: {
+		datasets: Array<{
+			label: string;
+			data: number[];
+			color?: string;
+		}>;
+		labels: string[];
+		options?: {
+			responsive?: boolean;
+			maintainAspectRatio?: boolean;
+		};
+	};
 }
 
 export interface BarChartWidget extends BaseWidget {
-  type: 'barChart';
-  data: {
-    datasets: Array<{
-      label: string;
-      data: number[];
-      backgroundColor?: string;
-    }>;
-    labels: string[];
-    orientation?: 'vertical' | 'horizontal';
-  };
+	type: 'barChart';
+	data: {
+		datasets: Array<{
+			label: string;
+			data: number[];
+			backgroundColor?: string;
+		}>;
+		labels: string[];
+		orientation?: 'vertical' | 'horizontal';
+	};
 }
 
 export interface MetricWidget extends BaseWidget {
-  type: 'metric';
-  data: {
-    label: string;
-    value: string | number;
-    change?: number;
-    changeType?: 'increase' | 'decrease';
-    unit?: string;
-  };
+	type: 'metric';
+	data: {
+		label: string;
+		value: string | number;
+		change?: number;
+		changeType?: 'increase' | 'decrease';
+		unit?: string;
+	};
 }
 
-export type Widget = 
-  | TableWidget 
-  | TitleWidget 
-  | ParagraphWidget 
-  | ImageWidget 
-  | LineChartWidget 
-  | BarChartWidget 
-  | MetricWidget;
+export type Widget =
+	| TableWidget
+	| TitleWidget
+	| ParagraphWidget
+	| ImageWidget
+	| LineChartWidget
+	| BarChartWidget
+	| MetricWidget;
 
 export interface DashboardConfig {
-  gridColumns: number;
-  gridRows: number;
-  gap: number;
-  minCellHeight: number;
+	gridColumns: number;
+	gridRows: number;
+	gap: number;
+	minCellHeight: number;
 }
 
 export interface DragState {
-  isDragging: boolean;
-  activeWidgetId: string | null;
-  ghostPosition: Position | null;
+	isDragging: boolean;
+	activeWidgetId: string | null;
+	ghostPosition: Position | null;
 }
 
 export interface ResizeState {
-  isResizing: boolean;
-  activeWidgetId: string | null;
-  resizeHandle: 'right' | 'bottom' | 'corner' | null;
+	isResizing: boolean;
+	activeWidgetId: string | null;
+	resizeHandle: 'right' | 'bottom' | 'corner' | null;
 }
