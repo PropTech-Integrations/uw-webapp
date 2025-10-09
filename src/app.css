@@ -53,3 +53,42 @@ html, body {
 .animate-fadeIn {
   animation: fade-in 300ms ease-out both;
 }
+
+
+/* Custom scrollbar styles */
+.widget-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.widget-content::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.widget-content::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 3px;
+}
+
+.widget-content::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Prevent text selection while dragging */
+.dashboard-grid.dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Smooth transitions for widget movements */
+.widget-wrapper:not(.dragging) {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hide resize handles by default on mobile */
+@media (max-width: 768px) {
+  .resize-handles {
+    display: none;
+  }
+}
