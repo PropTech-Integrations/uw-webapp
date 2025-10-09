@@ -29,9 +29,24 @@ export interface BaseWidget extends Position, Size, WidgetConstraints {
   id: string;
   type: WidgetType;
   locked?: boolean;
+  title?: string; // Optional widget title for display
+  description?: string; // Optional widget description
 }
 
-// Table Widget
+// Widget Action Types
+export type WidgetAction = 
+  | 'edit'
+  | 'duplicate' 
+  | 'lock' 
+  | 'unlock'
+  | 'bringToFront'
+  | 'sendToBack'
+  | 'exportData'
+  | 'refresh'
+  | 'settings'
+  | 'remove';
+
+// Rest of the widget interfaces remain the same...
 export interface TableWidget extends BaseWidget {
   type: 'table';
   data: {
@@ -42,7 +57,6 @@ export interface TableWidget extends BaseWidget {
   };
 }
 
-// Title Widget
 export interface TitleWidget extends BaseWidget {
   type: 'title';
   data: {
@@ -52,7 +66,6 @@ export interface TitleWidget extends BaseWidget {
   };
 }
 
-// Paragraph Widget
 export interface ParagraphWidget extends BaseWidget {
   type: 'paragraph';
   data: {
@@ -61,7 +74,6 @@ export interface ParagraphWidget extends BaseWidget {
   };
 }
 
-// Image Widget
 export interface ImageWidget extends BaseWidget {
   type: 'image';
   data: {
@@ -71,7 +83,6 @@ export interface ImageWidget extends BaseWidget {
   };
 }
 
-// Line Chart Widget
 export interface LineChartWidget extends BaseWidget {
   type: 'lineChart';
   data: {
@@ -88,7 +99,6 @@ export interface LineChartWidget extends BaseWidget {
   };
 }
 
-// Bar Chart Widget
 export interface BarChartWidget extends BaseWidget {
   type: 'barChart';
   data: {
@@ -102,7 +112,6 @@ export interface BarChartWidget extends BaseWidget {
   };
 }
 
-// Metric Widget
 export interface MetricWidget extends BaseWidget {
   type: 'metric';
   data: {

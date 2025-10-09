@@ -62,7 +62,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// console.log("access_token: -----------------------3333333333333333333333333333333>>>>>>>>>>>", access_token)
 	const refresh_token = event.cookies.get('refresh_token');
 
-	logger('id_token:', id_token);
+	// logger('id_token:', id_token);
 
 	// If user is not logged in, redirect to login
 	if (!id_token || !access_token || !refresh_token) {
