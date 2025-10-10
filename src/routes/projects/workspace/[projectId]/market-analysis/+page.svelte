@@ -16,7 +16,7 @@
 	import TitleParagraph from '$lib/components/dashboad/widgets/titleParagraph.svelte';
 
 	let { data } = $props();
-	// console.log('data ------>: ', data);
+
 	// Use reactive project store instead of static data
 	let project = $derived($projectStore);
 	// Access mapStore from parent layout context

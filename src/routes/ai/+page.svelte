@@ -67,15 +67,15 @@
 
 	const jobInput1 = {
 		request: JSON.stringify(jobInput1Request),
-		priority: 'HIGH'
+		priority: 'HIGH' as const
 	};
 	const jobInput2 = {
 		request: JSON.stringify(jobInput2Request),
-		priority: 'HIGH'
+		priority: 'HIGH' as const
 	};
 	const jobInput3 = {
 		request: JSON.stringify(jobInput3Request),
-		priority: 'HIGH'
+		priority: 'HIGH' as const
 	};
 
 	// const jobInput2 = {
