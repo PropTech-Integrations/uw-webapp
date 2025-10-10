@@ -4,7 +4,7 @@
 	import { dashboard } from '$lib/dashboard/stores/dashboard.svelte';
 	import type { Widget } from '$lib/dashboard/types/widget';
 	import { onMount } from 'svelte';
-
+	import { PUBLIC_GEOAPIFY_API_KEY } from '$env/static/public';
 	let isLoading = $state(true);
 
 	const marketingWidgets: Widget[] = [
@@ -66,9 +66,24 @@
 				paginated: false
 			}
 		},
+		// {
+		// 	id: 'widget-5',
+		// 	type: 'image',
+		// 	gridColumn: 1,
+		// 	gridRow: 2,
+		// 	colSpan: 8,
+		// 	rowSpan: 4,
+		// 	minWidth: 3,
+		// 	minHeight: 2,
+		// 	data: {
+		// 		src: 'https://pti-demo-web-assets.s3.us-west-2.amazonaws.com/images/aaronmap.png',
+		// 		alt: 'Image',
+		// 		objectFit: 'cover'
+		// 	}
+		// },
 		{
 			id: 'widget-5',
-			type: 'image',
+			type: 'map',
 			gridColumn: 1,
 			gridRow: 2,
 			colSpan: 8,
@@ -76,12 +91,14 @@
 			minWidth: 3,
 			minHeight: 2,
 			data: {
-				src: 'https://pti-demo-web-assets.s3.us-west-2.amazonaws.com/images/aaronmap.png',
-				alt: 'Image',
-				objectFit: 'cover'
+				title: 'Map of Hillsboro',
+				lat: 45.513897,
+				lon: -122.943565,
+				zoom: 15,
+				mapType: 'leaflet',
+				apiKey: PUBLIC_GEOAPIFY_API_KEY
 			}
 		},
-		
 		{
 			id: 'widget-6',
 			type: 'paragraph',

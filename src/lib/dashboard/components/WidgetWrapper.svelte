@@ -11,6 +11,7 @@
 	import LineChartWidget from '$lib/dashboard/components/widgets/LineChartWidget.svelte';
 	import BarChartWidget from '$lib/dashboard/components/widgets/BarChartWidget.svelte';
 	import MetricWidget from '$lib/dashboard/components/widgets/MetricWidget.svelte';
+	import MapWidget from '$lib/dashboard/components/widgets/MapWidget.svelte';
 
 	interface Props {
 		widget: Widget;
@@ -139,6 +140,8 @@
 				<BarChartWidget data={widget.data} />
 			{:else if widget.type === 'metric'}
 				<MetricWidget data={widget.data} />
+			{:else if widget.type === 'map'}
+				<MapWidget data={widget.data} />
 			{/if}
 		</div>
 

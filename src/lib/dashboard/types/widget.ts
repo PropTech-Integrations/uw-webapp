@@ -6,7 +6,8 @@ export type WidgetType =
 	| 'image'
 	| 'lineChart'
 	| 'barChart'
-	| 'metric';
+	| 'metric'
+	| 'map';
 
 export interface Position {
 	gridColumn: number;
@@ -115,6 +116,19 @@ export interface BarChartWidget extends BaseWidget {
 	};
 }
 
+export interface MapWidget extends BaseWidget {
+	type: 'map';
+	data: {
+		title?: string;
+		description?: string;
+		lat: number;
+		lon: number;
+		zoom: number;
+		mapType: 'leaflet' | 'google' | 'mapbox';
+		apiKey: string;
+	};
+}
+
 export interface MetricWidget extends BaseWidget {
 	type: 'metric';
 	data: {
@@ -133,7 +147,8 @@ export type Widget =
 	| ImageWidget
 	| LineChartWidget
 	| BarChartWidget
-	| MetricWidget;
+	| MetricWidget
+	| MapWidget;
 
 export interface DashboardConfig {
 	gridColumns: number;
