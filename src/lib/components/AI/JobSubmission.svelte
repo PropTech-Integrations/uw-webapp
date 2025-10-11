@@ -4,6 +4,7 @@
 	import { AppSyncWsClient } from '$lib/realtime/websocket/AppSyncWsClient';
 	import { S_JOB_UPDATE } from '$lib/realtime/graphql/subscriptions/Job';
 	import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from '$env/static/public';
+	import { jobUpdateStore, type JobUpdate } from '$lib/stores/jobUpdateStore';
 
 	// ===== Type Definitions =====
 
@@ -47,15 +48,6 @@
 		readonly status: JobStatus;
 	}
 
-	interface JobUpdate {
-		readonly id: string;
-		readonly request: string;
-		readonly result: string | null;
-		readonly status: JobStatus;
-		readonly createdAt: string;
-		readonly updatedAt: string;
-	}
-
 	interface ParsedResult {
 		readonly output_parsed?: Record<string, unknown>;
 		readonly error?: string;
@@ -78,16 +70,9 @@
 		};
 	}
 
-	interface ComponentState {
-		// Job state
-		result: SubmitJobResponse | null;
-		error: Error | null;
-		loading: boolean;
-		jobUpdates: ReadonlyArray<JobUpdate>;
+	interface NetworkState {
 		// WebSocket state
 		wsClient: AppSyncWsClient | null;
-		connectionState: ConnectionState;
-		reconnectAttempts: number;
 		reconnectTimer: ReturnType<typeof setTimeout> | null;
 		subscriptionTimeout: ReturnType<typeof setTimeout> | null;
 	}
@@ -153,23 +138,64 @@
 		}
 	});
 
-	// State object with proper initialization
-	let state = $state<ComponentState>({
-		result: null,
-		error: null,
-		loading: false,
-		jobUpdates: [],
+	// Define types for component state
+	interface ComponentDisplayState {
+		result: { id: string; status: string} | null;
+		error: Error | null;
+		loading: boolean;
+		connectionState: ConnectionState;
+		reconnectAttempts: number;
+	}
+
+	// Network state (not exposed to UI)
+	// @ts-expect-error - Svelte 5 rune syntax not fully supported by TS yet
+	let networkState = $state<NetworkState>({
 		wsClient: null,
-		connectionState: CONNECTION_STATES.DISCONNECTED,
-		reconnectAttempts: 0,
 		reconnectTimer: null,
 		subscriptionTimeout: null
 	});
 
-	// Derived state with proper typing
-	const isSubscribed = $derived(state.connectionState === CONNECTION_STATES.CONNECTED);
-	const latestUpdate = $derived<JobUpdate | undefined>(state.jobUpdates[0]);
-	const isJobComplete = $derived<boolean>(!!latestUpdate && isTerminalStatus(latestUpdate.status));
+	// Current job ID (tracked locally)
+	// @ts-expect-error - Svelte 5 rune syntax
+	let currentJobId = $state<string | null>(null);
+
+	// Store-based state (reactively updated from stores)
+	// @ts-expect-error - Svelte 5 rune syntax
+	let state = $state<ComponentDisplayState | null>(null);
+	// @ts-expect-error - Svelte 5 rune syntax
+	let updates = $state<ReadonlyArray<JobUpdate>>([]);
+
+	// Subscribe to store updates
+	$effect(() => {
+		if (!currentJobId) {
+			state = null;
+			updates = [];
+			return;
+		}
+
+		// Subscribe to job state
+		const stateStore = jobUpdateStore.subscribeToJobState(currentJobId);
+		const unsubState = stateStore.subscribe((value) => {
+			state = value;
+		});
+
+		// Subscribe to job updates
+		const updatesStore = jobUpdateStore.subscribeToJobUpdates(currentJobId);
+		const unsubUpdates = updatesStore.subscribe((value) => {
+			updates = value;
+		});
+
+		return () => {
+			unsubState();
+			unsubUpdates();
+		};
+	});
+
+	const isSubscribed = $derived(state?.connectionState === CONNECTION_STATES.CONNECTED);
+	const latestUpdate = $derived<JobUpdate | undefined>(updates[0]);
+	const isJobComplete = $derived<boolean>(
+		!!latestUpdate && isTerminalStatus(latestUpdate.status as JobStatus)
+	);
 
 	// ===== GraphQL Mutation =====
 	const M_SUBMIT_JOB = `
@@ -306,29 +332,23 @@
 	}
 
 	// ===== WebSocket Management with Enhanced Error Handling =====
-	function addJobUpdate(update: JobUpdate): void {
+	function addJobUpdate(jobId: string, update: JobUpdate): void {
 		console.log('Adding job update:', {
 			id: update.id,
 			status: update.status,
 			timestamp: update.updatedAt
 		});
 
-		// Prevent duplicate updates using immutable comparison
-		const isDuplicate = state.jobUpdates.some(
-			(u) => u.id === update.id && u.updatedAt === update.updatedAt
-		);
+		// Write to store (store handles duplicate prevention)
+		jobUpdateStore.addJobUpdate(jobId, update);
 
-		if (!isDuplicate) {
-			// Create new array for immutability
-			state.jobUpdates = [update, ...state.jobUpdates];
-
-			// Trigger callbacks
-			if (isTerminalStatus(update.status)) {
-				if (update.status === JOB_STATUSES.FAILED || update.status === JOB_STATUSES.ERROR) {
-					onJobError?.(new JobSubmissionError('Job failed', update.status, update));
-				} else {
-					onJobComplete?.(update);
-				}
+		// Trigger callbacks
+		const status = update.status as JobStatus;
+		if (isTerminalStatus(status)) {
+			if (status === JOB_STATUSES.FAILED || status === JOB_STATUSES.ERROR) {
+				onJobError?.(new JobSubmissionError('Job failed', status, update));
+			} else {
+				onJobComplete?.(update);
 			}
 		}
 	}
@@ -336,7 +356,7 @@
 	function startSubscriptionTimeout(jobId: string): void {
 		clearSubscriptionTimeout();
 
-		state.subscriptionTimeout = setTimeout(() => {
+		networkState.subscriptionTimeout = setTimeout(() => {
 			console.warn(`Subscription timeout for job ${jobId}`);
 			handleSubscriptionError(
 				new WebSocketError('Subscription timeout', 'TIMEOUT', false),
@@ -347,24 +367,24 @@
 	}
 
 	function clearSubscriptionTimeout(): void {
-		if (state.subscriptionTimeout) {
-			clearTimeout(state.subscriptionTimeout);
-			state.subscriptionTimeout = null;
+		if (networkState.subscriptionTimeout) {
+			clearTimeout(networkState.subscriptionTimeout);
+			networkState.subscriptionTimeout = null;
 		}
 	}
 
 	async function setupSubscription(jobId: string, token: string): Promise<void> {
 		console.log('Setting up subscription for job:', jobId);
-		state.connectionState = CONNECTION_STATES.CONNECTING;
+		jobUpdateStore.updateJobState(jobId, { connectionState: CONNECTION_STATES.CONNECTING });
 
 		try {
 			// Clean up existing connection
-			await cleanupWebSocket();
+			await cleanupWebSocket(jobId);
 
 			// Start subscription timeout
 			startSubscriptionTimeout(jobId);
 
-			state.wsClient = new AppSyncWsClient({
+			networkState.wsClient = new AppSyncWsClient({
 				graphqlHttpUrl: PUBLIC_GRAPHQL_HTTP_ENDPOINT,
 				auth: { mode: 'cognito', idToken: token },
 				subscriptions: [
@@ -387,12 +407,12 @@
 						next: (update: JobUpdate | null) => {
 							if (update) {
 								clearSubscriptionTimeout(); // Reset timeout on successful update
-								addJobUpdate(update);
+								addJobUpdate(jobId, update);
 
 								// Auto-disconnect if job is complete
-								if (isTerminalStatus(update.status)) {
+								if (isTerminalStatus(update.status as JobStatus)) {
 									console.log('Job complete, scheduling subscription cleanup');
-									setTimeout(() => cleanupWebSocket(), 1000);
+									setTimeout(() => cleanupWebSocket(jobId), 1000);
 								} else {
 									startSubscriptionTimeout(jobId); // Restart timeout for next update
 								}
@@ -411,9 +431,11 @@
 				]
 			});
 
-			await state.wsClient.ready();
-			state.connectionState = CONNECTION_STATES.CONNECTED;
-			state.reconnectAttempts = 0;
+			await networkState.wsClient.ready();
+			jobUpdateStore.updateJobState(jobId, {
+				connectionState: CONNECTION_STATES.CONNECTED,
+				reconnectAttempts: 0
+			});
 			console.log('✓ Subscription established for job:', jobId);
 		} catch (error) {
 			const wsError =
@@ -428,22 +450,29 @@
 
 	function handleSubscriptionError(error: WebSocketError, jobId: string, token: string): void {
 		clearSubscriptionTimeout();
-		state.connectionState = CONNECTION_STATES.ERROR;
-		state.error = error;
+		jobUpdateStore.updateJobState(jobId, {
+			connectionState: CONNECTION_STATES.ERROR,
+			error: error
+		});
+
+		// Get current reconnect attempts from store
+		const currentState = state;
+		const currentReconnectAttempts = currentState?.reconnectAttempts || 0;
 
 		// Attempt reconnection if appropriate
 		const canRetry =
-			error.shouldRetry && state.reconnectAttempts < config.options.maxRetries && !isJobComplete;
+			error.shouldRetry && currentReconnectAttempts < config.options.maxRetries && !isJobComplete;
 
 		if (canRetry) {
-			state.reconnectAttempts++;
-			const delay = calculateBackoffDelay(state.reconnectAttempts);
+			const newAttempts = currentReconnectAttempts + 1;
+			jobUpdateStore.updateJobState(jobId, { reconnectAttempts: newAttempts });
+			const delay = calculateBackoffDelay(newAttempts);
 
 			console.log(
-				`Scheduling reconnection attempt ${state.reconnectAttempts}/${config.options.maxRetries} in ${delay}ms`
+				`Scheduling reconnection attempt ${newAttempts}/${config.options.maxRetries} in ${delay}ms`
 			);
 
-			state.reconnectTimer = setTimeout(() => {
+			networkState.reconnectTimer = setTimeout(() => {
 				setupSubscription(jobId, token);
 			}, delay);
 		} else {
@@ -452,57 +481,99 @@
 		}
 	}
 
-	async function cleanupWebSocket(): Promise<void> {
+	async function cleanupWebSocket(jobId?: string): Promise<void> {
 		clearSubscriptionTimeout();
 
-		if (state.reconnectTimer) {
-			clearTimeout(state.reconnectTimer);
-			state.reconnectTimer = null;
+		if (networkState.reconnectTimer) {
+			clearTimeout(networkState.reconnectTimer);
+			networkState.reconnectTimer = null;
 		}
 
-		if (state.wsClient) {
+		if (networkState.wsClient) {
 			try {
-				state.wsClient.disconnect();
+				networkState.wsClient.disconnect();
 			} catch (error) {
 				console.error('Error disconnecting WebSocket:', error);
 			} finally {
-				state.wsClient = null;
+				networkState.wsClient = null;
 			}
 		}
 
-		state.connectionState = CONNECTION_STATES.DISCONNECTED;
+		if (jobId) {
+			jobUpdateStore.updateJobState(jobId, {
+				connectionState: CONNECTION_STATES.DISCONNECTED
+			});
+		}
 	}
 
 	// ===== Main Handler =====
 	async function handleSubmitJob(): Promise<void> {
 		// Validate authentication
 		if (!config.auth.idToken) {
-			state.error = new JobSubmissionError('Authentication required', 'AUTH_REQUIRED');
+			const error = new JobSubmissionError('Authentication required', 'AUTH_REQUIRED');
+			// Create temporary job ID for error state
+			const tempJobId = 'temp-' + Date.now();
+			jobUpdateStore.setJobState(tempJobId, {
+				result: null,
+				error: error,
+				loading: false,
+				connectionState: CONNECTION_STATES.DISCONNECTED,
+				reconnectAttempts: 0
+			});
 			return;
 		}
 
 		// Validate input
 		const trimmedRequest = config.job.input?.request?.trim();
 		if (!trimmedRequest) {
-			state.error = new JobSubmissionError('Job request cannot be empty', 'INVALID_INPUT');
+			const error = new JobSubmissionError('Job request cannot be empty', 'INVALID_INPUT');
+			const tempJobId = 'temp-' + Date.now();
+			jobUpdateStore.setJobState(tempJobId, {
+				result: null,
+				error: error,
+				loading: false,
+				connectionState: CONNECTION_STATES.DISCONNECTED,
+				reconnectAttempts: 0
+			});
 			return;
 		}
 
-		// Reset state
-		await cleanupWebSocket();
-		state.error = null;
-		state.result = null;
-		state.jobUpdates = [];
-		state.loading = true;
+		// Reset state - clean up previous job if exists
+		if (currentJobId) {
+			await cleanupWebSocket(currentJobId);
+		}
+
+		// Create temporary loading state
+		const loadingJobId = 'loading-' + Date.now();
+		currentJobId = loadingJobId;
+		jobUpdateStore.setJobState(loadingJobId, {
+			result: null,
+			error: null,
+			loading: true,
+			connectionState: CONNECTION_STATES.DISCONNECTED,
+			reconnectAttempts: 0
+		});
+		jobUpdateStore.clearJobUpdates(loadingJobId);
 
 		try {
-			state.result = await submitJobWithRetry(config.job.input, config.auth.idToken);
-			console.log('Job submitted successfully:', state.result);
+			const result = await submitJobWithRetry(config.job.input, config.auth.idToken);
+			console.log('Job submitted successfully:', result);
+
+			// Update with actual job ID
+			currentJobId = result.id;
+			jobUpdateStore.setJobState(result.id, {
+				result: result,
+				error: null,
+				loading: false,
+				connectionState: CONNECTION_STATES.DISCONNECTED,
+				reconnectAttempts: 0
+			});
+
+			// Clean up temporary loading state
+			jobUpdateStore.deleteJob(loadingJobId);
 
 			// Set up real-time subscription
-			if (state.result?.id) {
-				await setupSubscription(state.result.id, config.auth.idToken);
-			}
+			await setupSubscription(result.id, config.auth.idToken);
 		} catch (error) {
 			const jobError =
 				error instanceof JobSubmissionError
@@ -513,24 +584,17 @@
 							error
 						);
 
-			state.error = jobError;
+			jobUpdateStore.updateJobState(loadingJobId, {
+				error: jobError,
+				loading: false
+			});
 			console.error('Job submission failed:', jobError);
 			onJobError?.(jobError);
-		} finally {
-			state.loading = false;
 		}
 	}
 
 	// ===== Lifecycle Hooks =====
 	onMount(() => {
-		// Validate configuration on mount
-		if (!config.auth.idToken) {
-			state.error = new JobSubmissionError(
-				'Authentication required to submit jobs',
-				'AUTH_REQUIRED'
-			);
-		}
-
 		// Set up performance monitoring in dev
 		if (import.meta.env.DEV) {
 			console.log('Job Submission Component mounted', {
@@ -545,7 +609,9 @@
 
 	onDestroy(() => {
 		// Ensure all resources are cleaned up
-		cleanupWebSocket();
+		if (currentJobId) {
+			cleanupWebSocket(currentJobId);
+		}
 		clearSubscriptionTimeout();
 
 		if (import.meta.env.DEV) {
@@ -555,10 +621,11 @@
 
 	// ===== Reactive Debugging (Dev Only) =====
 	$effect(() => {
-		if (import.meta.env.DEV) {
+		if (import.meta.env.DEV && state) {
 			console.log('State update:', {
+				jobId: currentJobId,
 				connectionState: state.connectionState,
-				updatesCount: state.jobUpdates.length,
+				updatesCount: updates.length,
 				isJobComplete,
 				latestStatus: latestUpdate?.status,
 				error: state.error?.message
@@ -587,14 +654,18 @@
 			[CONNECTION_STATES.DISCONNECTED]: 'Real-time updates disconnected',
 			[CONNECTION_STATES.ERROR]: 'Connection error'
 		};
-		return labels[state.connectionState];
+		const connectionState = state?.connectionState;
+		if (connectionState && connectionState in labels) {
+			return labels[connectionState as ConnectionState];
+		}
+		return labels[CONNECTION_STATES.DISCONNECTED];
 	}
 </script>
 
 // JobSubmission.svelte
 <div class="space-y-6" role="region" aria-label="Job Submission Interface">
 	<!-- Submit Button -->
-	{#if !state.result && !state.loading}
+	{#if !state?.result && !state?.loading}
 		<div class="space-y-3">
 			<button
 				onclick={handleSubmitJob}
@@ -629,7 +700,7 @@
 	{/if}
 
 	<!-- Loading State -->
-	{#if state.loading}
+	{#if state?.loading}
 		<div
 			class="rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-4"
 			role="status"
@@ -646,7 +717,7 @@
 	{/if}
 
 	<!-- Error State -->
-	{#if state.error}
+	{#if state?.error}
 		<div class="rounded-lg border border-red-200 bg-red-50 p-4" role="alert" aria-live="assertive">
 			<div class="flex gap-3">
 				<span class="text-red-600" aria-hidden="true">⚠️</span>
@@ -667,7 +738,7 @@
 	{/if}
 
 	<!-- Success State -->
-	{#if state.result}
+	{#if state?.result}
 		<div
 			class="rounded-lg border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-4"
 			role="status"
@@ -681,14 +752,14 @@
 					<p class="font-mono text-xs text-gray-600">ID: {state.result.id}</p>
 					<p class="text-sm text-gray-700">
 						Status:
-						<span class="font-semibold" aria-label={getAriaLabel(state.result.status)}>
+						<span class="font-semibold" aria-label={getAriaLabel(state.result.status as JobStatus)}>
 							{state.result.status}
 						</span>
 					</p>
 				</div>
 				<button
 					onclick={handleSubmitJob}
-					disabled={state.loading}
+					disabled={state?.loading}
 					class="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-green-800 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
 					aria-label="Submit another job"
 				>
@@ -702,7 +773,7 @@
 			<h2 class="text-lg font-semibold">
 				Job Updates
 				<span class="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-sm font-normal">
-					{state.jobUpdates.length}
+					{updates.length}
 				</span>
 			</h2>
 
@@ -711,7 +782,7 @@
 				role="status"
 				aria-label={getConnectionAriaLabel()}
 			>
-				{#if state.connectionState === CONNECTION_STATES.CONNECTED}
+				{#if state?.connectionState === CONNECTION_STATES.CONNECTED}
 					<span class="relative flex h-3 w-3" aria-hidden="true">
 						<span
 							class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"
@@ -719,10 +790,10 @@
 						<span class="relative inline-flex h-3 w-3 rounded-full bg-green-500"></span>
 					</span>
 					<span class="text-green-600">Live</span>
-				{:else if state.connectionState === CONNECTION_STATES.CONNECTING}
+				{:else if state?.connectionState === CONNECTION_STATES.CONNECTING}
 					<span class="h-3 w-3 animate-pulse rounded-full bg-yellow-500" aria-hidden="true"></span>
 					<span class="text-yellow-600">Connecting...</span>
-				{:else if state.connectionState === CONNECTION_STATES.ERROR}
+				{:else if state?.connectionState === CONNECTION_STATES.ERROR}
 					<span class="h-3 w-3 rounded-full bg-red-500" aria-hidden="true"></span>
 					<span class="text-red-600">Connection Error</span>
 				{:else}
@@ -737,7 +808,7 @@
 		</div>
 
 		<!-- Updates List -->
-		{#if state.jobUpdates.length === 0}
+		{#if updates.length === 0}
 			<div class="rounded-lg border border-gray-200 bg-white p-6 text-center" role="status">
 				<div
 					class="mx-auto mb-3 h-12 w-12 animate-pulse rounded-full bg-gray-100"
@@ -747,7 +818,7 @@
 				<p class="mt-1 text-sm text-gray-500">
 					{#if isSubscribed}
 						Subscription active and listening
-					{:else if state.connectionState === CONNECTION_STATES.CONNECTING}
+					{:else if state?.connectionState === CONNECTION_STATES.CONNECTING}
 						Establishing connection...
 					{:else}
 						Connection pending
@@ -756,8 +827,8 @@
 			</div>
 		{:else}
 			<div class="space-y-3" role="list" aria-label="Job updates">
-				{#each state.jobUpdates as update, index (update.id + '-' + update.updatedAt)}
-					{@const statusInfo = getStatusStyle(update.status)}
+				{#each updates as update, index (update.id + '-' + update.updatedAt)}
+					{@const statusInfo = getStatusStyle(update.status as JobStatus)}
 					{@const parsedResult = parseResult(update.result)}
 
 					<article
@@ -772,7 +843,7 @@
 								<span class="text-lg" aria-hidden="true">{statusInfo.icon}</span>
 								<span
 									class="rounded-full px-3 py-1 text-sm font-semibold {statusInfo.bg} {statusInfo.text}"
-									aria-label={getAriaLabel(update.status)}
+									aria-label={getAriaLabel(update.status as JobStatus)}
 								>
 									{update.status}
 								</span>
