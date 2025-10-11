@@ -1,10 +1,19 @@
 <script lang="ts">
+	import type { PageData } from './$types';
 	import Dashboard from '$lib/dashboard/components/Dashboard.svelte';
 	import DashboardControls from '$lib/dashboard/components/DashboardControls.svelte';
+	import MapStoreDebugPanel from '$lib/dashboard/components/MapStoreDebugPanel.svelte';
+	import AIJobParagraphExample from '$lib/dashboard/examples/AIJobParagraphExample.svelte';
 	import { dashboard } from '$lib/dashboard/stores/dashboard.svelte';
 	import type { Widget } from '$lib/dashboard/types/widget';
 	import { onMount } from 'svelte';
 	import { PUBLIC_GEOAPIFY_API_KEY } from '$env/static/public';
+	
+	interface Props {
+		data: PageData;
+	}
+	
+	let { data }: Props = $props();
 	let isLoading = $state(true);
 
 	const marketingWidgets: Widget[] = [
@@ -344,7 +353,7 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<div class="min-h-screen bg-gray-100">
+<div class="">
 	<header class="border-b bg-white shadow-sm">
 		<div class="mx-auto max-w-7xl px-4 py-4">
 			<h1 class="text-2xl font-bold text-gray-900">Drag & Drop Dashboard</h1>
@@ -356,13 +365,28 @@
 
 	<DashboardControls />
 
+	<!-- MapStore Debug Panel -->
+	<div class="mx-auto max-w-7xl px-4 pb-4">
+		<MapStoreDebugPanel />
+	</div>
+
+	<!-- AI Job → Paragraph Widget Example -->
+	<div class="mx-auto max-w-7xl px-4 pb-4">
+		<AIJobParagraphExample 
+			idToken={data.idToken}
+			prompt="Summarize the latest developments in AI technology in 2-3 paragraphs"
+			widgetId="dashboard-ai-paragraph"
+		/>
+	</div>
+
 	<main class="mx-auto max-w-7xl p-4">
 		{#if isLoading}
 			<div class="flex h-64 items-center justify-center">
 				<div class="text-gray-600">Loading dashboard...</div>
 			</div>
 		{:else}
-			<div class="h-[calc(100vh-200px)]">
+			<!-- Removed fixed height constraint to allow grid to extend fully -->
+			<div class="min-h-[800px]">
 				<Dashboard />
 			</div>
 		{/if}

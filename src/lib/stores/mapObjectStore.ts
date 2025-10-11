@@ -260,6 +260,88 @@ class MapStore {
     this.registrations.clear();
   }
 
+  /**
+   * Get all producers across all types
+   */
+  getAllProducers(): Array<{
+    registrationId: string;
+    typeId: string;
+    role: 'producer' | 'both';
+  }> {
+    const producers: Array<{
+      registrationId: string;
+      typeId: string;
+      role: 'producer' | 'both';
+    }> = [];
+
+    this.registrations.forEach((registration, registrationId) => {
+      if (registration.role === 'producer' || registration.role === 'both') {
+        producers.push({
+          registrationId,
+          typeId: registration.type,
+          role: registration.role
+        });
+      }
+    });
+
+    return producers;
+  }
+
+  /**
+   * Get all consumers across all types
+   */
+  getAllConsumers(): Array<{
+    registrationId: string;
+    typeId: string;
+    role: 'consumer' | 'both';
+  }> {
+    const consumers: Array<{
+      registrationId: string;
+      typeId: string;
+      role: 'consumer' | 'both';
+    }> = [];
+
+    this.registrations.forEach((registration, registrationId) => {
+      if (registration.role === 'consumer' || registration.role === 'both') {
+        consumers.push({
+          registrationId,
+          typeId: registration.type,
+          role: registration.role
+        });
+      }
+    });
+
+    return consumers;
+  }
+
+  /**
+   * Get all data stored across all types
+   */
+  getAllData(): Array<{
+    typeId: string;
+    value: any;
+    producerCount: number;
+    consumerCount: number;
+  }> {
+    const allData: Array<{
+      typeId: string;
+      value: any;
+      producerCount: number;
+      consumerCount: number;
+    }> = [];
+
+    this.typeRegistry.forEach((entry, typeId) => {
+      allData.push({
+        typeId,
+        value: entry.lastValue,
+        producerCount: entry.producers.size,
+        consumerCount: entry.consumers.size
+      });
+    });
+
+    return allData;
+  }
+
   // Private helper to ensure a type exists
   private ensureType<T>(typeId: string, initialValue?: T): void {
     if (!this.typeRegistry.has(typeId)) {

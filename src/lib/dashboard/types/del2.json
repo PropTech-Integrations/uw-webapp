@@ -1,0 +1,31 @@
+{
+    "type": "json_schema",
+    "json_schema": {
+        "name": "ParagraphContent",
+        "description": "Content for a paragraph widget with optional title and markdown support",
+        "schema": {
+            "$ref": "#/definitions/ParagraphContent",
+            "definitions": {
+                "ParagraphContent": {
+                    "type": "object",
+                    "properties": {
+                        "title": {
+                            "type": "string"
+                        },
+                        "content": {
+                            "type": "string"
+                        },
+                        "markdown": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "content"
+                    ],
+                    "additionalProperties": false
+                }
+            }
+        },
+        "strict": true
+    }
+}

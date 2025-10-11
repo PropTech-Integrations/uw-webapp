@@ -15,7 +15,7 @@
 	import ParagraphWidget from '$lib/dashboard/components/widgets/ParagraphWidget.svelte';
 	import { 
 		WidgetChannels, 
-		getWidgetOpenAIConfig,
+		getWidgetTextFormat,
 		type ParagraphWidgetData 
 	} from '$lib/dashboard/types/widgetSchemas';
 	import { 
@@ -41,37 +41,44 @@
 
 	// ===== Job Configuration =====
 	
-	// Get OpenAI structured output configuration for paragraph widget
-	// This Zod schema will be sent to OpenAI to ensure the response matches our widget data type
+	// Get OpenAI text format configuration for paragraph widget
+	// Using zodTextFormat which is the recommended OpenAI structured output approach
 	console.log(`\n\n╔═══════════════════════════════════════════════════════════════╗`);
 	console.log(`║  Widget Job Integration - Initialization                      ║`);
 	console.log(`╚═══════════════════════════════════════════════════════════════╝\n`);
 	
-	const openAIConfig = getWidgetOpenAIConfig(
-		'paragraph',
-		'DocumentSummary',
-		'Summary of a document with title and content'
-	);
+	const textFormat = getWidgetTextFormat('paragraph', 'DocumentSummary');
 
-	console.log('\n📋 [WidgetJobIntegration] OpenAI Structured Output Config:', openAIConfig);
+	console.log('\n📋 [WidgetJobIntegration] OpenAI Text Format Config:', textFormat);
 
 	const jobInput = {
 		request: JSON.stringify({
-			task: 'Generate a summary',
-			instructions: 'Create a summary of the latest market trends',
-			// Include the OpenAI response format configuration
-			response_format: openAIConfig
+			model: 'gpt-4o-mini',
+			input: [
+				{ 
+					role: 'system', 
+					content: 'Create a summary of the latest market trends. Include a title and clear content.' 
+				},
+				{ 
+					role: 'user', 
+					content: 'Generate a summary of current market conditions' 
+				}
+			],
+			// Use text format for structured output
+			text: {
+				format: textFormat
+			}
 		}),
 		priority: 'HIGH' as const
 	};
 
 	// ===== Widget Configuration =====
 	
-	const widgetData: ParagraphWidgetData = {
+	const widgetData = {
 		title: 'AI Generated Summary',
 		content: 'Waiting for AI response...',
 		markdown: true
-	};
+	} as ParagraphWidgetData;
 
 	// ===== Job Handlers =====
 
@@ -101,10 +108,10 @@
 				// Since we used OpenAI structured output, this should already match our schema
 				// But we transform it to be explicit
 				const transformed = {
-					title: parsed.title || 'AI Generated Summary',
+					title: parsed.title || undefined,
 					content: parsed.content || parsed.summary || result,
 					markdown: true
-				} satisfies ParagraphWidgetData;
+				} as ParagraphWidgetData;
 				
 				console.log(`   ✅ Transformed to widget data:`, transformed);
 				return transformed;
@@ -248,7 +255,7 @@
 		
 		<div class="rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
 			<ParagraphWidget 
-				data={widgetData}
+				data={widgetData as any}
 				widgetId="example-paragraph-widget"
 			/>
 		</div>

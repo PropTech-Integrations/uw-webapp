@@ -7,6 +7,7 @@ import type {
 } from '$lib/dashboard/types/widget';
 import { isValidPosition, findAvailablePosition } from '$lib/dashboard/utils/grid';
 import { DashboardStorage } from '$lib/dashboard/utils/storage';
+import { mapStore } from '$lib/stores/mapObjectStore';
 
 class DashboardStore {
 	// State using Svelte 5 runes
@@ -35,6 +36,9 @@ class DashboardStore {
 	autoSaveEnabled = $state(true);
 	autoSaveDelay = 1000;
 	private autoSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Auto-save widget data configuration
+	autoSaveWidgetData = $state(true);
 
 	// Development mode - disable localStorage persistence
 	devMode = $state(false);
@@ -75,6 +79,9 @@ class DashboardStore {
 	// Initialize from localStorage
 	initialize(): boolean {
 		if (this.initialized) return true;
+
+		// Initialize auto-save widget data setting
+		DashboardStorage.setAutoSaveWidgetData(this.autoSaveWidgetData);
 
 		// Skip loading from storage in dev mode
 		if (this.devMode) {
@@ -137,9 +144,13 @@ class DashboardStore {
 
 	// Clear saved dashboard
 	clearSavedDashboard(): boolean {
+		console.log('\n🧹 [DashboardStore] Clearing saved dashboard...');
 		const success = DashboardStorage.clearDashboard();
 		if (success) {
-			console.info('Dashboard cleared from localStorage');
+			// Also clear mapObjectStore data
+			console.log('   Clearing mapObjectStore data...');
+			mapStore.clearData();
+			console.log('✅ [DashboardStore] Dashboard and widget data cleared from localStorage');
 			this.hasUnsavedChanges = false;
 		}
 		return success;
@@ -167,6 +178,7 @@ class DashboardStore {
 
 	// Reset to default layout
 	resetToDefault() {
+		console.log('\n🔄 [DashboardStore] Resetting to default layout...');
 		this.widgets = [];
 		this.widgetZIndexMap.clear();
 		this.nextZIndex = 1;
@@ -176,7 +188,11 @@ class DashboardStore {
 			gap: 16,
 			minCellHeight: 100
 		};
+		// Clear mapObjectStore data
+		mapStore.clearData();
+		console.log('   Cleared all widget data from mapObjectStore');
 		this.clearSavedDashboard();
+		console.log('✅ [DashboardStore] Reset complete\n');
 	}
 
 	// Widget management methods
@@ -326,6 +342,12 @@ class DashboardStore {
 		if (enabled && this.hasUnsavedChanges) {
 			this.save();
 		}
+	}
+
+	setAutoSaveWidgetData(enabled: boolean) {
+		this.autoSaveWidgetData = enabled;
+		DashboardStorage.setAutoSaveWidgetData(enabled);
+		console.log(`🔧 [DashboardStore] Widget data auto-save: ${enabled ? 'enabled' : 'disabled'}`);
 	}
 
 	setDevMode(enabled: boolean) {

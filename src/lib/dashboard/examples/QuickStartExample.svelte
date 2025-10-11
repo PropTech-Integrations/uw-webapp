@@ -9,7 +9,7 @@
 	import { onDestroy } from 'svelte';
 	import JobSubmission from '$lib/components/AI/JobSubmission.svelte';
 	import ParagraphWidget from '$lib/dashboard/components/widgets/ParagraphWidget.svelte';
-	import { WidgetChannels, getWidgetOpenAIConfig } from '$lib/dashboard/types/widgetSchemas';
+	import { WidgetChannels, getWidgetTextFormat } from '$lib/dashboard/types/widgetSchemas';
 	import { createJobWidgetBridge } from '$lib/dashboard/types/widgetBridge';
 
 	interface Props {
@@ -19,14 +19,17 @@
 	let { idToken }: Props = $props();
 	let bridge = $state<ReturnType<typeof createJobWidgetBridge> | null>(null);
 
-	// Step 1: Get OpenAI config (ensures AI output matches widget schema)
-	const openAIConfig = getWidgetOpenAIConfig('paragraph');
+	// Step 1: Get OpenAI text format (ensures AI output matches widget schema)
+	const textFormat = getWidgetTextFormat('paragraph');
 
 	// Step 2: Configure job
 	const jobInput = {
 		request: JSON.stringify({
-			task: 'Summarize the latest tech news',
-			response_format: openAIConfig
+			model: 'gpt-4o-mini',
+			input: [
+				{ role: 'system', content: 'Summarize the latest tech news' }
+			],
+			text: { format: textFormat }
 		}),
 		priority: 'HIGH' as const
 	};

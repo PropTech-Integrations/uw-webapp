@@ -26,7 +26,7 @@
 	bind:this={containerEl}
 	role="region"
 	aria-label="Dashboard grid drop zone"
-	class="dashboard-grid relative h-full w-full rounded-lg bg-gray-50 p-4"
+	class="dashboard-grid relative h-full w-full rounded-lg p-4"
 	ondragover={handleDragOver}
 	ondrop={handleDrop}
 	ondragleave={handleDragLeave}
@@ -45,6 +45,7 @@
 
 <style>
 	.dashboard-grid {
-		min-height: 600px;
+		min-height: 800px; /* Increased to ensure full grid is visible */
+		height: 100%; /* Take full height of parent container */
 	}
 </style>

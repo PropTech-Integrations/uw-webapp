@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { mapStore } from '$lib/stores/mapObjectStore';
 import { jobUpdateStore, type JobUpdate } from '$lib/stores/jobUpdateStore';
+import { DashboardStorage } from '$lib/dashboard/utils/storage';
 import type { Readable } from 'svelte/store';
 import type {
 	WidgetChannelConfig,
@@ -34,6 +35,10 @@ class ValidatedPublisherImpl<T> implements ValidatedPublisher<T> {
 		}
 		console.log(`[ValidatedPublisher:${this.channelId}] ✅ Validation passed, publishing to mapStore`);
 		this.publisher.publish(result.data);
+		
+		// Trigger auto-save of widget data to localStorage
+		console.log(`[ValidatedPublisher:${this.channelId}] 💾 Triggering auto-save to localStorage...`);
+		DashboardStorage.autoSaveWidgetData();
 	}
 
 	safeParse(data: unknown): { success: true; data: T } | { success: false; error: z.ZodError } {
@@ -50,6 +55,10 @@ class ValidatedPublisherImpl<T> implements ValidatedPublisher<T> {
 	clear(): void {
 		console.log(`[ValidatedPublisher:${this.channelId}] clear() called`);
 		this.publisher.clear();
+		
+		// Trigger auto-save after clearing
+		console.log(`[ValidatedPublisher:${this.channelId}] 💾 Triggering auto-save after clear...`);
+		DashboardStorage.autoSaveWidgetData();
 	}
 }
 
@@ -329,9 +338,9 @@ export function createParagraphPublisher(
 			channelId,
 			widgetType: 'paragraph',
 			schema: z.object({
-				title: z.string().optional(),
+				title: z.string().nullable().optional(),
 				content: z.string(),
-				markdown: z.boolean().optional()
+				markdown: z.boolean().nullable().optional()
 			})
 		},
 		publisherId
@@ -351,9 +360,9 @@ export function createParagraphConsumer(
 			channelId,
 			widgetType: 'paragraph',
 			schema: z.object({
-				title: z.string().optional(),
+				title: z.string().nullable().optional(),
 				content: z.string(),
-				markdown: z.boolean().optional()
+				markdown: z.boolean().nullable().optional()
 			})
 		},
 		consumerId

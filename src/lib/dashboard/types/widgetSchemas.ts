@@ -4,35 +4,36 @@
 
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+import { zodTextFormat } from 'openai/helpers/zod';
 import type { WidgetType } from './widget';
 
 // ===== Zod Schemas for Widget Data =====
 
 export const ParagraphWidgetDataSchema = z.object({
-	title: z.string().optional(),
+	title: z.string().nullable().optional(),
 	content: z.string(),
-	markdown: z.boolean().optional()
+	markdown: z.boolean().nullable().optional()
 });
 
 export const TableWidgetDataSchema = z.object({
-	title: z.string().optional(),
+	title: z.string().nullable().optional(),
 	headers: z.array(z.string()),
 	rows: z.array(z.record(z.string(), z.any())),
-	sortable: z.boolean().optional(),
-	paginated: z.boolean().optional()
+	sortable: z.boolean().nullable().optional(),
+	paginated: z.boolean().nullable().optional()
 });
 
 export const TitleWidgetDataSchema = z.object({
 	title: z.string(),
-	subtitle: z.string().optional(),
-	alignment: z.enum(['left', 'center', 'right']).optional()
+	subtitle: z.string().nullable().optional(),
+	alignment: z.enum(['left', 'center', 'right']).nullable().optional()
 });
 
 export const ImageWidgetDataSchema = z.object({
-	title: z.string().optional(),
+	title: z.string().nullable().optional(),
 	src: z.string().url(),
 	alt: z.string(),
-	objectFit: z.enum(['cover', 'contain', 'fill']).optional()
+	objectFit: z.enum(['cover', 'contain', 'fill']).nullable().optional()
 });
 
 export const LineChartWidgetDataSchema = z.object({
@@ -40,15 +41,16 @@ export const LineChartWidgetDataSchema = z.object({
 		z.object({
 			label: z.string(),
 			data: z.array(z.number()),
-			color: z.string().optional()
+			color: z.string().nullable().optional()
 		})
 	),
 	labels: z.array(z.string()),
 	options: z
 		.object({
-			responsive: z.boolean().optional(),
-			maintainAspectRatio: z.boolean().optional()
+			responsive: z.boolean().nullable().optional(),
+			maintainAspectRatio: z.boolean().nullable().optional()
 		})
+		.nullable()
 		.optional()
 });
 
@@ -57,24 +59,24 @@ export const BarChartWidgetDataSchema = z.object({
 		z.object({
 			label: z.string(),
 			data: z.array(z.number()),
-			backgroundColor: z.string().optional()
+			backgroundColor: z.string().nullable().optional()
 		})
 	),
 	labels: z.array(z.string()),
-	orientation: z.enum(['vertical', 'horizontal']).optional()
+	orientation: z.enum(['vertical', 'horizontal']).nullable().optional()
 });
 
 export const MetricWidgetDataSchema = z.object({
 	label: z.string(),
 	value: z.union([z.string(), z.number()]),
-	change: z.number().optional(),
-	changeType: z.enum(['increase', 'decrease']).optional(),
-	unit: z.string().optional()
+	change: z.number().nullable().optional(),
+	changeType: z.enum(['increase', 'decrease']).nullable().optional(),
+	unit: z.string().nullable().optional()
 });
 
 export const MapWidgetDataSchema = z.object({
-	title: z.string().optional(),
-	description: z.string().optional(),
+	title: z.string().nullable().optional(),
+	description: z.string().nullable().optional(),
 	lat: z.number().min(-90).max(90),
 	lon: z.number().min(-180).max(180),
 	zoom: z.number().min(0).max(20),
@@ -150,8 +152,8 @@ export interface WidgetChannelConfig<T extends WidgetType = WidgetType> {
 // ===== OpenAI Structured Output Configuration =====
 
 /**
- * Configuration for OpenAI structured output
- * This can be used directly with OpenAI's response_format parameter
+ * Configuration for OpenAI structured output (Legacy - use zodTextFormat instead)
+ * @deprecated Use getWidgetTextFormat() for OpenAI text format
  */
 export interface OpenAIStructuredOutputConfig {
 	type: 'json_schema';
@@ -161,6 +163,18 @@ export interface OpenAIStructuredOutputConfig {
 		schema: Record<string, unknown>;
 		strict?: boolean;
 	};
+}
+
+/**
+ * OpenAI Text Format Configuration
+ * This is the correct format for OpenAI structured outputs
+ * Use this in the job input's `text.format` field
+ */
+export interface OpenAITextFormatConfig {
+	type: 'json_schema';
+	name: string;
+	strict: true;
+	schema: Record<string, unknown>;
 }
 
 /**
@@ -218,7 +232,43 @@ export function zodSchemaToOpenAI<T extends z.ZodSchema>(
 }
 
 /**
+ * Get OpenAI text format for a specific widget type
+ * This uses zodTextFormat which is the recommended way for OpenAI structured outputs
+ * 
+ * @param widgetType - The widget type
+ * @param name - Optional custom name (defaults to widgetType)
+ * @returns OpenAI text format configuration for use in job input
+ * 
+ * @example
+ * ```typescript
+ * const textFormat = getWidgetTextFormat('paragraph', 'ParagraphContent');
+ * 
+ * // Use in job input:
+ * const jobInput = {
+ *   model: 'gpt-4o-mini',
+ *   input: [{ role: 'system', content: 'Generate content...' }],
+ *   text: { format: textFormat }
+ * };
+ * ```
+ */
+export function getWidgetTextFormat<T extends WidgetType>(
+	widgetType: T,
+	name?: string
+): OpenAITextFormatConfig {
+	console.log(`\n🔧 [getWidgetTextFormat] Getting OpenAI text format for widget type: ${widgetType}`);
+	const schema = WidgetDataSchemas[widgetType];
+	const configName = name || `${widgetType}WidgetData`;
+	
+	console.log(`   Using zodTextFormat with name: ${configName}`);
+	const textFormat = zodTextFormat(schema, configName);
+	console.log(`   ✅ Text format generated`);
+	
+	return textFormat as OpenAITextFormatConfig;
+}
+
+/**
  * Get OpenAI structured output config for a specific widget type
+ * @deprecated Use getWidgetTextFormat() instead for proper OpenAI text format
  * @param widgetType - The widget type
  * @param name - Optional custom name (defaults to widgetType)
  * @param description - Optional description
@@ -229,6 +279,7 @@ export function getWidgetOpenAIConfig<T extends WidgetType>(
 	description?: string
 ): OpenAIStructuredOutputConfig {
 	console.log(`\n🔧 [getWidgetOpenAIConfig] Getting OpenAI config for widget type: ${widgetType}`);
+	console.log(`   ⚠️  DEPRECATED: Use getWidgetTextFormat() instead`);
 	const schema = WidgetDataSchemas[widgetType];
 	const configName = name || `${widgetType}WidgetData`;
 	const configDescription = description || `Data for ${widgetType} widget`;
