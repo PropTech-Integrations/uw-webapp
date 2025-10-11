@@ -7,16 +7,35 @@
 <script lang="ts">
 	import { PUBLIC_GEOAPIFY_API_KEY } from '$env/static/public';
 	import type { MapWidget } from '$lib/dashboard/types/widget';
+	import { mapStore } from '$lib/stores/mapObjectStore';
 
 	interface Props {
 		data: MapWidget['data'];
 	}
 
 	let { data }: Props = $props();
+	let widgetData = $state(data);
+
+	let consumer = mapStore.registerConsumer<MapWidget['data']>(
+		'map-content',
+		'map-widget'
+	);
+
+	console.log(`🗺️ MapWidget: Initialized`);
+	console.log('   Subscribing to content updates...\n');
+
+	// Subscribe to content updates
+	consumer.subscribe((data) => {
+		if (data) {
+			widgetData = data;
+			console.log('Map content updated:', data);
+		}
+	});
+
 	const apiKey = PUBLIC_GEOAPIFY_API_KEY;
-	const lat = data.lat;
-	const lon = data.lon;
-	const zoom = data.zoom;
+	const lat = widgetData.lat;
+	const lon = widgetData.lon;
+	const zoom = widgetData.zoom;
 
 	// --- DOM Element Reference ---
 	let mapContainer: HTMLDivElement; // This will be a reference to the <div> element, bound in the template.

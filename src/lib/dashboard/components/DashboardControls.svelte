@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { dashboard } from '$lib/dashboard/stores/dashboard.svelte';
+	import { mapStore } from '$lib/stores/mapObjectStore';
+	import type { ParagraphWidget } from '../types/widget';
 
 	let showExportDialog = $state(false);
 	let showImportDialog = $state(false);
@@ -67,6 +69,61 @@
 		a.download = `dashboard-config-${new Date().toISOString().split('T')[0]}.json`;
 		a.click();
 		URL.revokeObjectURL(url);
+	}
+
+	function handleUpdateParagraphWidget() {
+		let contentProducer = mapStore.registerProducer<ParagraphWidget['data']>(
+			'paragraph-content',
+			'content-generator-agent'
+		);
+
+		const topics = [
+			{
+				title: 'AI Dashboard Update',
+				content:
+					'The AI-powered dashboard is now processing **12,543 events per second** with an average latency of _15ms_. Machine learning models have achieved a 94% accuracy rate in predicting user behavior patterns.',
+				markdown: true
+			},
+			{
+				title: 'System Performance',
+				content:
+					'All systems are operating normally. CPU usage: 45%, Memory: 62%, Network throughput: optimal. No anomalies detected in the last hour.',
+				markdown: false
+			},
+			{
+				title: 'Market Analysis',
+				content:
+					"Today's market shows **strong growth** in the technology sector with a _3.2% increase_. AI and machine learning companies are leading the surge with unprecedented investor interest.",
+				markdown: true
+			},
+			{
+				title: 'Weather Report',
+				content:
+					'Current conditions: Partly cloudy, 72°F. Forecast: Mild temperatures continuing through the week with a 20% chance of rain on Thursday.',
+				markdown: false
+			},
+			{
+				title: 'Breaking News',
+				content:
+					'**Breaking:** Scientists announce breakthrough in quantum computing, achieving stable qubit coherence for over _100 microseconds_. This represents a ***10x improvement*** over previous records.',
+				markdown: true
+			}
+		];
+		// Pick a random topic
+		const topic = topics[Math.floor(Math.random() * topics.length)];
+
+		// Add timestamp to content
+		const timestamp = new Date().toLocaleTimeString();
+		const contentWithTime = `${topic.content}\n\n_Last updated: ${timestamp}_`;
+
+		const data: ParagraphWidget['data'] = {
+			title: topic.title,
+			content: topic.markdown ? contentWithTime : `${topic.content}\n\nLast updated: ${timestamp}`,
+			markdown: topic.markdown
+		};
+
+		console.log(`🤖 AI Agent generated new content: "${topic.title}"`);
+		contentProducer.publish(data);
 	}
 </script>
 
@@ -140,6 +197,14 @@
 			class="rounded bg-red-500 px-3 py-1.5 text-sm text-white hover:bg-red-600"
 		>
 			Clear Saved
+		</button>
+
+		<!-- Update ParagraphWidget -->
+		<button
+			onclick={handleUpdateParagraphWidget}
+			class="rounded bg-red-500 px-3 py-1.5 text-sm text-white hover:bg-red-600"
+		>
+			Update ParagraphWidget
 		</button>
 	</div>
 </div>

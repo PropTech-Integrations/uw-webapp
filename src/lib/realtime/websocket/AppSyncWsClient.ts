@@ -60,6 +60,7 @@ import type {
 	AppSyncAuth,
 	SubscribeOptions
 } from './types';
+
 import { toRealtimeUrl, base64Url, safeJsonParse, uuid, pluck } from './utils';
 
 export class AppSyncWsClient implements TAppSyncWsClient {
@@ -329,7 +330,7 @@ export class AppSyncWsClient implements TAppSyncWsClient {
 	private setupSubscription<T>(spec: SubscriptionSpec<T>): void {
 		logger('Setting up subscription ---------------------->: ', spec);
 		const selector =
-			spec.select ?? ((payload: any) => pluck(payload, spec.path)) ?? ((payload: any) => payload);
+			spec.select ?? (spec.path ? (payload: any) => pluck(payload, spec.path) : (payload: any) => payload);
 
 		const h = this.subscribe({
 			query: spec.query,

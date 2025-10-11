@@ -1,20 +1,39 @@
 <script lang="ts">
 	import type { TableWidget } from '$lib/dashboard/types/widget';
+	import { mapStore } from '$lib/stores/mapObjectStore';
 
 	interface Props {
 		data: TableWidget['data'];
 	}
 
 	let { data }: Props = $props();
+	let widgetData = $state(data);
+
+	let consumer = mapStore.registerConsumer<TableWidget['data']>(
+		'table-content',
+		'table-widget'
+	);
+
+	console.log(`📋 TableWidget: Initialized`);
+	console.log('   Subscribing to content updates...\n');
+
+	// Subscribe to content updates
+	consumer.subscribe((data) => {
+		if (data) {
+			widgetData = data;
+			console.log('Table content updated:', data);
+		}
+	});
+
 	let sortColumn = $state<string | null>(null);
 	let sortDirection = $state<'asc' | 'desc'>('asc');
 	let currentPage = $state(1);
 	const itemsPerPage = 10;
 
 	let sortedRows = $derived.by(() => {
-		if (!data.sortable || !sortColumn) return data.rows;
+		if (!widgetData.sortable || !sortColumn) return widgetData.rows;
 
-		return [...data.rows].sort((a, b) => {
+		return [...widgetData.rows].sort((a, b) => {
 			const aVal = a[sortColumn!];
 			const bVal = b[sortColumn!];
 			const comparison = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
@@ -23,13 +42,13 @@
 	});
 
 	let paginatedRows = $derived.by(() => {
-		if (!data.paginated) return sortedRows;
+		if (!widgetData.paginated) return sortedRows;
 		const start = (currentPage - 1) * itemsPerPage;
 		return sortedRows.slice(start, start + itemsPerPage);
 	});
 
 	function handleSort(column: string) {
-		if (!data.sortable) return;
+		if (!widgetData.sortable) return;
 		if (sortColumn === column) {
 			sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
 		} else {
@@ -41,21 +60,21 @@
 
 <div class="table-widget flex h-full flex-col">
 	<div class="flex-1 overflow-auto">
-		{#if data.title}
-			<h3 class="mb-2 text-lg font-medium text-gray-700">{data.title}</h3>
+		{#if widgetData.title}
+			<h3 class="mb-2 text-lg font-medium text-gray-700">{widgetData.title}</h3>
 		{/if}
 		<table class="w-full text-sm">
 			<thead class="sticky top-0 bg-gray-50">
 				<tr>
-					{#each data.headers as header}
+					{#each widgetData.headers as header}
 						<th
-							class="px-3 py-2 text-left font-medium text-gray-700 {data.sortable
+							class="px-3 py-2 text-left font-medium text-gray-700 {widgetData.sortable
 								? 'cursor-pointer hover:bg-gray-100'
 								: ''}"
 							onclick={() => handleSort(header)}
 						>
 							{header}
-							{#if data.sortable && sortColumn === header}
+							{#if widgetData.sortable && sortColumn === header}
 								<span class="ml-1">
 									{sortDirection === 'asc' ? '↑' : '↓'}
 								</span>
@@ -67,7 +86,7 @@
 			<tbody class="divide-y divide-gray-200">
 				{#each paginatedRows as row}
 					<tr class="hover:bg-gray-50">
-						{#each data.headers as header}
+						{#each widgetData.headers as header}
 							<td class="px-3 py-2 text-gray-600">
 								{row[header] || ''}
 							</td>
@@ -78,7 +97,7 @@
 		</table>
 	</div>
 
-	{#if data.paginated}
+	{#if widgetData.paginated}
 		<div class="mt-2 flex items-center justify-between border-t pt-2">
 			<button
 				class="rounded bg-gray-100 px-3 py-1 text-sm hover:bg-gray-200 disabled:opacity-50"
@@ -88,11 +107,11 @@
 				Previous
 			</button>
 			<span class="text-sm text-gray-600">
-				Page {currentPage} of {Math.ceil(data.rows.length / itemsPerPage)}
+				Page {currentPage} of {Math.ceil(widgetData.rows.length / itemsPerPage)}
 			</span>
 			<button
 				class="rounded bg-gray-100 px-3 py-1 text-sm hover:bg-gray-200 disabled:opacity-50"
-				disabled={currentPage >= Math.ceil(data.rows.length / itemsPerPage)}
+				disabled={currentPage >= Math.ceil(widgetData.rows.length / itemsPerPage)}
 				onclick={() => currentPage++}
 			>
 				Next
