@@ -1,31 +1,52 @@
 <script lang="ts">
 	// import TypeWriter from '$lib/components/TypeWriter/TypeWriter.svelte';
 	import type { ParagraphWidget } from '$lib/dashboard/types/widget';
-
-	import { mapStore } from '$lib/stores/mapObjectStore';
+	import { WidgetChannels } from '$lib/dashboard/types/widgetSchemas';
+	import { createWidgetConsumer } from '$lib/dashboard/types/widgetBridge';
+	import type { ParagraphWidgetData } from '$lib/dashboard/types/widgetSchemas';
 
 	interface Props {
 		data: ParagraphWidget['data'];
+		/** Optional custom channel ID (defaults to 'paragraph-content') */
+		channelId?: string;
+		/** Optional custom widget ID for consumer registration */
+		widgetId?: string;
 	}
 
-	let { data }: Props = $props();
-	let widgetData = $state(data);
+	let { data, channelId = 'paragraph-content', widgetId = 'paragraph-widget' }: Props = $props();
+	let widgetData = $state<ParagraphWidgetData>(data);
 
-	let consumer = mapStore.registerConsumer<ParagraphWidget['data']>(
-		'paragraph-content',
-		'paragraph-widget'
+	console.log(`\n📝 [ParagraphWidget] Initializing widget`);
+	console.log(`   Widget ID: ${widgetId}`);
+	console.log(`   Channel ID: ${channelId}`);
+	console.log(`   Initial data:`, data);
+
+	// Create a validated consumer using the type-safe bridge system
+	const consumer = createWidgetConsumer(
+		channelId === 'paragraph-content'
+			? WidgetChannels.paragraphContent
+			: {
+					channelId,
+					widgetType: 'paragraph',
+					schema: WidgetChannels.paragraphContent.schema,
+					description: `Custom paragraph widget channel: ${channelId}`
+				},
+		widgetId
 	);
 
-	console.log(`📝 ParagraphWidget[${data.title}]: Initialized`);
-	console.log('   Subscribing to content updates...\n');
+	console.log(`📝 [ParagraphWidget:${widgetId}] Consumer created, setting up subscription...`);
 	$inspect(widgetData);
 
-	// Subscribe to content updates
-	consumer.subscribe((data) => {
-		if (data) {
-			// this.updateContent(data);
-			widgetData = data;
-			console.log('Content updated:', data);
+	// Subscribe to validated content updates
+	// The consumer automatically validates data against the Zod schema
+	consumer.subscribe((validatedData) => {
+		console.log(`\n📝 [ParagraphWidget:${widgetId}] 📥 Subscription callback triggered`);
+		if (validatedData) {
+			console.log(`   ✅ Received validated data:`, validatedData);
+			widgetData = validatedData;
+			console.log(`   ✅ Widget state updated`);
+		} else {
+			console.log(`   ⚠️ Received undefined or invalid data`);
 		}
 	});
 </script>

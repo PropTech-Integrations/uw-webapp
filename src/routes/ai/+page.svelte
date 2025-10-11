@@ -61,6 +61,7 @@
 		tool_choice: 'auto',
 		text: { format: zodTextFormat(projectSchema, 'projectDetails') }
 	};
+	
 	const jobInput2Request: JobInputRequest = {
 		model: 'gpt-5-nano',
 		input: [{ role: 'system', content: 'Extract the details from the file' }],
@@ -121,8 +122,9 @@
 
 		<!-- Right Column -->
 		<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-			<h2 class="mb-4 text-xl font-semibold text-gray-800">Broker Details</h2>
-			<JobSubmission idToken={data.idToken} jobInput={jobInput2} />
+			<h2 class="mb-4 text-xl font-semibold text-gray-800">Project Details</h2>
+			<JobSubmission idToken={data.idToken} jobInput={jobInput1} />
+			<!-- <JobSubmission idToken={data.idToken} jobInput={jobInput2} /> -->
 		</div>
 
 		<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">

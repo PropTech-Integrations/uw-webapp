@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { gql } from '$lib/realtime/graphql/requestHandler';
-	import { AppSyncWsClient } from '$lib/realtime/websocket/AppSyncWsClient';
+	import { addSubscription, removeSubscription, ensureConnection } from '$lib/stores/appSyncClientStore';
 	import { S_JOB_UPDATE } from '$lib/realtime/graphql/subscriptions/Job';
-	import { PUBLIC_GRAPHQL_HTTP_ENDPOINT } from '$env/static/public';
 	import { jobUpdateStore, type JobUpdate } from '$lib/stores/jobUpdateStore';
+	import type { SubscriptionSpec } from '$lib/realtime/websocket/types';
 
-	// ===== Type Definitions =====
+	// ===== Type and Variables Related to Job Status =====
 
 	// Use const assertion for better type safety
 	const JOB_STATUSES = {
@@ -71,8 +71,8 @@
 	}
 
 	interface NetworkState {
-		// WebSocket state
-		wsClient: AppSyncWsClient | null;
+		// Subscription state
+		currentSubscription: SubscriptionSpec<JobUpdate> | null;
 		reconnectTimer: ReturnType<typeof setTimeout> | null;
 		subscriptionTimeout: ReturnType<typeof setTimeout> | null;
 	}
@@ -150,7 +150,7 @@
 	// Network state (not exposed to UI)
 	// @ts-expect-error - Svelte 5 rune syntax not fully supported by TS yet
 	let networkState = $state<NetworkState>({
-		wsClient: null,
+		currentSubscription: null,
 		reconnectTimer: null,
 		subscriptionTimeout: null
 	});
@@ -339,6 +339,7 @@
 			timestamp: update.updatedAt
 		});
 
+		console.log('Adding job update to store:', update);
 		// Write to store (store handles duplicate prevention)
 		jobUpdateStore.addJobUpdate(jobId, update);
 
@@ -378,60 +379,61 @@
 		jobUpdateStore.updateJobState(jobId, { connectionState: CONNECTION_STATES.CONNECTING });
 
 		try {
-			// Clean up existing connection
+			// Clean up existing subscription
 			await cleanupWebSocket(jobId);
 
 			// Start subscription timeout
 			startSubscriptionTimeout(jobId);
 
-			networkState.wsClient = new AppSyncWsClient({
-				graphqlHttpUrl: PUBLIC_GRAPHQL_HTTP_ENDPOINT,
-				auth: { mode: 'cognito', idToken: token },
-				subscriptions: [
-					{
-						query: S_JOB_UPDATE,
-						variables: { id: jobId },
-						select: (payload: unknown): JobUpdate | null => {
-							// Type-safe payload extraction
-							const data = payload as any;
-							const update = data?.onJobUpdate || data?.data?.onJobUpdate || data;
+			// Create subscription specification
+			const subscriptionSpec: SubscriptionSpec<JobUpdate> = {
+				query: S_JOB_UPDATE,
+				variables: { id: jobId },
+				select: (payload: unknown): JobUpdate | undefined => {
+					// Type-safe payload extraction
+					const data = payload as any;
+					const update = data?.onJobUpdate || data?.data?.onJobUpdate || data;
 
-							// Validate update structure
-							if (update?.id && update?.status) {
-								return update as JobUpdate;
-							}
+					// Validate update structure
+					if (update?.id && update?.status) {
+						return update as JobUpdate;
+					}
 
-							console.warn('Invalid update structure:', payload);
-							return null;
-						},
-						next: (update: JobUpdate | null) => {
-							if (update) {
-								clearSubscriptionTimeout(); // Reset timeout on successful update
-								addJobUpdate(jobId, update);
+					console.warn('Invalid update structure:', payload);
+					return undefined;
+				},
+				next: (update: JobUpdate) => {
+					if (update) {
+						clearSubscriptionTimeout(); // Reset timeout on successful update
+						addJobUpdate(jobId, update);
 
-								// Auto-disconnect if job is complete
-								if (isTerminalStatus(update.status as JobStatus)) {
-									console.log('Job complete, scheduling subscription cleanup');
-									setTimeout(() => cleanupWebSocket(jobId), 1000);
-								} else {
-									startSubscriptionTimeout(jobId); // Restart timeout for next update
-								}
-							}
-						},
-						error: (error: unknown) => {
-							const wsError =
-								error instanceof Error
-									? new WebSocketError(error.message, 'SUBSCRIPTION_ERROR')
-									: new WebSocketError('Unknown subscription error', 'UNKNOWN_ERROR');
-
-							console.error('Subscription error:', wsError);
-							handleSubscriptionError(wsError, jobId, token);
+						// Auto-disconnect if job is complete
+						if (isTerminalStatus(update.status as JobStatus)) {
+							console.log('Job complete, scheduling subscription cleanup');
+							setTimeout(() => cleanupWebSocket(jobId), 1000);
+						} else {
+							startSubscriptionTimeout(jobId); // Restart timeout for next update
 						}
 					}
-				]
-			});
+				},
+				error: (error: unknown) => {
+					const wsError =
+						error instanceof Error
+							? new WebSocketError(error.message, 'SUBSCRIPTION_ERROR')
+							: new WebSocketError('Unknown subscription error', 'UNKNOWN_ERROR');
 
-			await networkState.wsClient.ready();
+					console.error('Subscription error:', wsError);
+					handleSubscriptionError(wsError, jobId, token);
+				}
+			};
+
+			// Store the subscription spec so we can remove it later
+			networkState.currentSubscription = subscriptionSpec;
+
+			// Ensure connection and add subscription to shared client
+			await ensureConnection(token);
+			await addSubscription(token, subscriptionSpec);
+
 			jobUpdateStore.updateJobState(jobId, {
 				connectionState: CONNECTION_STATES.CONNECTED,
 				reconnectAttempts: 0
@@ -489,13 +491,14 @@
 			networkState.reconnectTimer = null;
 		}
 
-		if (networkState.wsClient) {
+		// Remove subscription from shared client
+		if (networkState.currentSubscription) {
 			try {
-				networkState.wsClient.disconnect();
+				removeSubscription(networkState.currentSubscription);
 			} catch (error) {
-				console.error('Error disconnecting WebSocket:', error);
+				console.error('Error removing subscription:', error);
 			} finally {
-				networkState.wsClient = null;
+				networkState.currentSubscription = null;
 			}
 		}
 
