@@ -4,6 +4,30 @@
 	import { zodTextFormat } from 'openai/helpers/zod';
 	import { z } from 'zod';
 
+	// Define a type for Job Input Request
+
+	type Tool = {
+		type: string;
+		vector_store_ids?: string[];
+		[key: string]: any;
+	};
+
+	type Message = {
+		role: string;
+		content: string;
+	};
+
+	type JobInputRequest = {
+		model: string;
+		input?: { role: string; content: string }[];
+		messages?: Message[];
+		tools?: Tool[] | string;
+		tool_choice?: string;
+		text?: { format: any };
+		priority?: string;
+		[key: string]: any;
+	};
+
 	const projectSchema = z.object({
 		name: z.string(),
 		description: z.string(),
@@ -30,14 +54,14 @@
 		)
 	});
 
-	const jobInput1Request = {
+	const jobInput1Request: JobInputRequest = {
 		model: 'gpt-5-nano',
 		input: [{ role: 'system', content: 'Extract the details from the file' }],
 		tools: [{ type: 'file_search', vector_store_ids: ['vs_68da2c6862088191a5b51b8b4566b300'] }],
 		tool_choice: 'auto',
 		text: { format: zodTextFormat(projectSchema, 'projectDetails') }
 	};
-	const jobInput2Request = {
+	const jobInput2Request: JobInputRequest = {
 		model: 'gpt-5-nano',
 		input: [{ role: 'system', content: 'Extract the details from the file' }],
 		tools: [{ type: 'file_search', vector_store_ids: ['vs_68da2c6862088191a5b51b8b4566b300'] }],
@@ -45,7 +69,7 @@
 		text: { format: zodTextFormat(brokerSchema, 'projectDetails') }
 	};
 
-	const jobInput3Request = {
+	const jobInput3Request: JobInputRequest = {
 		model: 'gpt-5-nano',
 		priority: 'HIGH',
 		messages: [
