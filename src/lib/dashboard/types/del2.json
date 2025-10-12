@@ -29,3 +29,34 @@
         "strict": true
     }
 }
+
+const createJobInput = (customPrompt?: string) => {
+    const textFormat = getWidgetTextFormat('paragraph', 'ParagraphContent');
+    
+    return {
+        request: JSON.stringify({
+            model,
+            input: [
+                {
+                    role: 'system',
+                    content: `You are a helpful assistant that writes clear, informative paragraphs. 
+                    Structure your response with:
+                    - A concise, descriptive title
+                    - Well-formatted content (use markdown if it improves readability)
+                    - Set markdown: true if you use markdown formatting`
+                },
+                {
+                    role: 'user',
+                    content: customPrompt || prompt
+                }
+            ],
+            text: {
+                format: textFormat
+            },
+            // Add temperature and max_tokens for consistency
+            temperature: 0.7,
+            max_tokens: 500
+        }),
+        priority: 'HIGH' as const
+    };
+};

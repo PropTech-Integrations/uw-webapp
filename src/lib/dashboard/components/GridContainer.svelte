@@ -3,6 +3,7 @@
 		columns: number;
 		rows: number;
 		gap: number;
+		minCellHeight?: number;
 		containerEl?: HTMLElement;
 		handleDragOver: (e: DragEvent) => void;
 		handleDrop: (e: DragEvent) => void;
@@ -14,6 +15,7 @@
 		columns,
 		rows,
 		gap,
+		minCellHeight = 100,
 		containerEl = $bindable(),
 		handleDragOver,
 		handleDrop,
@@ -32,10 +34,10 @@
 	ondragleave={handleDragLeave}
 >
 	<div
-		class="relative grid h-full"
+		class="relative grid"
 		style="
         grid-template-columns: repeat({columns}, 1fr);
-        grid-template-rows: repeat({rows}, minmax(100px, 1fr));
+        grid-template-rows: repeat({rows}, {minCellHeight}px);
         gap: {gap}px;
       "
 	>

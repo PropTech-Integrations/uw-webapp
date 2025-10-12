@@ -70,6 +70,7 @@
 	columns={dashboard.config.gridColumns}
 	rows={dashboard.config.gridRows}
 	gap={dashboard.config.gap}
+	minCellHeight={dashboard.config.minCellHeight}
 	{...dropHandlers}
 >
 	{#each dashboard.widgets as widget (widget.id)}
