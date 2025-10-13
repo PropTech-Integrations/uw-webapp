@@ -72,7 +72,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	try {
 		const user = await verify(id_token);
-		event.locals.currentUser = user;
+		event.locals.currentUser = { ...user, idToken: id_token };
 	} catch (error) {
 		event.cookies.delete('id_token', { path: '/' });
 		event.cookies.delete('access_token', { path: '/' });

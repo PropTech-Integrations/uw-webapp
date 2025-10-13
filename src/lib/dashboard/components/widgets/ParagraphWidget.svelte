@@ -5,6 +5,14 @@
 	import { createWidgetConsumer } from '$lib/dashboard/types/widgetBridge';
 	import type { ParagraphWidgetData } from '$lib/dashboard/types/widgetSchemas';
 
+	// AI Job Submission
+	import { createJobSubmissionClientWithAppSync } from '$lib/dashboard/lib/JobManager';
+	import { type JobUpdate } from '$lib/dashboard/lib/JobManager';
+	import { paragraphTitleQuery } from '$lib/dashboard/types/OpenAIQueryDefs';
+	import { Button } from 'flowbite-svelte';
+	import { getContext } from 'svelte';
+	import type { CurrentUser } from '$lib/types/auth';
+
 	interface Props {
 		data: ParagraphWidget['data'];
 		/** Optional custom channel ID (defaults to 'paragraph-content') */
@@ -15,6 +23,55 @@
 
 	let { data, channelId = 'paragraph-content', widgetId = 'paragraph-widget' }: Props = $props();
 	let widgetData = $state<ParagraphWidgetData>(data);
+	
+	// Get current user from page context
+	const pageData = getContext<{ currentUser: CurrentUser }>('pageData');
+	const currentUser = pageData?.currentUser;
+
+	//////////////////////////////////////////////////////////////////////////////////////////////
+	// AI Job Submission
+	//////////////////////////////////////////////////////////////////////////////////////////////
+
+	export async function advancedExample(idToken: string) {
+		// Create a client with custom configuration (async)
+		const client = await createJobSubmissionClientWithAppSync({
+			config: {
+				maxRetries: 5,
+				retryDelay: 2000,
+				reconnectBackoffMultiplier: 2,
+				maxReconnectDelay: 60000,
+				subscriptionTimeout: 300000 // 5 minutes
+			},
+			callbacks: {
+				onJobComplete: (update: JobUpdate) => {
+					console.log('✅ Job completed successfully:', update);
+					const result = JSON.parse(update.result as string);
+					widgetData = result.output_parsed as ParagraphWidgetData;
+					// Handle completion (e.g., show notification, update UI)
+				},
+				onJobError: (error: Error) => {
+					console.error('❌ Job failed:', error);
+					// Handle error (e.g., show error message, retry)
+				},
+				onStatusUpdate: (update: JobUpdate) => {
+					console.log('📊 Status update:', update.status);
+					// Track progress (e.g., update progress bar)
+				},
+				onConnectionStateChange: (state) => {
+					console.log('🔌 Connection state:', state);
+					// Handle connection changes (e.g., show connection indicator)
+				}
+			}
+		});
+
+		// Submit a job
+		const result = await client.submitJob(
+			paragraphTitleQuery('Write a paragraph about the economy of Santa Rosa, CA'),
+			idToken
+		);
+
+		return result;
+	}
 
 	console.log(`\n📝 [ParagraphWidget] Initializing widget`);
 	console.log(`   Widget ID: ${widgetId}`);
@@ -52,8 +109,15 @@
 </script>
 
 <div class="paragraph-widget h-full overflow-auto">
+	<div class="absolute right-16 top-4 z-10">
+		<Button
+			class="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
+			onclick={() => currentUser?.idToken && advancedExample(currentUser.idToken)}
+			>Submit AI Job</Button
+		>
+	</div>
 	{#if data.title}
-		<h3 class="mb-2 text-lg font-medium text-gray-700">{widgetData.title}</h3>
+		<h3 class="mb-2 mt-1 text-lg font-medium text-gray-700">{widgetData.title}</h3>
 	{/if}
 	{#if data.markdown}
 		{@html widgetData.content}

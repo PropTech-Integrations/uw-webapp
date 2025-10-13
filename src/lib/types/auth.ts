@@ -3,6 +3,7 @@
   // Represents the authenticated user and their claims
   export type CurrentUser = {
       isAuthenticated: boolean;         // Whether the user is authenticated
+      idToken?: string;                 // Cognito ID token for API authentication
       sub?: string;                     // Cognito user unique identifier (subject)
       username?: string;                // Username (may be Cognito or preferred username)
       email?: string;                   // User's email address

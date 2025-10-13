@@ -6,7 +6,7 @@
 	import ParagraphDisplayParent from '$lib/dashboard/examples/ParagraphDisplayParent.svelte';
 	import { dashboard } from '$lib/dashboard/stores/dashboard.svelte';
 	import type { Widget } from '$lib/dashboard/types/widget';
-	import { onMount } from 'svelte';
+	import { onMount, setContext } from 'svelte';
 	import { PUBLIC_GEOAPIFY_API_KEY } from '$env/static/public';
 	import SimpleWidgetExample from '$lib/dashboard/examples/SimpleWidgetExample.svelte';
 	import SimplifiedParagraphDisplay from '$lib/dashboard/examples/SimplifiedParagraphDisplay.svelte';
@@ -16,10 +16,11 @@
 
 	let { data }: Props = $props();
 	let isLoading = $state(true);
+	
+	// Set page data context for child components
+	setContext('pageData', { currentUser: data.currentUser });
 
-	import { createJobSubmissionClientWithAppSync } from '$lib/dashboard/lib/JobManager';
-    import { type JobUpdate } from '$lib/dashboard/lib/JobManager';
-	import { paragraphTitleQuery } from '$lib/dashboard/types/OpenAIQueryDefs';
+
 
 	const marketingWidgets: Widget[] = [
 		{
@@ -354,49 +355,11 @@
 		}
 	}
 
-	export async function advancedExample(idToken: string) {
-		// Create a client with custom configuration (async)
-		const client = await createJobSubmissionClientWithAppSync({
-			config: {
-				maxRetries: 5,
-				retryDelay: 2000,
-				reconnectBackoffMultiplier: 2,
-				maxReconnectDelay: 60000,
-				subscriptionTimeout: 300000 // 5 minutes
-			},
-			callbacks: {
-				onJobComplete: (update: JobUpdate) => {
-					console.log('✅ Job completed successfully:', update);
-					// Handle completion (e.g., show notification, update UI)
-				},
-				onJobError: (error: Error) => {
-					console.error('❌ Job failed:', error);
-					// Handle error (e.g., show error message, retry)
-				},
-				onStatusUpdate: (update: JobUpdate) => {
-					console.log('📊 Status update:', update.status);
-					// Track progress (e.g., update progress bar)
-				},
-				onConnectionStateChange: (state) => {
-					console.log('🔌 Connection state:', state);
-					// Handle connection changes (e.g., show connection indicator)
-				}
-			}
-		});
 
-		// Submit a job
-		const result = await client.submitJob(
-			paragraphTitleQuery('Write a paragraph about the economy of Santa Rosa, CA'),
-			idToken
-		);
-
-		return result;
-	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
-<button onclick={() => advancedExample(data.idToken)}>Advanced Example</button>
 <div class="">
 	<header class="border-b bg-white shadow-sm">
 		<div class="mx-auto max-w-7xl px-4 py-4">

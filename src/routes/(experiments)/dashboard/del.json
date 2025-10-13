@@ -1,0 +1,98 @@
+{
+  "result": {
+    "top_logprobs": 0,
+    "instructions": null,
+    "metadata": {},
+    "max_tool_calls": null,
+    "reasoning": {
+      "summary": null,
+      "effort": "medium"
+    },
+    "usage": {
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "total_tokens": 2291,
+      "output_tokens": 2175,
+      "input_tokens": 116,
+      "output_tokens_details": {
+        "reasoning_tokens": 1984
+      }
+    },
+    "created_at": 1760321896,
+    "safety_identifier": null,
+    "error": null,
+    "tools": [],
+    "billing": {
+      "payer": "developer"
+    },
+    "output": [
+      {
+        "summary": [],
+        "id": "rs_0026ff2fb65eba960068ec61689f08819dbc22a492844196a1",
+        "type": "reasoning"
+      },
+      {
+        "role": "assistant",
+        "id": "msg_0026ff2fb65eba960068ec617635b8819dae38c35d46ff127a",
+        "type": "message",
+        "content": [
+          {
+            "annotations": [],
+            "parsed": {
+              "markdown": false,
+              "title": "Economy of Santa Rosa, California",
+              "content": "Santa Rosa's economy is diversified and resilient, anchored by wine and agriculture in Sonoma County, a robust tourism sector that draws visitors to its wineries, farm-to-table dining, and outdoor recreation, and a solid base of health care, education, and public services. The wine industry supports many local jobs across vineyards, production, distribution, and hospitality, while tourism fuels hotels, restaurants, and events throughout the year. Public employment and health care providers give the city a stable foundation, with Santa Rosa Junior College and nearby Sonoma State University supporting a skilled workforce. The local economy benefits from its proximity to the San Francisco Bay Area, but faces challenges from housing affordability and wildfire risk, which influence construction, insurance costs, and resilience planning. Ongoing investment in infrastructure, housing, and business services helps diversify the economy and sustain growth."
+            },
+            "text": "{\"title\":\"Economy of Santa Rosa, California\",\"content\":\"Santa Rosa's economy is diversified and resilient, anchored by wine and agriculture in Sonoma County, a robust tourism sector that draws visitors to its wineries, farm-to-table dining, and outdoor recreation, and a solid base of health care, education, and public services. The wine industry supports many local jobs across vineyards, production, distribution, and hospitality, while tourism fuels hotels, restaurants, and events throughout the year. Public employment and health care providers give the city a stable foundation, with Santa Rosa Junior College and nearby Sonoma State University supporting a skilled workforce. The local economy benefits from its proximity to the San Francisco Bay Area, but faces challenges from housing affordability and wildfire risk, which influence construction, insurance costs, and resilience planning. Ongoing investment in infrastructure, housing, and business services helps diversify the economy and sustain growth.\",\"markdown\":false}",
+            "type": "output_text",
+            "logprobs": []
+          }
+        ],
+        "status": "completed"
+      }
+    ],
+    "top_p": 1,
+    "previous_response_id": null,
+    "temperature": 1,
+    "tool_choice": "auto",
+    "model": "gpt-5-nano-2025-08-07",
+    "service_tier": "default",
+    "id": "resp_0026ff2fb65eba960068ec6168240c819da0a661fb79d2a5b4",
+    "text": {
+      "format": {
+        "schema": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "markdown": { "nullable": true, "type": "boolean" },
+            "title": { "nullable": true, "type": "string" },
+            "content": { "type": "string" }
+          },
+          "required": ["title", "content", "markdown"]
+        },
+        "name": "ParagraphContent",
+        "description": null,
+        "type": "json_schema",
+        "strict": true
+      },
+      "verbosity": "medium"
+    },
+    "incomplete_details": null,
+    "prompt_cache_key": null,
+    "truncation": "disabled",
+    "output_parsed": {
+      "markdown": false,
+      "title": "Economy of Santa Rosa, California",
+      "content": "Santa Rosa's economy is diversified and resilient, anchored by wine and agriculture in Sonoma County, a robust tourism sector that draws visitors to its wineries, farm-to-table dining, and outdoor recreation, and a solid base of health care, education, and public services. The wine industry supports many local jobs across vineyards, production, distribution, and hospitality, while tourism fuels hotels, restaurants, and events throughout the year. Public employment and health care providers give the city a stable foundation, with Santa Rosa Junior College and nearby Sonoma State University supporting a skilled workforce. The local economy benefits from its proximity to the San Francisco Bay Area, but faces challenges from housing affordability and wildfire risk, which influence construction, insurance costs, and resilience planning. Ongoing investment in infrastructure, housing, and business services helps diversify the economy and sustain growth."
+    },
+    "store": true,
+    "parallel_tool_calls": true,
+    "background": false,
+    "output_text": "{\"title\":\"Economy of Santa Rosa, California\",\"content\":\"Santa Rosa's economy is diversified and resilient, anchored by wine and agriculture in Sonoma County, a robust tourism sector that draws visitors to its wineries, farm-to-table dining, and outdoor recreation, and a solid base of health care, education, and public services. The wine industry supports many local jobs across vineyards, production, distribution, and hospitality, while tourism fuels hotels, restaurants, and events throughout the year. Public employment and health care providers give the city a stable foundation, with Santa Rosa Junior College and nearby Sonoma State University supporting a skilled workforce. The local economy benefits from its proximity to the San Francisco Bay Area, but faces challenges from housing affordability and wildfire risk, which influence construction, insurance costs, and resilience planning. Ongoing investment in infrastructure, housing, and business services helps diversify the economy and sustain growth.\",\"markdown\":false}",
+    "user": null,
+    "object": "response",
+    "status": "completed",
+    "max_output_tokens": null
+  }
+}

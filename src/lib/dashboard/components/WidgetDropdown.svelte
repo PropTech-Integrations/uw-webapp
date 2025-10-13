@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy, tick } from 'svelte';
 	import type { Widget, WidgetAction } from '$lib/dashboard/types/widget';
-	import { dashboard } from '$lib/dashboard/stores/dashboard.svelte';
 
 	interface Props {
 		widget: Widget;
@@ -260,7 +259,7 @@
         <circle cx="41" cy="170" r="8" fill="#4a5568"/>
         <circle cx="159" cy="170" r="8" fill="#4a5568"/>
       </svg> -->
-        <img src="/images/icons/robot2.png" class="h-8 w-8  text-gray-200 dark:text-gray-800" />
+        <img src="/images/icons/robot2.png" alt="Robot" class="h-8 w-8 text-gray-200 dark:text-gray-800" />
 		<!-- <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 			<path
 				stroke-linecap="round"
