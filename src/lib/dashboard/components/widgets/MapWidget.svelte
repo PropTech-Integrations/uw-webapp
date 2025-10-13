@@ -61,7 +61,7 @@
 
 		// 3. Create and add the Mapbox GL layer using the Geoapify style
 		const gl = L.mapboxGL({
-			style: `https://maps.geoapify.com/v1/styles/osm-bright/style.json?apiKey=${apiKey}`,
+			style: `https://maps.geoapify.com/v1/styles/maptiler-3d/style.json?apiKey=${apiKey}`,
 			accessToken: 'no-token' // not needed for Geoapify
 		}).addTo(map);
 

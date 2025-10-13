@@ -26,9 +26,9 @@
 	});
 </script>
 
-<div class="title-widget flex h-full flex-col justify-center text-{widgetData.alignment || 'left'}">
-	<h2 class="text-2xl font-bold text-gray-800">{widgetData.title}</h2>
+<div class="title-widget flex h-full flex-col bg-gray-50 dark:bg-gray-800 justify-center text-{widgetData.alignment || 'left'}">
+	<h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{widgetData.title}</h2>
 	{#if widgetData.subtitle}
-		<p class="mt-1 text-sm text-gray-600">{widgetData.subtitle}</p>
+		<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{widgetData.subtitle}</p>
 	{/if}
 </div>

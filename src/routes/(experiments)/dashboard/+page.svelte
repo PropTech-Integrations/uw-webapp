@@ -10,17 +10,16 @@
 	import { PUBLIC_GEOAPIFY_API_KEY } from '$env/static/public';
 	import SimpleWidgetExample from '$lib/dashboard/examples/SimpleWidgetExample.svelte';
 	import SimplifiedParagraphDisplay from '$lib/dashboard/examples/SimplifiedParagraphDisplay.svelte';
+
 	interface Props {
 		data: PageData;
 	}
 
 	let { data }: Props = $props();
 	let isLoading = $state(true);
-	
+
 	// Set page data context for child components
 	setContext('pageData', { currentUser: data.currentUser });
-
-
 
 	const marketingWidgets: Widget[] = [
 		{
@@ -107,8 +106,8 @@
 			minHeight: 2,
 			data: {
 				title: 'Map of Hillsboro',
-				lat: 45.513897,
-				lon: -122.943565,
+				lat: 29.416775,
+				lon: -98.406103,
 				zoom: 15,
 				mapType: 'leaflet',
 				apiKey: PUBLIC_GEOAPIFY_API_KEY
@@ -126,7 +125,7 @@
 			data: {
 				title: 'Employment',
 				content:
-					'As of 2023, the workforce of Hillsboro is about 59,200 people. Employment grew ~ 1.8% from 2022 to 2023. The labor force participation rate (i.e. percent of working-age population that is working or seeking work) in Hillsboro is around 73%, which is higher than both the Portland MSA (~67%) and Oregon overall (~62.4%). In terms of industries employing residents, the top sectors are: Manufacturing (≈14,254 jobs), Health Care & Social Assistance (≈6,822), and Retail Trade (≈6,661). Regarding earnings: — Median household income in Hillsboro is ~$103,207. — Among industries, Manufacturing is one of the highest paying, with about $100,297 average/typical earnings.'
+					'Lone Oak Shopping Center sits in a robust urban economy in San Antonio, Texas—the state’s second-most populous city with about 1.45 million residents and a diversified mix of industries, including health care and social assistance, retail trade, and food services, with some of the best-paying sectors in mining/oil and technical services. The immediate trade area benefits from a sizable daytime population, counting roughly 9,806 people within 1 mile, 69,885 within 3 miles, and 227,158 within 5 miles, which supports strong foot traffic potential for retailers and service providers around the center. Demographically, the five-mile radius shows a large Hispanic share (around 64.8%), with 2023 average household incomes near $69,740 and a 2023 median home value around $218,621, underscoring a solid, diverse consumer base with growing purchasing power. The property itself is fully occupied and anchored by long-tenured tenants, including H-E-B, with a nearby distribution center noted as a logistical asset, suggesting resilient demand and potential rent growth through renewals and inflation-driven escalations; local traffic on WW White Road is strong (about 21,888 vehicles per day in 2022), reinforcing visibility and access for customers. '
 			}
 		},
 		{
@@ -354,8 +353,6 @@
 			dashboard.save();
 		}
 	}
-
-
 </script>
 
 <svelte:window onkeydown={handleKeydown} />

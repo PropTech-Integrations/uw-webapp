@@ -14,7 +14,7 @@ class DashboardStore {
 	widgets = $state<Widget[]>([]);
 	widgetZIndexMap = $state<Map<string, number>>(new Map());
 	config = $state<DashboardConfig>({
-		gridColumns: 12,
+		gridColumns: 16,
 		gridRows: 10,
 		gap: 16,
 		minCellHeight: 100

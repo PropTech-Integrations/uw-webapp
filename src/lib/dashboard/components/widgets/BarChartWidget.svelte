@@ -29,10 +29,10 @@
     // This is a placeholder implementation
   </script>
   
-  <div class="bar-chart-widget h-full flex items-center justify-center bg-gray-50 rounded">
+  <div class="bar-chart-widget h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded">
     <div class="text-center">
-      <p class="text-gray-600 mb-2">Bar Chart ({widgetData.orientation || 'vertical'})</p>
-      <p class="text-sm text-gray-500">
+      <p class="text-gray-600 dark:text-gray-300 mb-2">Bar Chart ({widgetData.orientation || 'vertical'})</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
         {widgetData.datasets.length} dataset(s) with {widgetData.labels.length} bars
       </p>
       <!-- Integrate Chart.js or similar library here -->

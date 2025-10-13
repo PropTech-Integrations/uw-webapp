@@ -61,15 +61,15 @@
 <div class="table-widget flex h-full flex-col">
 	<div class="flex-1 overflow-auto">
 		{#if widgetData.title}
-			<h3 class="mb-2 text-lg font-medium text-gray-700">{widgetData.title}</h3>
+			<h3 class="mb-2 text-lg font-medium text-gray-700 dark:text-gray-200">{widgetData.title}</h3>
 		{/if}
 		<table class="w-full text-sm">
-			<thead class="sticky top-0 bg-gray-50">
+			<thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
 				<tr>
 					{#each widgetData.headers as header}
 						<th
-							class="px-3 py-2 text-left font-medium text-gray-700 {widgetData.sortable
-								? 'cursor-pointer hover:bg-gray-100'
+							class="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-200 {widgetData.sortable
+								? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700'
 								: ''}"
 							onclick={() => handleSort(header)}
 						>
@@ -83,11 +83,11 @@
 					{/each}
 				</tr>
 			</thead>
-			<tbody class="divide-y divide-gray-200">
+			<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
 				{#each paginatedRows as row}
-					<tr class="hover:bg-gray-50">
+					<tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
 						{#each widgetData.headers as header}
-							<td class="px-3 py-2 text-gray-600">
+							<td class="px-3 py-2 text-gray-600 dark:text-gray-300">
 								{row[header] || ''}
 							</td>
 						{/each}
@@ -98,19 +98,19 @@
 	</div>
 
 	{#if widgetData.paginated}
-		<div class="mt-2 flex items-center justify-between border-t pt-2">
+		<div class="mt-2 flex items-center justify-between border-t dark:border-gray-700 pt-2">
 			<button
-				class="rounded bg-gray-100 px-3 py-1 text-sm hover:bg-gray-200 disabled:opacity-50"
+				class="rounded bg-gray-100 dark:bg-gray-700 px-3 py-1 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
 				disabled={currentPage === 1}
 				onclick={() => currentPage--}
 			>
 				Previous
 			</button>
-			<span class="text-sm text-gray-600">
+			<span class="text-sm text-gray-600 dark:text-gray-400">
 				Page {currentPage} of {Math.ceil(widgetData.rows.length / itemsPerPage)}
 			</span>
 			<button
-				class="rounded bg-gray-100 px-3 py-1 text-sm hover:bg-gray-200 disabled:opacity-50"
+				class="rounded bg-gray-100 dark:bg-gray-700 px-3 py-1 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
 				disabled={currentPage >= Math.ceil(widgetData.rows.length / itemsPerPage)}
 				onclick={() => currentPage++}
 			>

@@ -48,6 +48,8 @@
 		class?: string;
 		/** Callback to expose AI generation function to parent */
 		onAIGenerationReady?: (generateFn: (prompt: string) => Promise<void>) => void;
+		/** Callback to expose flip control to parent */
+		onFlipControlReady?: (flipFn: () => void) => void;
 	}
 
 	const { 
@@ -57,7 +59,8 @@
 		defaultPrompt = 'Write a paragraph about the economy around the property',
 		enableAIGeneration = true,
 		class: className = '',
-		onAIGenerationReady
+		onAIGenerationReady,
+		onFlipControlReady
 	}: Props = $props();
 
 	// Local state management
@@ -66,6 +69,8 @@
 	let error = $state<string | null>(null);
 	let lastUpdateTime = $state<Date | null>(null);
 	let connectionState = $state<'Researching' | 'Ready' | 'Complete'>('Complete');
+	let isFlipped = $state(false);
+	let customPromptInput = $state('');
 
 	// Get current user from context
 	const pageData = getContext<{ currentUser: CurrentUser }>('pageData');
@@ -236,117 +241,249 @@
 		}
 	}
 	
+	// Flip control functions
+	function toggleFlip() {
+		isFlipped = !isFlipped;
+		if (isFlipped) {
+			customPromptInput = defaultPrompt;
+		}
+	}
+	
+	function handleFormSubmit() {
+		if (customPromptInput.trim()) {
+			handleAIGeneration(customPromptInput);
+			isFlipped = false;
+			customPromptInput = '';
+		}
+	}
+	
+	function handleFormCancel() {
+		isFlipped = false;
+		customPromptInput = '';
+	}
+	
 	// Expose AI generation function to parent component
 	$effect(() => {
 		if (onAIGenerationReady) {
 			onAIGenerationReady(handleAIGeneration);
 		}
 	});
+	
+	// Expose flip control to parent component
+	$effect(() => {
+		if (onFlipControlReady) {
+			onFlipControlReady(toggleFlip);
+		}
+	});
 </script>
 
-<div class="paragraph-widget relative h-full overflow-auto rounded-lg bg-white shadow-sm {className}" class:loading={isLoading}>
-	<!-- Error Display -->
-	{#if error}
-		<Alert 
-			color="red" 
-			dismissable
-			class="absolute left-4 right-4 top-4 z-20"
-			onclose={clearError}
-		>
-			{error}
-		</Alert>
-	{/if}
-	
-	<!-- AI Generation Controls -->
-	{#if enableAIGeneration}
-		<div class="absolute right-12 top-4 z-10 flex items-center gap-2">
-			<!-- Connection Status Indicator -->
-			<div class="flex items-center gap-1">
-				<div 
-					class="h-2 w-2 rounded-full"
-					class:bg-green-500={connectionState === 'Researching'}
-					class:bg-yellow-500={connectionState === 'Ready'}
-					class:bg-blue-500={connectionState === 'Complete'}
-				></div>
-				<span class="text-xs text-gray-600">
-					{connectionState}
-				</span>
-			</div>
+<div class="flip-container h-full {className}" class:flipped={isFlipped}>
+	<div class="flip-card h-full">
+		<!-- FRONT SIDE -->
+		<div class="flip-card-front absolute h-full w-full overflow-auto rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+			<!-- Error Display -->
+			{#if error}
+				<Alert 
+					color="red" 
+					dismissable
+					class="absolute left-4 right-4 top-4 z-20"
+					onclose={clearError}
+				>
+					{error}
+				</Alert>
+			{/if}
 			
-			<!-- Generate Button -->
-			<!-- <Button
-				disabled={!canSubmitJob}
-				class="flex items-center gap-2"
-				color="blue"
-				size="sm"
-				onclick={() => handleAIGeneration()}
-			>
-				{#if isLoading}
-					<Spinner size="4" color="primary" />
-					<span>Generating...</span>
-				{:else}
-					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path 
-							stroke-linecap="round" 
-							stroke-linejoin="round" 
-							stroke-width="2" 
-							d="M13 10V3L4 14h7v7l9-11h-7z"
-						/>
-					</svg>
-					<span>Generate Content</span>
-				{/if}
-			</Button> -->
-		</div>
-	{/if}
-	
-	<!-- Content Display -->
-	<div class="px-4 pb-4 pt-4">
-		{#if widgetData.title}
-			<h3 class="mb-3 text-xl font-semibold text-gray-800">
-				{widgetData.title}
-			</h3>
-		{/if}
-		
-		{#if isLoading && !widgetData.content}
-			<div class="flex items-center justify-center py-12">
-				<Spinner size="8" color="gray" />
-			</div>
-		{:else}
-			{#key widgetData.content}
-				<div class="custom-prose max-w-none">
-					{#if widgetData.markdown}
-						<!-- If using markdown, you might want to add a markdown renderer here -->
-						<TypeWriter text={widgetData.content} speed={2} />
-					{:else}
-						<TypeWriter text={widgetData.content} speed={2} />
-					{/if}
+			<!-- AI Generation Controls -->
+			{#if enableAIGeneration}
+				<div class="absolute right-12 top-4 z-10 flex items-center gap-2">
+					<!-- Connection Status Indicator -->
+					<div class="flex items-center gap-1">
+						<div 
+							class="h-2 w-2 rounded-full"
+							class:bg-green-500={connectionState === 'Researching'}
+							class:dark:bg-green-400={connectionState === 'Researching'}
+							class:bg-yellow-500={connectionState === 'Ready'}
+							class:dark:bg-yellow-400={connectionState === 'Ready'}
+							class:bg-blue-500={connectionState === 'Complete'}
+							class:dark:bg-blue-400={connectionState === 'Complete'}
+						></div>
+						<span class="text-xs text-gray-600 dark:text-gray-400">
+							{connectionState}
+						</span>
+					</div>
 				</div>
-			{/key}
-		{/if}
-		
-		<!-- Update Timestamp -->
-		{#if formattedUpdateTime}
-			<div class="mt-4 text-xs text-gray-500">
-				Last updated: {formattedUpdateTime}
+			{/if}
+			
+			<!-- Content Display -->
+			<div class="px-4 pb-4 pt-4" class:loading={isLoading}>
+				{#if widgetData.title}
+					<h3 class="mb-3 text-xl font-semibold text-gray-800 dark:text-gray-100">
+						{widgetData.title}
+					</h3>
+				{/if}
+				
+				{#if isLoading && !widgetData.content}
+					<div class="flex items-center justify-center py-12">
+						<Spinner size="8" color="gray" />
+					</div>
+				{:else}
+					{#key widgetData.content}
+						<div class="custom-prose max-w-none">
+							{#if widgetData.markdown}
+								<TypeWriter text={widgetData.content} speed={2} />
+							{:else}
+								<TypeWriter text={widgetData.content} speed={2} />
+							{/if}
+						</div>
+					{/key}
+				{/if}
+				
+				<!-- Update Timestamp -->
+				{#if formattedUpdateTime}
+					<div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+						Last updated: {formattedUpdateTime}
+					</div>
+				{/if}
 			</div>
-		{/if}
+		</div>
+
+		<!-- BACK SIDE -->
+		<div class="flip-card-back absolute h-full w-full overflow-auto rounded-lg bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900 dark:to-indigo-950 shadow-sm">
+			<div class="flex h-full flex-col p-6">
+				<!-- Header -->
+				<div class="mb-6 flex items-center gap-3">
+					<div class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 dark:bg-blue-500">
+						<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path 
+								stroke-linecap="round" 
+								stroke-linejoin="round" 
+								stroke-width="2" 
+								d="M13 10V3L4 14h7v7l9-11h-7z"
+							/>
+						</svg>
+					</div>
+					<div>
+						<h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">AI Local Economy Agent</h3>
+						<p class="text-sm text-gray-600 dark:text-gray-300">The Local Economy Agent specializes in providing detailed economic analysis in targeted markets</p>
+					</div>
+				</div>
+
+				<!-- Form -->
+				<form 
+					class="flex flex-1 flex-col gap-4"
+					onsubmit={(e) => {
+						e.preventDefault();
+						handleFormSubmit();
+					}}
+				>
+					<div class="flex-1">
+						<label for="custom-prompt-{widgetId}" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">
+							Enter custom instructions for this agent
+						</label>
+						<textarea
+							id="custom-prompt-{widgetId}"
+							bind:value={customPromptInput}
+							class="h-16 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+							placeholder="Example: Write a paragraph about the economy around the property"
+							onkeydown={(e) => {
+								if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+									e.preventDefault();
+									handleFormSubmit();
+								} else if (e.key === 'Escape') {
+									handleFormCancel();
+								}
+							}}
+						></textarea>
+						<p class="mt-2 text-xs text-gray-600 dark:text-gray-300">
+							💡 Tip: Press <kbd class="rounded bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5">Ctrl+Enter</kbd> to submit, <kbd class="rounded bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5">Esc</kbd> to cancel
+						</p>
+					</div>
+
+					<!-- Buttons -->
+					<div class="flex justify-end gap-3">
+						<button
+							type="button"
+							onclick={handleFormCancel}
+							class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600"
+						>
+							Cancel
+						</button>
+						<button
+							type="submit"
+							disabled={!customPromptInput.trim() || isLoading}
+							class="flex items-center gap-2 rounded-lg bg-blue-600 dark:bg-blue-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{#if isLoading}
+								<Spinner size="4" />
+								<span>Generating...</span>
+							{:else}
+								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path 
+										stroke-linecap="round" 
+										stroke-linejoin="round" 
+										stroke-width="2" 
+										d="M13 10V3L4 14h7v7l9-11h-7z"
+									/>
+								</svg>
+								<span>Generate Content</span>
+							{/if}
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
 	</div>
 </div>
 
 <style>
-	/* Smooth transitions for alerts */
-	.paragraph-widget :global(.alert) {
-		transition: all 0.3s ease-in-out;
+	/* Flip Container */
+	.flip-container {
+		perspective: 1000px;
+		position: relative;
+	}
+	
+	.flip-card {
+		position: relative;
+		transform-style: preserve-3d;
+		transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+	}
+	
+	.flip-container.flipped .flip-card {
+		transform: rotateY(180deg);
+	}
+	
+	.flip-card-front,
+	.flip-card-back {
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
+	}
+	
+	.flip-card-front {
+		transform: rotateY(0deg);
+	}
+	
+	.flip-card-back {
+		transform: rotateY(180deg);
 	}
 	
 	/* Loading state overlay */
-	.paragraph-widget.loading {
+	.loading {
 		opacity: 0.75;
 	}
 	
-	/* Custom prose styles if needed */
+	/* Custom prose styles */
 	.custom-prose {
 		line-height: 1.75;
 		color: rgb(55 65 81);
+	}
+	
+	:global(.dark) .custom-prose {
+		color: rgb(209 213 219);
+	}
+	
+	/* Keyboard shortcut keys */
+	kbd {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-size: 0.75rem;
 	}
 </style>

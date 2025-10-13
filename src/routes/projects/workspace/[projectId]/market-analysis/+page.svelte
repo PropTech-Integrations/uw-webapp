@@ -1,243 +1,377 @@
-<!-- +page.svelte -->
 <script lang="ts">
-	import MarketSizeCard from '$lib/components/cards/statistics/MarketSizeCard.svelte';
-	import Riskcard from '$lib/components/cards/statistics/riskcard.svelte';
-	import TitleTextCard from '$lib/components/cards/statistics/TitleTextCard.svelte';
+	import type { PageData } from './$types';
+	import Dashboard from '$lib/dashboard/components/Dashboard.svelte';
+	import DashboardControls from '$lib/dashboard/components/DashboardControls.svelte';
+	import MapStoreDebugPanel from '$lib/dashboard/components/MapStoreDebugPanel.svelte';
+	import ParagraphDisplayParent from '$lib/dashboard/examples/ParagraphDisplayParent.svelte';
+	import { dashboard } from '$lib/dashboard/stores/dashboard.svelte';
+	import type { Widget } from '$lib/dashboard/types/widget';
+	import { onMount, setContext } from 'svelte';
+	import { PUBLIC_GEOAPIFY_API_KEY } from '$env/static/public';
+	import SimpleWidgetExample from '$lib/dashboard/examples/SimpleWidgetExample.svelte';
+	import SimplifiedParagraphDisplay from '$lib/dashboard/examples/SimplifiedParagraphDisplay.svelte';
 
-	import StatCard from '$lib/components/cards/statistics/StatCard.svelte';
-	import StatCardHorizontal from '$lib/components/cards/statistics/StatCardHorizontal.svelte';
-	import KeyValueTable from '$lib/components/tables/KeyValueTable.svelte';
-	// import GoogleMapCard from '$lib/components/MapBox.svelte';
-	import { Button, Card, CardPlaceholder, Heading, P, Toggle } from 'flowbite-svelte';
-	import { ArrowRightOutline } from 'flowbite-svelte-icons';
-	import Sidebar from '$lib/components/properties/sidebar/Sidebar.svelte';
-	import { project as projectStore } from '$lib/stores/project.svelte.js';
-	import TypeWriter from '$lib/components/TypeWriter/TypeWriter.svelte';
-	import TitleParagraph from '$lib/components/dashboad/widgets/titleParagraph.svelte';
+	interface Props {
+		data: PageData;
+	}
 
-	let { data } = $props();
+	let { data }: Props = $props();
+	let isLoading = $state(true);
 
-	// Use reactive project store instead of static data
-	let project = $derived($projectStore);
-	// Access mapStore from parent layout context
-	import { getContext } from 'svelte';
-	// Get mapStore from parent layout context
-	const mapStore = getContext('mapStore') as any;
+	// Set page data context for child components
+	setContext('pageData', { currentUser: data.currentUser });
 
-	let vCard = false;
-	let imageUrl = 'https://pti-demo-web-assets.s3.us-west-2.amazonaws.com/images/aaronmap.png';
-
-	const conversations = [
+	const marketingWidgets: Widget[] = [
 		{
-			category: 'Market Analysis',
-			title: 'Employment',
-			paragraph:
-				"As of 2023, the workforce of Hillsboro is about 59,200 people. Employment grew ~ 1.8% from 2022 to 2023. The labor force participation rate (i.e. percent of working-age population that is working or seeking work) in Hillsboro is around 73%, which is higher than both the Portland MSA (~67%) and Oregon overall (~62.4%). In terms of industries employing residents, the top sectors are: Manufacturing (≈14,254 jobs), Health Care & Social Assistance (≈6,822), and Retail Trade (≈6,661). Regarding earnings: — Median household income in Hillsboro is ~$103,207. — Among industries, Manufacturing is one of the highest paying, with about $100,297 average/typical earnings. Utilities and Management of Companies & Enterprises are also high. Educational attainment is relatively strong: ~ 42% of residents over 25 have a bachelor's degree or higher."
+			id: 'widget-1',
+			type: 'title',
+			gridColumn: 1,
+			gridRow: 1,
+			colSpan: 12,
+			rowSpan: 1,
+			data: {
+				title: 'Market Analysis',
+				subtitle: 'Real-time metrics and analytics',
+				alignment: 'center'
+			}
+		},
+		{
+			id: 'widget-4',
+			type: 'table',
+			gridColumn: 9,
+			gridRow: 2,
+			colSpan: 4,
+			rowSpan: 4,
+			minHeight: 2,
+			data: {
+				title: 'City Statistics',
+				headers: ['Name', 'Value'],
+				rows: [
+					{
+						Name: 'City',
+						Value: 'Hillsboro'
+					},
+					{
+						Name: 'State',
+						Value: 'Oregon'
+					},
+					{
+						Name: 'County',
+						Value: 'Washington'
+					},
+					{
+						Name: 'Zip Codes',
+						Value: '97124 97123'
+					},
+					{
+						Name: 'Cost of Living',
+						Value: '28.1% higher'
+					},
+					{
+						Name: 'Time zone',
+						Value: 'Pacific Standard Time (PST)'
+					},
+					{
+						Name: 'Elevation',
+						Value: '33 ft above sea level'
+					}
+				],
+				sortable: true,
+				paginated: false
+			}
+		},
+		// {
+		// 	id: 'widget-5',
+		// 	type: 'image',
+		// 	gridColumn: 1,
+		// 	gridRow: 2,
+		// 	colSpan: 8,
+		// 	rowSpan: 4,
+		// 	minWidth: 3,
+		// 	minHeight: 2,
+		// 	data: {
+		// 		src: 'https://pti-demo-web-assets.s3.us-west-2.amazonaws.com/images/aaronmap.png',
+		// 		alt: 'Image',
+		// 		objectFit: 'cover'
+		// 	}
+		// },
+		{
+			id: 'widget-5',
+			type: 'map',
+			gridColumn: 1,
+			gridRow: 2,
+			colSpan: 8,
+			rowSpan: 4,
+			minWidth: 3,
+			minHeight: 2,
+			data: {
+				title: 'Map of Hillsboro',
+				lat: 29.416775,
+				lon: -98.406103,
+				zoom: 15,
+				mapType: 'leaflet',
+				apiKey: PUBLIC_GEOAPIFY_API_KEY
+			}
+		},
+		{
+			id: 'widget-6',
+			type: 'paragraph',
+			gridColumn: 1,
+			gridRow: 6,
+			colSpan: 12,
+			rowSpan: 2,
+			minWidth: 2,
+			minHeight: 2,
+			data: {
+				title: 'Employment',
+				content:
+					'Lone Oak Shopping Center sits in a robust urban economy in San Antonio, Texas—the state’s second-most populous city with about 1.45 million residents and a diversified mix of industries, including health care and social assistance, retail trade, and food services, with some of the best-paying sectors in mining/oil and technical services. The immediate trade area benefits from a sizable daytime population, counting roughly 9,806 people within 1 mile, 69,885 within 3 miles, and 227,158 within 5 miles, which supports strong foot traffic potential for retailers and service providers around the center. Demographically, the five-mile radius shows a large Hispanic share (around 64.8%), with 2023 average household incomes near $69,740 and a 2023 median home value around $218,621, underscoring a solid, diverse consumer base with growing purchasing power. The property itself is fully occupied and anchored by long-tenured tenants, including H-E-B, with a nearby distribution center noted as a logistical asset, suggesting resilient demand and potential rent growth through renewals and inflation-driven escalations; local traffic on WW White Road is strong (about 21,888 vehicles per day in 2022), reinforcing visibility and access for customers. '
+			}
+		},
+		{
+			id: 'widget-8',
+			type: 'metric',
+			gridColumn: 1,
+			gridRow: 9,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'MANUFACTURING',
+				value: '10%'
+			}
+		},
+		{
+			id: 'widget-1760034441135',
+			type: 'metric',
+			gridColumn: 3,
+			gridRow: 9,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'BUSINESS SERVICES',
+				value: '16%'
+			}
+		},
+		{
+			id: 'widget-1760034444139',
+			type: 'metric',
+			gridColumn: 5,
+			gridRow: 9,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'GOVERNMENT',
+				value: '10%'
+			}
+		},
+		{
+			id: 'widget-1760034594067',
+			type: 'metric',
+			gridColumn: 7,
+			gridRow: 9,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'HOSPITALITY',
+				value: '10%'
+			}
+		},
+		{
+			id: 'widget-1760034597055',
+			type: 'metric',
+			gridColumn: 9,
+			gridRow: 9,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'FINANCIAL ACTIVITIES',
+				value: '10%'
+			}
+		},
+		{
+			id: 'widget-1760034608731',
+			type: 'metric',
+			gridColumn: 11,
+			gridRow: 9,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'UTILITIES',
+				value: '10%'
+			}
+		},
+		{
+			id: 'widget-1760034608732',
+			type: 'metric',
+			gridColumn: 11,
+			gridRow: 10,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'CONSTRUCTION',
+				value: '10%'
+			}
+		},
+		{
+			id: 'widget-1760034605935',
+			type: 'metric',
+			gridColumn: 1,
+			gridRow: 10,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'EDUCATION AND HEALTH SERVICES',
+				value: '10%'
+			}
+		},
+		{
+			id: 'widget-1760034612393',
+			type: 'metric',
+			gridColumn: 3,
+			gridRow: 10,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'INFORMATION',
+				value: '10%'
+			}
+		},
+		{
+			id: 'widget-1760034618243',
+			type: 'metric',
+			gridColumn: 5,
+			gridRow: 10,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'OTHER SERVICES',
+				value: '10%'
+			}
+		},
+		{
+			id: 'widget-1760034621635',
+			type: 'metric',
+			gridColumn: 7,
+			gridRow: 10,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'MANUFACTURING',
+				value: '10%'
+			}
+		},
+		{
+			id: 'widget-1760034624211',
+			type: 'metric',
+			gridColumn: 9,
+			gridRow: 10,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'Total Revenue',
+				value: '$45,231',
+				change: 12.5,
+				changeType: 'increase'
+			}
 		}
 	];
 
-	const city_data = [
-		{
-			key: 'State',
-			val: 'Oregon'
-		},
-		{
-			key: 'County',
-			val: 'Washington County'
-		},
-		{
-			key: 'Metro Area',
-			val: 'Portland-Vancouver-Hillsboro Metro Area'
-		},
-		{
-			key: 'City',
-			val: 'Hillsboro'
-		},
-		{
-			key: 'Zip Codes',
-			val: '97124 97123'
-		},
-		{
-			key: 'Cost of Living',
-			val: '28.1% higher'
-		},
-		{
-			key: 'Time zone',
-			val: 'Pacific Standard Time (PST)'
-		},
-		{
-			key: 'Elevation',
-			val: '33 ft above sea level'
+	onMount(() => {
+		// Try to load saved dashboard
+		const hasLoadedDashboard = dashboard.initialize();
+
+		// If no saved dashboard, load defaults
+		if (!hasLoadedDashboard) {
+			console.info('No saved dashboard found, loading defaults');
+			marketingWidgets.forEach((widget) => {
+				dashboard.addWidget(widget);
+			});
 		}
-	];
 
-	import ComponentA from '$lib/components/mapStore/componentA.svelte';
-	import ComponentB from '$lib/components/mapStore/componentB.svelte';
-	import ComponentC from '$lib/components/mapStore/componentC.svelte';
+		// Handle responsive grid adjustment
+		function updateGridSize() {
+			const width = window.innerWidth;
+			if (width < 640) {
+				dashboard.updateGridConfig({ gridColumns: 4, gridRows: 12 });
+			} else if (width < 1024) {
+				dashboard.updateGridConfig({ gridColumns: 8, gridRows: 10 });
+			} else {
+				dashboard.updateGridConfig({ gridColumns: 12, gridRows: 8 });
+			}
+		}
 
-	// Initialize with some data
-	mapStore.setKey('fruits', ['apple', 'banana']);
-	mapStore.setKey('colors', ['red', 'blue']);
-	mapStore.setKey('animals', ['cat', 'dog']);
+		updateGridSize();
+		window.addEventListener('resize', updateGridSize);
+
+		// Save dashboard before page unload if there are unsaved changes
+		window.addEventListener('beforeunload', (e) => {
+			if (dashboard.hasUnsavedChanges && dashboard.autoSaveEnabled) {
+				dashboard.save();
+			}
+		});
+
+		isLoading = false;
+
+		return () => {
+			window.removeEventListener('resize', updateGridSize);
+			// Save any pending changes
+			if (dashboard.hasUnsavedChanges && dashboard.autoSaveEnabled) {
+				dashboard.save();
+			}
+		};
+	});
+
+	// Keyboard shortcuts
+	function handleKeydown(e: KeyboardEvent) {
+		// Ctrl/Cmd + S to save
+		if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+			e.preventDefault();
+			dashboard.save();
+		}
+	}
 </script>
 
-<main>
-	<h1>Map Store Demo</h1>
+<svelte:window onkeydown={handleKeydown} />
 
-	<div class="info">
-		<p>Each component subscribes to different keys in the map.</p>
-		<p>Component A only re-renders when "fruits" changes.</p>
-		<p>Component B only re-renders when "colors" changes.</p>
-		<p>Component C can monitor any key dynamically.</p>
+<main class="mx-auto max-w-7xl p-4">
+	<DashboardControls />
+
+	<div class="mx-auto max-w-7xl px-4 pb-4">
+		<MapStoreDebugPanel />
 	</div>
 
-	<div class="grid">
-		<ComponentA />
-		<ComponentB />
-		<ComponentC />
-	</div>
+	{#if isLoading}
+		<div class="flex h-64 items-center justify-center">
+			<div class="text-gray-600">Loading dashboard...</div>
+		</div>
+	{:else}
+		<!-- Removed fixed height constraint to allow grid to extend fully -->
+		<div class="min-h-[800px]">
+			<Dashboard />
+		</div>
+	{/if}
 </main>
-<section
-	class="dark:text-gray-100shadow-md w-full space-y-6 rounded-2xl bg-white bg-gradient-to-br from-zinc-50 via-red-50 to-indigo-50 p-6 dark:bg-gray-900"
->
-	<Heading tag="h2" class="mb-8 text-2xl font-extrabold  md:text-3xl lg:text-4xl">
-		Market Analysis
-	</Heading>
-
-	<div class="grid grid-cols-2 gap-4">
-		<Card img={imageUrl} reverse={vCard} class="max-w-full">
-			<Heading tag="h4" class="text-md mb-4 font-extrabold  md:text-lg lg:text-xl">
-				Hillsboro, OR
-			</Heading>
-			<P class="mb-3 font-normal leading-tight text-gray-700 dark:text-gray-400">
-				Hillsboro, Oregon is a vibrant city located in the northwestern edge of the state. From its
-				scenic parks and trails to its thriving cultural scene, Hillsboro has something for
-				everyone.
-			</P>
-			<Button>
-				Read more <ArrowRightOutline class="ms-2 h-6 w-6 text-white" />
-			</Button>
-		</Card>
-		<Card class="max-w-full">
-			<KeyValueTable title="City Statistics" data={city_data} />
-		</Card>
-		<!-- <Toggle bind:checked={vCard} class="italic dark:text-gray-500">Reverse</Toggle> -->
-	</div>
-
-	{#each conversations as conversation}
-		<TitleParagraph title={conversation.title} paragraph={conversation.paragraph} />
-	{/each}
-
-	<!-- <P class="mb-3 text-xl font-normal leading-tight text-gray-700 dark:text-gray-400">
-		<TypeWriter
-			text="Testing TypeWriter component..."
-			speed={100}
-			autoplay={true}
-		/>
-	</P> -->
-	<!-- <P class="mb-3 text-xl font-normal leading-tight text-gray-700 dark:text-gray-400">
-		<TypeWriter
-			text="As of 2023, the workforce of Hillsboro is about 59,200 people. Employment grew ~ 1.8% from 2022 to 2023. The labor force participation rate (i.e. percent of working-age population that is working or seeking work) in Hillsboro is around 73%, which is higher than both the Portland MSA (~67%) and Oregon overall (~62.4%). In terms of industries employing residents, the top sectors are: Manufacturing (≈14,254 jobs), Health Care & Social Assistance (≈6,822), and Retail Trade (≈6,661). Regarding earnings: — Median household income in Hillsboro is ~$103,207. — Among industries, Manufacturing is one of the highest paying, with about $100,297 average/typical earnings. Utilities and Management of Companies & Enterprises are also high. Educational attainment is relatively strong: ~ 42% of residents over 25 have a bachelor's degree or higher."
-			speed={10}
-			autoplay={true}
-		/>
-	</P> -->
-
-	<!-- <Heading tag="h3" class="text-md mb-4 font-extrabold  md:text-lg lg:text-xl">Population</Heading>
-	<P class="mb-3 text-xl font-normal leading-tight text-gray-700 dark:text-gray-400">
-		<TypeWriter
-			text="Hillsboro, Oregon has a population of about 110,000–111,000 as of 2025. It’s the largest city in Washington County and continues to grow steadily, though at a modest annual rate."
-			speed={10}
-			autoplay={true}
-		/>
-	</P> -->
-
-	<div class="grid grid-cols-5 gap-4">
-		<StatCard label="MANUFACTURING" val="10%" />
-		<StatCard label="BUSINESS SERVICES" val="16%" />
-		<StatCard label="GOVERNMENT" val="12%" />
-		<StatCard label="HOSPITALITY" val="9%" />
-		<StatCard label="FINANCIAL ACTIVITIES" val="6%" />
-
-		<StatCard label="UTILITIES" val="19%" />
-		<StatCard label="CONSTRUCTION" val="6%" />
-		<StatCard label="EDUCATION AND HEALTH SERVICES" val="15%" />
-		<StatCard label="INFORMATION" val="2%" />
-		<StatCard label="OTHER SERVICES" val="3%" />
-	</div>
-</section>
-
-<!-- <MarketSizeCard />
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 h-1/6">
-	<TitleTextCard
-		title="Need a help in Claim?"
-		text="Go to this step by step guideline process on how to certify for your weekly benefits:"
-		linkText="See Our Guidelines"
-		href="/"
-	/>
-	<TitleTextCard
-		title="Population Snapshot"
-		text="Explore current and projected 1-, 3-, and 5-mile population counts to gauge consumer density around the site."
-		linkText="View Census Tables"
-		href="/demographics/population"
-	/>
-
-	<TitleTextCard
-		title="Household Income Profile"
-		text="See median and average household income levels, plus 5-year growth forecasts, to assess purchasing power in the trade area."
-		linkText="Download Income Report"
-		href="/demographics/household-income"
-	/>
-
-	<TitleTextCard
-		title="Daytime Population Growth"
-		text="Compare resident vs. daytime worker counts to understand lunch-time and commuter traffic that drives retail sales."
-		linkText="See Workforce Flow"
-		href="/demographics/daytime-population"
-	/>
-
-	<TitleTextCard
-		title="Top Employers Nearby"
-		text="Review the largest public and private employers within a 3-mile radius, including headcounts and industry sectors."
-		linkText="Open Employer List"
-		href="/market/top-employers"
-	/>
-
-	<TitleTextCard
-		title="Regional Highway Access"
-		text="Visualize primary and secondary highways, average daily traffic (ADT), and distance to key interchanges servicing the property."
-		linkText="View Traffic Map"
-		href="/market/highways"
-	/>
-
-	<TitleTextCard
-		title="University & College Nodes"
-		text="Identify major higher-education campuses, enrollment figures, and their impact on seasonal retail demand."
-		linkText="Browse Campus Data"
-		href="/market/universities"
-	/>
-
-	<TitleTextCard
-		title="Tourism & Visitor Anchors"
-		text="Highlight hotels, convention centers, sports venues, and attractions that generate out-of-area footfall."
-		linkText="See Visitor Stats"
-		href="/market/tourism-nodes"
-	/>
-</div>
-
- -->
-
-<style>
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: 1rem;
-	}
-
-	.info {
-		padding: 1rem;
-		background: #e8f5e9;
-		border-radius: 8px;
-		margin: 1rem 0;
-	}
-</style>
