@@ -1,18 +1,18 @@
 import { createWidgetConsumer } from '$lib/dashboard/types/widgetBridge';
-import type { WidgetChannelConfig, ParagraphWidgetData } from '$lib/dashboard/types/widgetSchemas';
+import type { WidgetChannelConfig } from '$lib/dashboard/types/widgetSchemas';
 
 /**
- * Sets up a consumer for the paragraph widget with automatic subscription
+ * Sets up a consumer for a widget with automatic subscription
  * 
  * @param channel - The channel definition to consume from
  * @param widgetId - Unique identifier for this widget instance
  * @param onDataReceived - Callback function when validated data is received
- * @returns The consumer instance
+ * @returns The consumer instance and unsubscribe function
  */
-export function setupParagraphConsumer(
-	channel: WidgetChannelConfig<'paragraph'>,
+export function setupConsumer<TData>(
+	channel: WidgetChannelConfig<any>,
 	widgetId: string,
-	onDataReceived: (data: ParagraphWidgetData | undefined) => void
+	onDataReceived: (data: TData | undefined) => void
 ) {
 	console.log(`\n📝 [ParagraphWidget] Initializing widget`);
 	console.log(`   Widget ID: ${widgetId}`);
@@ -25,11 +25,11 @@ export function setupParagraphConsumer(
 
 	// Subscribe to validated content updates
 	// The consumer automatically validates data against the Zod schema
-	consumer.subscribe((validatedData) => {
+	const unsubscribe = consumer.subscribe((validatedData) => {
 		console.log(`\n📝 [ParagraphWidget:${widgetId}] 📥 Subscription callback triggered`);
 		if (validatedData) {
 			console.log(`   ✅ Received validated data:`, validatedData);
-			onDataReceived(validatedData);
+			onDataReceived(validatedData as TData);
 			console.log(`   ✅ Widget state updated`);
 		} else {
 			console.log(`   ⚠️ Received undefined or invalid data`);
@@ -37,6 +37,6 @@ export function setupParagraphConsumer(
 		}
 	});
 
-	return consumer;
+	return { consumer, unsubscribe };
 }
 
