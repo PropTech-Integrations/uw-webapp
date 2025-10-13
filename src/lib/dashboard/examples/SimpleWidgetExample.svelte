@@ -17,10 +17,8 @@
 		type ParagraphWidgetData,
 		ParagraphWidgetDataSchema
 	} from '$lib/dashboard/types/widgetSchemas';
-
 	import { createJobWidgetBridge, type JobWidgetBridge } from '$lib/dashboard/types/widgetBridge';
-	// import { z } from 'zod';
-	import { paragraphTitleQuery, type AIResponse } from '../types/OpenAIQueryDefs';
+	import { z } from 'zod';
 
 	// ===== Types =====
 	interface Props {
@@ -46,49 +44,19 @@
 		completedAt: Date | null;
 	}
 
-	// // Response schema for better type safety
-	// const AIResponseSchema = z.object({
-	// 	title: z.string().optional().nullable(),
-	// 	content: z.string(),
-	// 	markdown: z.boolean().optional().nullable(),
-	// 	output_parsed: z
-	// 		.object({
-	// 			title: z.string().optional(),
-	// 			content: z.string().optional(),
-	// 			markdown: z.boolean().optional()
-	// 		})
-	// 		.optional()
-	// });
+	// Response schema for better type safety
+	const AIResponseSchema = z.object({
+		title: z.string().optional().nullable(),
+		content: z.string(),
+		markdown: z.boolean().optional().nullable(),
+		output_parsed: z.object({
+			title: z.string().optional(),
+			content: z.string().optional(),
+			markdown: z.boolean().optional()
+		}).optional()
+	});
 
-	// type AIResponse = z.infer<typeof ParagraphWidgetDataSchema>;
-
-	// const createJobInput = (customPrompt?: string) => {
-	// 	const textFormat = getWidgetTextFormat('paragraph', 'ParagraphContent');
-
-	// 	return {
-	// 		request: JSON.stringify({
-	// 			model,
-	// 			input: [
-	// 				{
-	// 					role: 'system',
-	// 					content: `You are a helpful assistant that writes clear, informative paragraphs.
-	// 					Structure your response with:
-	// 					- A concise, descriptive title
-	// 					- Well-formatted content (use markdown if it improves readability)
-	// 					- Set markdown: true if you use markdown formatting`
-	// 				},
-	// 				{
-	// 					role: 'user',
-	// 					content: customPrompt || prompt
-	// 				}
-	// 			],
-	// 			text: {
-	// 				format: textFormat
-	// 			}
-	// 		}),
-	// 		priority: 'HIGH' as const
-	// 	};
-	// };
+	type AIResponse = z.infer<typeof AIResponseSchema>;
 
 	// ===== Props with defaults =====
 	let {
@@ -108,11 +76,11 @@
 		submittedAt: null,
 		completedAt: null
 	});
-
+	
 	// Track retry attempts
 	let retryCount = $state(0);
 	const MAX_RETRIES = 3;
-
+	
 	// Track widget data updates
 	let widgetData = $state<ParagraphWidgetData>({
 		title: 'AI Generated Content',
@@ -121,8 +89,10 @@
 	});
 
 	// ===== Computed Properties =====
-	let isProcessing = $derived(jobState.status === 'submitting' || jobState.status === 'processing');
-
+	let isProcessing = $derived(
+		jobState.status === 'submitting' || jobState.status === 'processing'
+	);
+	
 	let processingTime = $derived(() => {
 		if (!jobState.submittedAt) return null;
 		const end = jobState.completedAt || new Date();
@@ -147,21 +117,48 @@
 	});
 
 	// ===== Enhanced Job Configuration =====
+	const createJobInput = (customPrompt?: string) => {
+		const textFormat = getWidgetTextFormat('paragraph', 'ParagraphContent');
+		
+		return {
+			request: JSON.stringify({
+				model,
+				input: [
+					{
+						role: 'system',
+						content: `You are a helpful assistant that writes clear, informative paragraphs. 
+						Structure your response with:
+						- A concise, descriptive title
+						- Well-formatted content (use markdown if it improves readability)
+						- Set markdown: true if you use markdown formatting`
+					},
+					{
+						role: 'user',
+						content: customPrompt || prompt
+					}
+				],
+				text: {
+					format: textFormat
+				},
+			}),
+			priority: 'HIGH' as const
+		};
+	};
 
-	let jobInput = $state(paragraphTitleQuery(prompt, model));
+	let jobInput = $state(createJobInput());
 
 	// ===== Enhanced Transformation Logic =====
 	function transformJobResult(result: unknown): ParagraphWidgetData {
 		console.group('🔄 Transforming Job Result');
 		console.log('Raw result:', result);
 		console.log('Raw result type:', typeof result);
-
+		
 		try {
 			// Parse string to object
 			const parsed = typeof result === 'string' ? JSON.parse(result) : result;
 			console.log('Parsed result:', parsed);
 			console.log('Parsed keys:', Object.keys(parsed as any));
-
+			
 			// Check if it's already in the correct format (direct match)
 			if (parsed && typeof parsed === 'object') {
 				// Try direct validation first
@@ -171,12 +168,12 @@
 					console.groupEnd();
 					return directValidation.data;
 				}
-
+				
 				// Extract from various possible structures
 				let extractedTitle: string | undefined;
 				let extractedContent: string;
 				let extractedMarkdown: boolean | undefined;
-
+				
 				// Try multiple extraction paths
 				if (typeof parsed.content === 'string') {
 					extractedContent = parsed.content;
@@ -196,31 +193,29 @@
 				} else if (parsed.content && typeof parsed.content === 'object') {
 					// Content is an object - try to extract text field
 					console.log('📦 Content is object, extracting text field');
-					extractedContent =
-						parsed.content.text || parsed.content.body || JSON.stringify(parsed.content);
+					extractedContent = parsed.content.text || parsed.content.body || JSON.stringify(parsed.content);
 					extractedTitle = parsed.title || parsed.content.title;
 					extractedMarkdown = parsed.markdown || parsed.content.markdown || false;
 				} else {
 					// Last resort: Check all keys for likely content
 					console.warn('⚠️ Using fallback extraction, available keys:', Object.keys(parsed));
 					const possibleContent = parsed.body || parsed.message || parsed.response;
-					extractedContent =
-						typeof possibleContent === 'string' ? possibleContent : JSON.stringify(parsed, null, 2);
+					extractedContent = typeof possibleContent === 'string' ? possibleContent : JSON.stringify(parsed, null, 2);
 					extractedTitle = 'AI Response';
 					extractedMarkdown = false;
 				}
-
+				
 				const widgetData = {
 					title: extractedTitle,
 					content: extractedContent,
 					markdown: extractedMarkdown ?? false
 				} as ParagraphWidgetData;
-
+				
 				console.log('✅ Extracted widget data:', widgetData);
 				console.groupEnd();
 				return widgetData;
 			}
-
+			
 			// Fallback for non-object
 			console.warn('⚠️ Result is not an object, converting to string');
 			console.groupEnd();
@@ -229,6 +224,7 @@
 				content: String(result),
 				markdown: false
 			} as ParagraphWidgetData;
+			
 		} catch (error) {
 			console.error('❌ Transform error:', error);
 			console.groupEnd();
@@ -243,7 +239,7 @@
 	// ===== Enhanced Job Handlers =====
 	function handleJobComplete(update: any) {
 		console.group(`🎯 Job Completed: ${update.id}`);
-
+		
 		jobState = {
 			...jobState,
 			status: 'completed',
@@ -251,7 +247,7 @@
 			completedAt: new Date(),
 			error: null
 		};
-
+		
 		// Reset retry count on success
 		retryCount = 0;
 
@@ -277,6 +273,7 @@
 			console.log('✅ Bridge created successfully');
 			console.log(`   Producer ID: job-${update.id}-to-paragraph-content`);
 			console.log(`   Channel: paragraph-content`);
+			
 		} catch (error) {
 			console.error('❌ Failed to create bridge:', error);
 			jobState.error = error instanceof Error ? error : new Error('Failed to create bridge');
@@ -287,21 +284,21 @@
 
 	function handleJobError(error: Error) {
 		console.error('❌ Job error:', error);
-
+		
 		jobState = {
 			...jobState,
 			status: 'error',
 			error,
 			completedAt: new Date()
 		};
-
+		
 		// Attempt retry if under limit
 		if (retryCount < MAX_RETRIES) {
 			retryCount++;
 			console.log(`🔄 Retrying... (${retryCount}/${MAX_RETRIES})`);
 			setTimeout(() => {
 				jobState.status = 'idle';
-				jobInput = paragraphTitleQuery(prompt, model);
+				jobInput = createJobInput();
 			}, 2000);
 		}
 	}
@@ -312,7 +309,7 @@
 			bridge.disconnect();
 			bridge = null;
 		}
-
+		
 		jobState = {
 			status: 'idle',
 			jobId: null,
@@ -320,10 +317,10 @@
 			submittedAt: null,
 			completedAt: null
 		};
-
+		
 		retryCount = 0;
-		jobInput = paragraphTitleQuery(prompt, model);
-
+		jobInput = createJobInput();
+		
 		widgetData = {
 			title: 'AI Generated Content',
 			content: 'Waiting for AI to generate content... Click "Submit Job" to start.',
@@ -359,8 +356,8 @@
 			{#if jobState.status === 'completed' || jobState.status === 'error'}
 				<button
 					onclick={resetJob}
-					class="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700
-					       transition-colors hover:bg-gray-200"
+					class="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 
+					       hover:bg-gray-200 transition-colors"
 				>
 					Reset
 				</button>
@@ -396,7 +393,9 @@
 
 	<!-- Info Panel -->
 	<details class="rounded-lg bg-blue-50 p-4" open={jobState.status === 'idle'}>
-		<summary class="cursor-pointer font-semibold text-blue-900"> ℹ️ How it works </summary>
+		<summary class="cursor-pointer font-semibold text-blue-900">
+			ℹ️ How it works
+		</summary>
 		<ol class="mt-2 space-y-1 text-sm text-blue-800">
 			<li>1. AI job uses OpenAI text format (zodTextFormat with ParagraphWidget schema)</li>
 			<li>2. Job completes → handleJobComplete() creates bridge</li>
@@ -443,9 +442,7 @@
 					<div class="grid grid-cols-2 gap-3">
 						<div>
 							<span class="font-medium">Producer Created:</span>
-							<span
-								class="ml-2 rounded-full bg-green-600 px-2 py-0.5 text-xs font-semibold text-white"
-							>
+							<span class="ml-2 rounded-full bg-green-600 px-2 py-0.5 text-xs font-semibold text-white">
 								✓ Yes
 							</span>
 						</div>
@@ -458,7 +455,7 @@
 							{/if}
 						</div>
 					</div>
-
+					
 					<div class="space-y-1">
 						<div>
 							<span class="font-medium">Channel:</span>
@@ -471,7 +468,7 @@
 							</code>
 						</div>
 					</div>
-
+					
 					{#if bridge.getStatus().lastUpdate}
 						<div>
 							<span class="font-medium">Last Update:</span>
@@ -480,7 +477,7 @@
 							</span>
 						</div>
 					{/if}
-
+					
 					{#if bridge.getStatus().lastError}
 						<div class="mt-2 rounded border border-red-300 bg-red-50 p-2">
 							<p class="text-xs font-semibold text-red-800">Validation Error:</p>
@@ -503,35 +500,41 @@
 			<p class="mb-3 text-xs text-purple-700">
 				This widget automatically receives data from the producer via mapObjectStore
 			</p>
-			<div class="min-h-[150px] rounded-lg border-2 border-purple-400 bg-white p-4">
-				<ParagraphWidget data={widgetData as any} {widgetId} channelId="paragraph-content" />
+			<div class="rounded-lg border-2 border-purple-400 bg-white p-4 min-h-[150px]">
+				<ParagraphWidget 
+					data={widgetData as any} 
+					{widgetId} 
+					channelId="paragraph-content" 
+				/>
 			</div>
 		</div>
 	</div>
 
 	<!-- Debug Panel -->
 	<details class="rounded-lg bg-gray-50 p-4">
-		<summary class="cursor-pointer font-semibold text-gray-900"> 🐛 Debug Information </summary>
+		<summary class="cursor-pointer font-semibold text-gray-900">
+			🐛 Debug Information
+		</summary>
 		<div class="mt-3 space-y-3">
 			<p class="text-xs text-gray-600">
 				Open browser console (F12) to see detailed logs. Use MapStore Debug Panel for inspection.
 			</p>
-
+			
 			{#if jobState.jobId}
 				<div class="rounded bg-gray-100 p-3">
 					<h4 class="text-xs font-semibold text-gray-700">Current State:</h4>
 					<pre class="mt-2 overflow-x-auto text-xs text-gray-600">{JSON.stringify(
-							{
-								status: jobState.status,
-								jobId: jobState.jobId,
-								processingTime: processingTime ? `${processingTime}s` : null,
-								retryCount,
-								hasError: !!jobState.error,
-								bridgeConnected: bridge?.getStatus().connected || false
-							},
-							null,
-							2
-						)}</pre>
+						{
+							status: jobState.status,
+							jobId: jobState.jobId,
+							processingTime: processingTime ? `${processingTime}s` : null,
+							retryCount,
+							hasError: !!jobState.error,
+							bridgeConnected: bridge?.getStatus().connected || false
+						},
+						null,
+						2
+					)}</pre>
 				</div>
 			{/if}
 		</div>
@@ -542,32 +545,31 @@
 	code {
 		font-family: 'Fira Code', 'Cascadia Code', monospace;
 	}
-
+	
 	@keyframes pulse {
-		0%,
-		100% {
+		0%, 100% {
 			opacity: 1;
 		}
 		50% {
 			opacity: 0.5;
 		}
 	}
-
+	
 	.animate-pulse {
 		animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 	}
-
+	
 	details summary::-webkit-details-marker {
 		display: none;
 	}
-
+	
 	details summary::before {
 		content: '▶';
 		display: inline-block;
 		margin-right: 0.5rem;
 		transition: transform 0.2s;
 	}
-
+	
 	details[open] summary::before {
 		transform: rotate(90deg);
 	}

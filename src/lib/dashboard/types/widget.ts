@@ -71,9 +71,9 @@ export interface TitleWidget extends BaseWidget {
 export interface ParagraphWidget extends BaseWidget {
 	type: 'paragraph';
 	data: {
-		title?: string;
+		title?: string | null;
 		content: string;
-		markdown?: boolean;
+		markdown?: boolean | null;
 	};
 }
 

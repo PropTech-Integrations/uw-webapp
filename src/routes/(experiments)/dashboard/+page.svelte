@@ -3,18 +3,23 @@
 	import Dashboard from '$lib/dashboard/components/Dashboard.svelte';
 	import DashboardControls from '$lib/dashboard/components/DashboardControls.svelte';
 	import MapStoreDebugPanel from '$lib/dashboard/components/MapStoreDebugPanel.svelte';
-	import AIJobParagraphExample from '$lib/dashboard/examples/AIJobParagraphExample.svelte';
+	import ParagraphDisplayParent from '$lib/dashboard/examples/ParagraphDisplayParent.svelte';
 	import { dashboard } from '$lib/dashboard/stores/dashboard.svelte';
 	import type { Widget } from '$lib/dashboard/types/widget';
 	import { onMount } from 'svelte';
 	import { PUBLIC_GEOAPIFY_API_KEY } from '$env/static/public';
-	
+	import SimpleWidgetExample from '$lib/dashboard/examples/SimpleWidgetExample.svelte';
+	import SimplifiedParagraphDisplay from '$lib/dashboard/examples/SimplifiedParagraphDisplay.svelte';
 	interface Props {
 		data: PageData;
 	}
-	
+
 	let { data }: Props = $props();
 	let isLoading = $state(true);
+
+	import { createJobSubmissionClientWithAppSync } from '$lib/dashboard/lib/JobManager';
+    import { type JobUpdate } from '$lib/dashboard/lib/JobManager';
+	import { paragraphTitleQuery } from '$lib/dashboard/types/OpenAIQueryDefs';
 
 	const marketingWidgets: Widget[] = [
 		{
@@ -120,7 +125,7 @@
 			data: {
 				title: 'Employment',
 				content:
-					"As of 2023, the workforce of Hillsboro is about 59,200 people. Employment grew ~ 1.8% from 2022 to 2023. The labor force participation rate (i.e. percent of working-age population that is working or seeking work) in Hillsboro is around 73%, which is higher than both the Portland MSA (~67%) and Oregon overall (~62.4%). In terms of industries employing residents, the top sectors are: Manufacturing (≈14,254 jobs), Health Care & Social Assistance (≈6,822), and Retail Trade (≈6,661). Regarding earnings: — Median household income in Hillsboro is ~$103,207. — Among industries, Manufacturing is one of the highest paying, with about $100,297 average/typical earnings."
+					'As of 2023, the workforce of Hillsboro is about 59,200 people. Employment grew ~ 1.8% from 2022 to 2023. The labor force participation rate (i.e. percent of working-age population that is working or seeking work) in Hillsboro is around 73%, which is higher than both the Portland MSA (~67%) and Oregon overall (~62.4%). In terms of industries employing residents, the top sectors are: Manufacturing (≈14,254 jobs), Health Care & Social Assistance (≈6,822), and Retail Trade (≈6,661). Regarding earnings: — Median household income in Hillsboro is ~$103,207. — Among industries, Manufacturing is one of the highest paying, with about $100,297 average/typical earnings.'
 			}
 		},
 		{
@@ -292,9 +297,8 @@
 				change: 12.5,
 				changeType: 'increase'
 			}
-		},
+		}
 	];
-
 
 	onMount(() => {
 		// Try to load saved dashboard
@@ -349,10 +353,50 @@
 			dashboard.save();
 		}
 	}
+
+	export async function advancedExample(idToken: string) {
+		// Create a client with custom configuration (async)
+		const client = await createJobSubmissionClientWithAppSync({
+			config: {
+				maxRetries: 5,
+				retryDelay: 2000,
+				reconnectBackoffMultiplier: 2,
+				maxReconnectDelay: 60000,
+				subscriptionTimeout: 300000 // 5 minutes
+			},
+			callbacks: {
+				onJobComplete: (update: JobUpdate) => {
+					console.log('✅ Job completed successfully:', update);
+					// Handle completion (e.g., show notification, update UI)
+				},
+				onJobError: (error: Error) => {
+					console.error('❌ Job failed:', error);
+					// Handle error (e.g., show error message, retry)
+				},
+				onStatusUpdate: (update: JobUpdate) => {
+					console.log('📊 Status update:', update.status);
+					// Track progress (e.g., update progress bar)
+				},
+				onConnectionStateChange: (state) => {
+					console.log('🔌 Connection state:', state);
+					// Handle connection changes (e.g., show connection indicator)
+				}
+			}
+		});
+
+		// Submit a job
+		const result = await client.submitJob(
+			paragraphTitleQuery('Write a paragraph about the economy of Santa Rosa, CA'),
+			idToken
+		);
+
+		return result;
+	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
+<button onclick={() => advancedExample(data.idToken)}>Advanced Example</button>
 <div class="">
 	<header class="border-b bg-white shadow-sm">
 		<div class="mx-auto max-w-7xl px-4 py-4">
@@ -371,13 +415,37 @@
 	</div>
 
 	<!-- AI Job → Paragraph Widget Example -->
-	<div class="mx-auto max-w-7xl px-4 pb-4">
+	<!-- <div class="mx-auto max-w-7xl px-4 pb-4">
 		<AIJobParagraphExample 
 			idToken={data.idToken}
 			prompt="Summarize the latest developments in AI technology in 2-3 paragraphs"
 			widgetId="dashboard-ai-paragraph"
 		/>
+	</div> -->
+
+	<!-- Simple Widget Example -->
+	<!-- <div class="mx-auto max-w-7xl px-4 pb-4">
+		<SimpleWidgetExample	 
+			idToken={data.idToken}
+		/>
+	</div>  -->
+
+	<!-- AI Job → Paragraph Widget Example -->
+	<div class="mx-auto max-w-7xl px-4 pb-4">
+		<ParagraphDisplayParent
+			idToken={data.idToken}
+			prompt="Write 2-3 sentences about the economy of Hillsboro, OR"
+			widgetId="dashboard-ai-paragraph"
+		/>
 	</div>
+
+	<!-- AI Job → Paragraph Widget Example -->
+	<!-- <div class="mx-auto max-w-7xl px-4 pb-4">
+		<SimplifiedParagraphDisplay
+			idToken={data.idToken}
+			widgetId="dashboard-simplified-paragraph"
+		/>
+	</div> -->
 
 	<main class="mx-auto max-w-7xl p-4">
 		{#if isLoading}

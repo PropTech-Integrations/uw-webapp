@@ -1,26 +1,26 @@
 <script lang="ts">
 	/**
-	 * AI Job → Paragraph Widget Example
+	 * AI Job → Paragraph Parent Component
 	 *
-	 * This example shows how to:
-	 * 1. Submit an AI job with structured output
-	 * 2. Automatically create a producer via bridge
-	 * 3. Display results in ParagraphWidget
+	 * Handles:
+	 * - AI job submission and lifecycle
+	 * - Job status management
+	 * - Result transformation
+	 * - Bridge creation and management
+	 * - Passing transformed data to child component
 	 */
 
 	import { onDestroy, onMount } from 'svelte';
 	import JobSubmission from '$lib/components/AI/JobSubmission.svelte';
-	import ParagraphWidget from '$lib/dashboard/components/widgets/ParagraphWidget.svelte';
+	import ParagraphDisplay from './ParagraphDisplay.svelte';
 	import {
 		WidgetChannels,
 		getWidgetTextFormat,
 		type ParagraphWidgetData,
 		ParagraphWidgetDataSchema
 	} from '$lib/dashboard/types/widgetSchemas';
-
 	import { createJobWidgetBridge, type JobWidgetBridge } from '$lib/dashboard/types/widgetBridge';
-	// import { z } from 'zod';
-	import { paragraphTitleQuery, type AIResponse } from '../types/OpenAIQueryDefs';
+	import { z } from 'zod';
 
 	// ===== Types =====
 	interface Props {
@@ -46,49 +46,21 @@
 		completedAt: Date | null;
 	}
 
-	// // Response schema for better type safety
-	// const AIResponseSchema = z.object({
-	// 	title: z.string().optional().nullable(),
-	// 	content: z.string(),
-	// 	markdown: z.boolean().optional().nullable(),
-	// 	output_parsed: z
-	// 		.object({
-	// 			title: z.string().optional(),
-	// 			content: z.string().optional(),
-	// 			markdown: z.boolean().optional()
-	// 		})
-	// 		.optional()
-	// });
+	// Response schema for better type safety
+	const AIResponseSchema = z.object({
+		title: z.string().optional().nullable(),
+		content: z.string(),
+		markdown: z.boolean().optional().nullable(),
+		output_parsed: z
+			.object({
+				title: z.string().optional(),
+				content: z.string().optional(),
+				markdown: z.boolean().optional()
+			})
+			.optional()
+	});
 
-	// type AIResponse = z.infer<typeof ParagraphWidgetDataSchema>;
-
-	// const createJobInput = (customPrompt?: string) => {
-	// 	const textFormat = getWidgetTextFormat('paragraph', 'ParagraphContent');
-
-	// 	return {
-	// 		request: JSON.stringify({
-	// 			model,
-	// 			input: [
-	// 				{
-	// 					role: 'system',
-	// 					content: `You are a helpful assistant that writes clear, informative paragraphs.
-	// 					Structure your response with:
-	// 					- A concise, descriptive title
-	// 					- Well-formatted content (use markdown if it improves readability)
-	// 					- Set markdown: true if you use markdown formatting`
-	// 				},
-	// 				{
-	// 					role: 'user',
-	// 					content: customPrompt || prompt
-	// 				}
-	// 			],
-	// 			text: {
-	// 				format: textFormat
-	// 			}
-	// 		}),
-	// 		priority: 'HIGH' as const
-	// 	};
-	// };
+	type AIResponse = z.infer<typeof AIResponseSchema>;
 
 	// ===== Props with defaults =====
 	let {
@@ -147,8 +119,35 @@
 	});
 
 	// ===== Enhanced Job Configuration =====
+	const createJobInput = (customPrompt?: string) => {
+		const textFormat = getWidgetTextFormat('paragraph', 'ParagraphContent');
 
-	let jobInput = $state(paragraphTitleQuery(prompt, model));
+		return {
+			request: JSON.stringify({
+				model,
+				input: [
+					{
+						role: 'system',
+						content: `You are a helpful assistant that writes clear, informative paragraphs. 
+						Structure your response with:
+						- A concise, descriptive title
+						- Well-formatted content (use markdown if it improves readability)
+						- Set markdown: true if you use markdown formatting`
+					},
+					{
+						role: 'user',
+						content: customPrompt || prompt
+					}
+				],
+				text: {
+					format: textFormat
+				}
+			}),
+			priority: 'HIGH' as const
+		};
+	};
+
+	let jobInput = $state(createJobInput());
 
 	// ===== Enhanced Transformation Logic =====
 	function transformJobResult(result: unknown): ParagraphWidgetData {
@@ -266,12 +265,6 @@
 					const hasResult = update.result !== null && update.result !== undefined;
 					return isComplete && hasResult;
 				}
-				// },
-				// // Add error handler
-				// onError: (error) => {
-				// 	console.error('❌ Bridge error:', error);
-				// 	jobState.error = error instanceof Error ? error : new Error(String(error));
-				// }
 			});
 
 			console.log('✅ Bridge created successfully');
@@ -301,7 +294,7 @@
 			console.log(`🔄 Retrying... (${retryCount}/${MAX_RETRIES})`);
 			setTimeout(() => {
 				jobState.status = 'idle';
-				jobInput = paragraphTitleQuery(prompt, model);
+				jobInput = createJobInput();
 			}, 2000);
 		}
 	}
@@ -322,7 +315,7 @@
 		};
 
 		retryCount = 0;
-		jobInput = paragraphTitleQuery(prompt, model);
+		jobInput = createJobInput();
 
 		widgetData = {
 			title: 'AI Generated Content',
@@ -394,17 +387,7 @@
 		{/if}
 	</div>
 
-	<!-- Info Panel -->
-	<details class="rounded-lg bg-blue-50 p-4" open={jobState.status === 'idle'}>
-		<summary class="cursor-pointer font-semibold text-blue-900"> ℹ️ How it works </summary>
-		<ol class="mt-2 space-y-1 text-sm text-blue-800">
-			<li>1. AI job uses OpenAI text format (zodTextFormat with ParagraphWidget schema)</li>
-			<li>2. Job completes → handleJobComplete() creates bridge</li>
-			<li>3. Bridge creates ValidatedPublisher for 'paragraph-content' channel</li>
-			<li>4. Bridge validates and publishes job result to mapObjectStore</li>
-			<li>5. ParagraphWidget (consumer) receives and displays validated data</li>
-		</ol>
-	</details>
+
 
 	<!-- Job Configuration -->
 	<div class="space-y-3">
@@ -496,17 +479,10 @@
 		</div>
 	{/if}
 
-	<!-- Widget Display -->
+	<!-- Widget Display (Child Component) -->
 	<div class="space-y-3">
 		<h3 class="font-semibold text-gray-900">Step 3: Widget Display</h3>
-		<div class="rounded-lg border-2 border-purple-300 bg-purple-50 p-4">
-			<p class="mb-3 text-xs text-purple-700">
-				This widget automatically receives data from the producer via mapObjectStore
-			</p>
-			<div class="min-h-[150px] rounded-lg border-2 border-purple-400 bg-white p-4">
-				<ParagraphWidget data={widgetData as any} {widgetId} channelId="paragraph-content" />
-			</div>
-		</div>
+		<ParagraphDisplay data={widgetData} {widgetId} channelId="paragraph-content" />
 	</div>
 
 	<!-- Debug Panel -->
