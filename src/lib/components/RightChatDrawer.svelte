@@ -234,7 +234,7 @@
 		</div>
 
 		<div class="flex items-center gap-2">
-			<select
+			<!-- <select
 				bind:value={model}
 				class="rounded-xl border border-gray-300 px-2 py-1 pr-6 text-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 			>
@@ -244,7 +244,7 @@
 				<option value="gpt-4-turbo">gpt-4-turbo</option>
 				<option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
 				<option value="gpt-3.5">gpt-3.5</option>
-			</select>
+			</select> -->
 
 			<button
 				type="button"
