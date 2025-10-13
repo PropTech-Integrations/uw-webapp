@@ -22,13 +22,16 @@
 		handleDragLeave,
 		children
 	}: Props = $props();
+	
+	// Calculate the total height needed for the grid
+	const gridHeight = $derived(rows * minCellHeight + (rows - 1) * gap);
 </script>
 
 <div
 	bind:this={containerEl}
 	role="region"
 	aria-label="Dashboard grid drop zone"
-	class="dashboard-grid relative h-full w-full rounded-lg p-4"
+	class="dashboard-grid relative w-full rounded-lg p-4"
 	ondragover={handleDragOver}
 	ondrop={handleDrop}
 	ondragleave={handleDragLeave}
@@ -39,6 +42,7 @@
         grid-template-columns: repeat({columns}, 1fr);
         grid-template-rows: repeat({rows}, {minCellHeight}px);
         gap: {gap}px;
+        min-height: {gridHeight}px;
       "
 	>
 		{@render children?.()}
@@ -47,7 +51,6 @@
 
 <style>
 	.dashboard-grid {
-		min-height: 800px; /* Increased to ensure full grid is visible */
-		height: 100%; /* Take full height of parent container */
+		/* No fixed height - grows dynamically with grid content */
 	}
 </style>

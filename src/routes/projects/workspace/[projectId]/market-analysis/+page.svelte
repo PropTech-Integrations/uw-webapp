@@ -119,7 +119,7 @@
 			gridColumn: 1,
 			gridRow: 6,
 			colSpan: 12,
-			rowSpan: 2,
+			rowSpan: 4,
 			minWidth: 2,
 			minHeight: 2,
 			data: {
@@ -132,7 +132,7 @@
 			id: 'widget-8',
 			type: 'metric',
 			gridColumn: 1,
-			gridRow: 9,
+			gridRow: 11,
 			colSpan: 2,
 			rowSpan: 1,
 			minWidth: 1,
@@ -146,7 +146,7 @@
 			id: 'widget-1760034441135',
 			type: 'metric',
 			gridColumn: 3,
-			gridRow: 9,
+			gridRow: 11,
 			colSpan: 2,
 			rowSpan: 1,
 			minWidth: 1,
@@ -160,7 +160,7 @@
 			id: 'widget-1760034444139',
 			type: 'metric',
 			gridColumn: 5,
-			gridRow: 9,
+			gridRow: 11,
 			colSpan: 2,
 			rowSpan: 1,
 			minWidth: 1,
@@ -174,7 +174,7 @@
 			id: 'widget-1760034594067',
 			type: 'metric',
 			gridColumn: 7,
-			gridRow: 9,
+			gridRow: 11,
 			colSpan: 2,
 			rowSpan: 1,
 			minWidth: 1,
@@ -188,7 +188,7 @@
 			id: 'widget-1760034597055',
 			type: 'metric',
 			gridColumn: 9,
-			gridRow: 9,
+			gridRow: 11,
 			colSpan: 2,
 			rowSpan: 1,
 			minWidth: 1,
@@ -202,7 +202,7 @@
 			id: 'widget-1760034608731',
 			type: 'metric',
 			gridColumn: 11,
-			gridRow: 9,
+			gridRow: 11,
 			colSpan: 2,
 			rowSpan: 1,
 			minWidth: 1,
@@ -215,8 +215,8 @@
 		{
 			id: 'widget-1760034608732',
 			type: 'metric',
-			gridColumn: 11,
-			gridRow: 10,
+			gridColumn: 1,
+			gridRow: 13,
 			colSpan: 2,
 			rowSpan: 1,
 			minWidth: 1,
@@ -229,8 +229,8 @@
 		{
 			id: 'widget-1760034605935',
 			type: 'metric',
-			gridColumn: 1,
-			gridRow: 10,
+			gridColumn: 3,
+			gridRow: 13,
 			colSpan: 2,
 			rowSpan: 1,
 			minWidth: 1,
@@ -238,64 +238,6 @@
 			data: {
 				label: 'EDUCATION AND HEALTH SERVICES',
 				value: '10%'
-			}
-		},
-		{
-			id: 'widget-1760034612393',
-			type: 'metric',
-			gridColumn: 3,
-			gridRow: 10,
-			colSpan: 2,
-			rowSpan: 1,
-			minWidth: 1,
-			minHeight: 1,
-			data: {
-				label: 'INFORMATION',
-				value: '10%'
-			}
-		},
-		{
-			id: 'widget-1760034618243',
-			type: 'metric',
-			gridColumn: 5,
-			gridRow: 10,
-			colSpan: 2,
-			rowSpan: 1,
-			minWidth: 1,
-			minHeight: 1,
-			data: {
-				label: 'OTHER SERVICES',
-				value: '10%'
-			}
-		},
-		{
-			id: 'widget-1760034621635',
-			type: 'metric',
-			gridColumn: 7,
-			gridRow: 10,
-			colSpan: 2,
-			rowSpan: 1,
-			minWidth: 1,
-			minHeight: 1,
-			data: {
-				label: 'MANUFACTURING',
-				value: '10%'
-			}
-		},
-		{
-			id: 'widget-1760034624211',
-			type: 'metric',
-			gridColumn: 9,
-			gridRow: 10,
-			colSpan: 2,
-			rowSpan: 1,
-			minWidth: 1,
-			minHeight: 1,
-			data: {
-				label: 'Total Revenue',
-				value: '$45,231',
-				change: 12.5,
-				changeType: 'increase'
 			}
 		}
 	];
@@ -357,13 +299,17 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<main class="mx-auto max-w-7xl p-4">
-	<DashboardControls />
+<div class=""></div>
 
+<DashboardControls />
+
+<!--
 	<div class="mx-auto max-w-7xl px-4 pb-4">
 		<MapStoreDebugPanel />
-	</div>
+	</div> 
+-->
 
+<main class="mx-auto max-w-7xl p-4">
 	{#if isLoading}
 		<div class="flex h-64 items-center justify-center">
 			<div class="text-gray-600">Loading dashboard...</div>

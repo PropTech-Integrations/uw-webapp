@@ -14,9 +14,17 @@ export function createDragHandlers(widget: Widget, handlers: DragDropHandlers) {
 			e.dataTransfer.effectAllowed = 'move';
 			e.dataTransfer.setData('application/json', JSON.stringify(widget));
 
-			// Create drag image
+			// Create a better drag image from the widget element
 			const dragImage = e.currentTarget as HTMLElement;
-			e.dataTransfer.setDragImage(dragImage, e.offsetX, e.offsetY);
+			
+			// Calculate the offset from the element's top-left corner
+			// Use the position within the element where the mouse grabbed it
+			const rect = dragImage.getBoundingClientRect();
+			const offsetX = e.clientX - rect.left;
+			const offsetY = e.clientY - rect.top;
+			
+			// Set drag image with proper offset so cursor aligns with grab point
+			e.dataTransfer.setDragImage(dragImage, offsetX, offsetY);
 
 			handlers.onDragStart(widget);
 		},

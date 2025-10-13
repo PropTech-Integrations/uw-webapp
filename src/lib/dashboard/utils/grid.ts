@@ -35,17 +35,31 @@ export function getGridPositionFromCoordinates(
 	containerRect: DOMRect,
 	gridColumns: number,
 	gridRows: number,
-	gap: number
+	gap: number,
+	padding: number = 16 // p-4 class = 1rem = 16px
 ): Position {
-	const cellWidth = (containerRect.width - gap * (gridColumns - 1)) / gridColumns;
-	const cellHeight = (containerRect.height - gap * (gridRows - 1)) / gridRows;
+	// Account for padding on the container
+	const effectiveWidth = containerRect.width - (padding * 2);
+	const effectiveHeight = containerRect.height - (padding * 2);
+	
+	// Calculate cell dimensions including gaps
+	const totalGapWidth = gap * (gridColumns - 1);
+	const totalGapHeight = gap * (gridRows - 1);
+	
+	const cellWidth = (effectiveWidth - totalGapWidth) / gridColumns;
+	const cellHeight = (effectiveHeight - totalGapHeight) / gridRows;
 
+	// Adjust mouse position to account for padding
+	const relativeX = x - containerRect.left - padding;
+	const relativeY = y - containerRect.top - padding;
+
+	// Calculate column and row
 	const col = Math.min(
-		Math.max(1, Math.floor((x - containerRect.left) / (cellWidth + gap)) + 1),
+		Math.max(1, Math.floor(relativeX / (cellWidth + gap)) + 1),
 		gridColumns
 	);
 	const row = Math.min(
-		Math.max(1, Math.floor((y - containerRect.top) / (cellHeight + gap)) + 1),
+		Math.max(1, Math.floor(relativeY / (cellHeight + gap)) + 1),
 		gridRows
 	);
 

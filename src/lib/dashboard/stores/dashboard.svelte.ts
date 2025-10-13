@@ -14,8 +14,8 @@ class DashboardStore {
 	widgets = $state<Widget[]>([]);
 	widgetZIndexMap = $state<Map<string, number>>(new Map());
 	config = $state<DashboardConfig>({
-		gridColumns: 16,
-		gridRows: 10,
+		gridColumns: 12,
+		gridRows: 20,
 		gap: 16,
 		minCellHeight: 100
 	});
@@ -100,6 +100,9 @@ class DashboardStore {
 				this.widgetZIndexMap.set(widget.id, index + 1);
 				this.nextZIndex = Math.max(this.nextZIndex, index + 2);
 			});
+
+			// Ensure grid has enough capacity for existing widgets
+			this.ensureGridCapacity();
 
 			this.initialized = true;
 			console.info('Dashboard loaded from localStorage');
@@ -197,6 +200,12 @@ class DashboardStore {
 
 	// Widget management methods
 	addWidget(widget: Widget) {
+		// Try to expand grid if widget doesn't fit
+		if (!this.canPlaceWidget(widget)) {
+			this.autoExpandGrid(widget);
+		}
+		
+		// Check again after potential expansion
 		if (this.canPlaceWidget(widget)) {
 			this.widgets.push(widget);
 			this.widgetZIndexMap.set(widget.id, this.nextZIndex++);
@@ -252,7 +261,17 @@ class DashboardStore {
 
 	moveWidget(id: string, position: Position) {
 		const widget = this.widgets.find((w) => w.id === id);
-		if (widget && this.canPlaceWidget({ ...widget, ...position }, id)) {
+		if (!widget) return false;
+		
+		const widgetWithNewPosition = { ...widget, ...position };
+		
+		// Try to expand grid if widget doesn't fit in new position
+		if (!this.canPlaceWidget(widgetWithNewPosition, id)) {
+			this.autoExpandGrid(widgetWithNewPosition);
+		}
+		
+		// Check again after potential expansion
+		if (this.canPlaceWidget(widgetWithNewPosition, id)) {
 			this.updateWidget(id, position);
 			return true;
 		}
@@ -265,14 +284,22 @@ class DashboardStore {
 
 		const newColSpan = Math.max(
 			widget.minWidth || 1,
-			Math.min(widget.maxWidth || this.config.gridColumns, colSpan)
+			Math.min(widget.maxWidth || Infinity, colSpan)
 		);
 		const newRowSpan = Math.max(
 			widget.minHeight || 1,
-			Math.min(widget.maxHeight || this.config.gridRows, rowSpan)
+			Math.min(widget.maxHeight || Infinity, rowSpan)
 		);
 
-		if (this.canPlaceWidget({ ...widget, colSpan: newColSpan, rowSpan: newRowSpan }, id)) {
+		const resizedWidget = { ...widget, colSpan: newColSpan, rowSpan: newRowSpan };
+		
+		// Try to expand grid if resized widget doesn't fit
+		if (!this.canPlaceWidget(resizedWidget, id)) {
+			this.autoExpandGrid(resizedWidget);
+		}
+		
+		// Check again after potential expansion
+		if (this.canPlaceWidget(resizedWidget, id)) {
 			this.updateWidget(id, { colSpan: newColSpan, rowSpan: newRowSpan });
 			return true;
 		}
@@ -335,6 +362,56 @@ class DashboardStore {
 	updateGridConfig(config: Partial<DashboardConfig>) {
 		this.config = { ...this.config, ...config };
 		this.scheduleAutoSave();
+	}
+
+	// Auto-expand grid to accommodate widget placement
+	private autoExpandGrid(widget: Partial<Widget> & Position & { colSpan: number; rowSpan: number }) {
+		const requiredRows = widget.gridRow + widget.rowSpan - 1;
+		const requiredColumns = widget.gridColumn + widget.colSpan - 1;
+		
+		// Add 2 buffer rows at the bottom to ensure there's always space for new widgets
+		const targetRows = requiredRows + 2;
+		
+		let expanded = false;
+		
+		// Expand rows if needed
+		if (targetRows > this.config.gridRows) {
+			console.log(`📏 Auto-expanding grid rows: ${this.config.gridRows} → ${targetRows} (includes buffer)`);
+			this.config.gridRows = targetRows;
+			expanded = true;
+		}
+		
+		// Expand columns if needed
+		if (requiredColumns > this.config.gridColumns) {
+			console.log(`📏 Auto-expanding grid columns: ${this.config.gridColumns} → ${requiredColumns}`);
+			this.config.gridColumns = requiredColumns;
+			expanded = true;
+		}
+		
+		if (expanded) {
+			this.scheduleAutoSave();
+		}
+		
+		return expanded;
+	}
+	
+	// Ensure grid has enough rows for all widgets plus buffer space
+	ensureGridCapacity() {
+		if (this.widgets.length === 0) return;
+		
+		// Find the lowest row being used
+		const maxRowUsed = Math.max(
+			...this.widgets.map(w => w.gridRow + w.rowSpan - 1)
+		);
+		
+		// Ensure we have at least 2 empty rows at the bottom
+		const minRequiredRows = maxRowUsed + 2;
+		
+		if (minRequiredRows > this.config.gridRows) {
+			console.log(`📏 Ensuring grid capacity: ${this.config.gridRows} → ${minRequiredRows} rows`);
+			this.config.gridRows = minRequiredRows;
+			this.scheduleAutoSave();
+		}
 	}
 
 	setAutoSave(enabled: boolean) {
