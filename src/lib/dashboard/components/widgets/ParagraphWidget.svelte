@@ -13,6 +13,9 @@
 	import { getContext } from 'svelte';
 	import type { CurrentUser } from '$lib/types/auth';
 
+	// mapStore
+	import { mapStore } from '$lib/stores/mapObjectStore';
+
 	interface Props {
 		data: ParagraphWidget['data'];
 		/** Optional custom channel ID (defaults to 'paragraph-content') */
@@ -23,7 +26,7 @@
 
 	let { data, channelId = 'paragraph-content', widgetId = 'paragraph-widget' }: Props = $props();
 	let widgetData = $state<ParagraphWidgetData>(data);
-	
+
 	// Get current user from page context
 	const pageData = getContext<{ currentUser: CurrentUser }>('pageData');
 	const currentUser = pageData?.currentUser;
@@ -33,6 +36,13 @@
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
 	export async function advancedExample(idToken: string) {
+		let contentProducer = mapStore.registerProducer<ParagraphWidget['data']>(
+			'paragraph-content',
+			'content-generator-agent'
+		);
+
+		const timestamp = new Date().toLocaleTimeString();
+
 		// Create a client with custom configuration (async)
 		const client = await createJobSubmissionClientWithAppSync({
 			config: {
@@ -46,7 +56,15 @@
 				onJobComplete: (update: JobUpdate) => {
 					console.log('✅ Job completed successfully:', update);
 					const result = JSON.parse(update.result as string);
-					widgetData = result.output_parsed as ParagraphWidgetData;
+					const data: ParagraphWidget['data'] = {
+						title: result.output_parsed.title,
+						content: result.output_parsed.markdown
+							? result.output_parsed.content
+							: `${result.output_parsed.content}\n\nLast updated: ${timestamp}`,
+						markdown: result.output_parsed.markdown
+					};
+					console.log(`🤖 AI Agent generated new content: "${result.output_parsed.title}"`);
+					contentProducer.publish(data);
 					// Handle completion (e.g., show notification, update UI)
 				},
 				onJobError: (error: Error) => {
