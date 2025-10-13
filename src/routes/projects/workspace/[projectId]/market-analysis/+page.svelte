@@ -239,6 +239,36 @@
 				label: 'EDUCATION AND HEALTH SERVICES',
 				value: '10%'
 			}
+		},
+		{
+			id: 'widget-1760034612393',
+			type: 'metric',
+			gridColumn: 5,
+			gridRow: 13,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'INFORMATION',
+				value: '10%'
+			}
+		},
+		{
+			id: 'widget-1760034624211',
+			type: 'metric',
+			gridColumn: 7,
+			gridRow: 13,
+			colSpan: 2,
+			rowSpan: 1,
+			minWidth: 1,
+			minHeight: 1,
+			data: {
+				label: 'Total Revenue',
+				value: '$45,231',
+				change: 12.5,
+				changeType: 'increase'
+			}
 		}
 	];
 
@@ -299,15 +329,11 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<div class=""></div>
+<!-- <DashboardControls /> -->
 
-<DashboardControls />
-
-<!--
-	<div class="mx-auto max-w-7xl px-4 pb-4">
+<!-- <div class="mx-auto max-w-7xl px-4 pb-4">
 		<MapStoreDebugPanel />
-	</div> 
--->
+	</div>  -->
 
 <main class="mx-auto max-w-7xl p-4">
 	{#if isLoading}
