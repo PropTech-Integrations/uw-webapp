@@ -21,15 +21,27 @@
 
 	let { widget, onDragStart, onDragEnd }: Props = $props();
 	let showEditDialog = $state(false);
+	let showCustomInstructionsDialog = $state(false);
+	let customPrompt = $state('');
+	let widgetAIGenerateFn: ((prompt: string) => Promise<void>) | null = null;
 
 	const dragHandlers = createDragHandlers(widget, {
 		onDragStart,
 		onDragEnd,
 		onDrop: () => {}
 	});
+	
+	function handleAIGenerationReady(generateFn: (prompt: string) => Promise<void>) {
+		widgetAIGenerateFn = generateFn;
+	}
 
 	function handleWidgetAction(action: WidgetAction) {
 		switch (action) {
+			case 'customInstructions':
+				customPrompt = '';
+				showCustomInstructionsDialog = true;
+				break;
+
 			case 'edit':
 				showEditDialog = true;
 				break;
@@ -90,6 +102,31 @@
 		console.log('Refreshing widget data:', widget.id);
 		// You could emit an event or call an API to refresh the widget's data
 	}
+	
+	async function handleCustomInstructionsSubmit() {
+		if (!customPrompt.trim()) {
+			alert('Please enter a prompt');
+			return;
+		}
+		
+		if (widgetAIGenerateFn) {
+			try {
+				await widgetAIGenerateFn(customPrompt);
+				showCustomInstructionsDialog = false;
+				customPrompt = '';
+			} catch (err) {
+				console.error('Failed to submit custom instructions:', err);
+				alert('Failed to generate content. Please try again.');
+			}
+		} else {
+			alert('AI generation is not available for this widget');
+		}
+	}
+	
+	function handleCustomInstructionsCancel() {
+		showCustomInstructionsDialog = false;
+		customPrompt = '';
+	}
 
 	// Calculate z-index for layering
 	let zIndex = $derived(dashboard.getWidgetZIndex(widget.id));
@@ -129,7 +166,7 @@
 			{#if widget.type === 'title'}
 				<TitleWidget data={widget.data} />
 			{:else if widget.type === 'paragraph'}
-				<ParagraphWidget data={widget.data} />
+				<ParagraphWidget data={widget.data} onAIGenerationReady={handleAIGenerationReady} />
 			{:else if widget.type === 'table'}
 				<TableWidget data={widget.data} />
 			{:else if widget.type === 'image'}
@@ -243,6 +280,86 @@
 	</div>
 {/if}
 
+<!-- Custom Instructions Dialog -->
+{#if showCustomInstructionsDialog}
+	<div
+		role="dialog"
+		tabindex="-1"
+		aria-modal="true"
+		aria-labelledby="custom-instructions-title"
+		class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
+		style="z-index: 10000;"
+		onclick={(e) => {
+			if (e.target === e.currentTarget) handleCustomInstructionsCancel();
+		}}
+		onkeydown={(e) => {
+			if (e.key === 'Escape') handleCustomInstructionsCancel();
+		}}
+	>
+		<div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+			<div class="mb-4 flex items-center gap-3">
+				<div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+					<svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path 
+							stroke-linecap="round" 
+							stroke-linejoin="round" 
+							stroke-width="2" 
+							d="M13 10V3L4 14h7v7l9-11h-7z"
+						/>
+					</svg>
+				</div>
+				<h3 id="custom-instructions-title" class="text-lg font-semibold text-gray-900">AI Content Generator</h3>
+			</div>
+
+			<p class="mb-4 text-sm text-gray-600">
+				Enter your instructions for the AI to generate custom content for this widget.
+			</p>
+
+			<div class="space-y-4">
+				<div>
+					<label
+						for="custom-prompt-{widget.id}"
+						class="mb-2 block text-sm font-medium text-gray-700"
+					>
+						Prompt
+					</label>
+					<textarea
+						id="custom-prompt-{widget.id}"
+						bind:value={customPrompt}
+						class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						rows="4"
+						placeholder="Example: Write a paragraph about the economy of Santa Rosa, CA"
+						onkeydown={(e) => {
+							if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+								handleCustomInstructionsSubmit();
+							}
+						}}
+					></textarea>
+					<p class="mt-1 text-xs text-gray-500">
+						Tip: Press Ctrl+Enter (Cmd+Enter on Mac) to submit
+					</p>
+				</div>
+			</div>
+
+			<div class="mt-6 flex justify-end gap-2">
+				<button
+					onclick={handleCustomInstructionsCancel}
+					class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+				>
+					Cancel
+				</button>
+				<button
+					onclick={handleCustomInstructionsSubmit}
+					class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+					disabled={!customPrompt.trim()}
+				>
+					Generate Content
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
 <style>
 	.widget-wrapper {
 		cursor: move;
@@ -251,10 +368,6 @@
 
 	.widget-wrapper[draggable='false'] {
 		cursor: default;
-	}
-
-	.widget-wrapper.dragging {
-		opacity: 0.5;
 	}
 
 	.widget-content {

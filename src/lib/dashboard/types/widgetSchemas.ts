@@ -11,8 +11,8 @@ import type { WidgetType } from './widget';
 
 export const ParagraphWidgetDataSchema = z.object({
 	title: z.string().nullable().optional(),
-	content: z.string(),
-	markdown: z.boolean().nullable().optional()
+	content: z.string().min(1, 'Content is required'),
+	markdown: z.boolean().nullable().default(false)
 });
 
 export const TableWidgetDataSchema = z.object({

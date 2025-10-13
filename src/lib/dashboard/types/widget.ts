@@ -36,6 +36,7 @@ export interface BaseWidget extends Position, Size, WidgetConstraints {
 
 // Widget Action Types
 export type WidgetAction =
+	| 'customInstructions'
 	| 'edit'
 	| 'duplicate'
 	| 'lock'

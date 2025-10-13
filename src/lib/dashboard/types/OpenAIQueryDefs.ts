@@ -27,7 +27,8 @@ export const paragraphTitleQuery = (customPrompt?: string, model: string = 'gpt-
 			],
 			text: {
 				format: textFormat
-			}
+			},
+			tools: [{ vector_store_ids: ['vs_68da2c6862088191a5b51b8b4566b300'], type: 'file_search' }]
 		}),
 		priority: 'HIGH' as const
 	};

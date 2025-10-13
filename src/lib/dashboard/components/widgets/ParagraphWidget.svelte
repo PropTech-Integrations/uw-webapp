@@ -8,7 +8,11 @@
 	
 	// Types
 	import type { ParagraphWidget } from '$lib/dashboard/types/widget';
-	import type { WidgetChannelConfig } from '$lib/dashboard/types/widgetSchemas';
+	import { 
+		ParagraphWidgetDataSchema, 
+		type ParagraphWidgetData,
+		type WidgetChannelConfig 
+	} from '$lib/dashboard/types/widgetSchemas';
 	import type { CurrentUser } from '$lib/types/auth';
 	import type { JobUpdate } from '$lib/dashboard/lib/JobManager';
 	
@@ -19,16 +23,12 @@
 	import { paragraphTitleQuery } from '$lib/dashboard/types/OpenAIQueryDefs';
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
-	// Schema Definition
+	// Constants
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	
-	const ParagraphWidgetDataSchema = z.object({
-		title: z.string().nullable().optional(),
-		content: z.string().min(1, 'Content is required'),
-		markdown: z.boolean().default(false)
-	});
-
-	type ParagraphWidgetData = z.infer<typeof ParagraphWidgetDataSchema>;
+	const PARAGRAPH_WIDGET_DATA_CHANNEL_ID = 'paragraph-content';
+	const PARAGRAPH_WIDGET_ID = 'paragraph-widget';
+	const WIDGET_TYPE = 'paragraph';
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	// Component Props & State
@@ -46,15 +46,18 @@
 		enableAIGeneration?: boolean;
 		/** Custom CSS classes */
 		class?: string;
+		/** Callback to expose AI generation function to parent */
+		onAIGenerationReady?: (generateFn: (prompt: string) => Promise<void>) => void;
 	}
 
 	const { 
 		data, 
-		channelId = 'paragraph-content', 
-		widgetId = 'paragraph-widget',
-		defaultPrompt = 'Write a paragraph about the economy of Santa Rosa, CA',
+		channelId = PARAGRAPH_WIDGET_DATA_CHANNEL_ID, 
+		widgetId = PARAGRAPH_WIDGET_ID,
+		defaultPrompt = 'Write a paragraph about the economy around the property',
 		enableAIGeneration = true,
-		class: className = ''
+		class: className = '',
+		onAIGenerationReady
 	}: Props = $props();
 
 	// Local state management
@@ -62,7 +65,7 @@
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 	let lastUpdateTime = $state<Date | null>(null);
-	let connectionState = $state<'connected' | 'disconnected' | 'connecting'>('disconnected');
+	let connectionState = $state<'Researching' | 'Ready' | 'Complete'>('Complete');
 
 	// Get current user from context
 	const pageData = getContext<{ currentUser: CurrentUser }>('pageData');
@@ -73,7 +76,7 @@
 		!isLoading && 
 		currentUser?.idToken && 
 		enableAIGeneration &&
-		connectionState !== 'connecting'
+		connectionState !== 'Ready'
 	);
 	
 	const formattedUpdateTime = $derived(
@@ -127,8 +130,8 @@
 
 	const channel: WidgetChannelConfig<'paragraph'> = {
 		channelId,
-		widgetType: 'paragraph',
-		schema: ParagraphWidgetDataSchema,
+		widgetType: WIDGET_TYPE,
+		schema: ParagraphWidgetDataSchema as z.ZodSchema<ParagraphWidgetData>,
 		description: 'Channel for paragraph widget content'
 	};
 
@@ -199,22 +202,30 @@
 		
 		onConnectionStateChange: (state: string) => {
 			console.log('🔌 Connection state:', state);
-			connectionState = state as typeof connectionState;
+			// Map technical states to user-friendly labels
+			const stateMap: Record<string, typeof connectionState> = {
+				'connected': 'Researching',
+				'connecting': 'Ready',
+				'disconnected': 'Complete'
+			};
+			connectionState = stateMap[state] || 'Complete';
 		}
 	};
 	
-	async function handleAIGeneration() {
+	async function handleAIGeneration(customPrompt?: string) {
 		if (!currentUser?.idToken) {
 			error = 'Authentication required';
 			return;
 		}
+		
+		const promptToUse = customPrompt || defaultPrompt;
 		
 		try {
 			error = null;
 			isLoading = true;
 			
 			await submitAIJob(
-				paragraphTitleQuery(defaultPrompt),
+				paragraphTitleQuery(promptToUse),
 				currentUser.idToken,
 				jobCallbacks
 			);
@@ -224,6 +235,13 @@
 			isLoading = false;
 		}
 	}
+	
+	// Expose AI generation function to parent component
+	$effect(() => {
+		if (onAIGenerationReady) {
+			onAIGenerationReady(handleAIGeneration);
+		}
+	});
 </script>
 
 <div class="paragraph-widget relative h-full overflow-auto rounded-lg bg-white shadow-sm {className}" class:loading={isLoading}>
@@ -241,14 +259,14 @@
 	
 	<!-- AI Generation Controls -->
 	{#if enableAIGeneration}
-		<div class="absolute right-4 top-4 z-10 flex items-center gap-2">
+		<div class="absolute right-12 top-4 z-10 flex items-center gap-2">
 			<!-- Connection Status Indicator -->
 			<div class="flex items-center gap-1">
 				<div 
 					class="h-2 w-2 rounded-full"
-					class:bg-green-500={connectionState === 'connected'}
-					class:bg-yellow-500={connectionState === 'connecting'}
-					class:bg-gray-400={connectionState === 'disconnected'}
+					class:bg-green-500={connectionState === 'Researching'}
+					class:bg-yellow-500={connectionState === 'Ready'}
+					class:bg-blue-500={connectionState === 'Complete'}
 				></div>
 				<span class="text-xs text-gray-600">
 					{connectionState}
@@ -256,12 +274,12 @@
 			</div>
 			
 			<!-- Generate Button -->
-			<Button
+			<!-- <Button
 				disabled={!canSubmitJob}
 				class="flex items-center gap-2"
 				color="blue"
 				size="sm"
-				onclick={handleAIGeneration}
+				onclick={() => handleAIGeneration()}
 			>
 				{#if isLoading}
 					<Spinner size="4" color="primary" />
@@ -277,12 +295,12 @@
 					</svg>
 					<span>Generate Content</span>
 				{/if}
-			</Button>
+			</Button> -->
 		</div>
 	{/if}
 	
 	<!-- Content Display -->
-	<div class="px-4 pb-4 pt-16">
+	<div class="px-4 pb-4 pt-4">
 		{#if widgetData.title}
 			<h3 class="mb-3 text-xl font-semibold text-gray-800">
 				{widgetData.title}
