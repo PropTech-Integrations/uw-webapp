@@ -1,8 +1,10 @@
 <script lang="ts">
+	import z from 'zod';
+
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	// Types
 	import type { ParagraphWidget } from '$lib/dashboard/types/widget';
-	import { ParagraphWidgetDataSchema, WidgetChannels, type ParagraphWidgetData } from '$lib/dashboard/types/widgetSchemas';
+	import { type WidgetChannelConfig } from '$lib/dashboard/types/widgetSchemas';
 
 	interface Props {
 		data: ParagraphWidget['data'];
@@ -11,6 +13,14 @@
 		/** Optional custom widget ID for consumer registration */
 		widgetId?: string;
 	}
+
+	const ParagraphWidgetDataSchema = z.object({
+		title: z.string().nullable().optional(),
+		content: z.string(),
+		markdown: z.boolean().nullable().optional()
+	});
+
+	type ParagraphWidgetData = z.infer<typeof ParagraphWidgetDataSchema>;
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	// Auth Types
@@ -24,9 +34,11 @@
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	// AI Job Submission & Channel Setup
-	import { submitParagraphGenerationJob } from './utils/aiJobSubmission';
-	import { createParagraphChannel } from './utils/channelSetup';
+	import { submitAIJob, type JobSubmissionCallbacks } from './utils/aiJobSubmission';
+	import type { JobUpdate } from '$lib/dashboard/lib/JobManager';
 	import { setupParagraphConsumer } from './utils/consumerSetup';
+	import { mapStore } from '$lib/stores/mapObjectStore';
+	import { paragraphTitleQuery } from '$lib/dashboard/types/OpenAIQueryDefs';
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	// Props & State
@@ -42,8 +54,20 @@
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
 	// Setup channel
-	const channel = WidgetChannels.paragraphContent;
+	const channel = {
+		channelId: 'paragraph-content',
+		widgetType: 'paragraph',
+		schema: ParagraphWidgetDataSchema,
+		description: 'Channel for paragraph widget content'
+	} as WidgetChannelConfig<'paragraph'>;
+
 	console.log(`   Initial data:`, data);
+
+	// Setup content producer for publishing AI-generated content
+	const contentProducer = mapStore.registerProducer<ParagraphWidget['data']>(
+		channelId,
+		'content-generator-agent'
+	);
 
 	// Setup consumer with subscription
 	const consumer = setupParagraphConsumer(channel, widgetId, (validatedData) => {
@@ -51,14 +75,54 @@
 			widgetData = validatedData;
 		}
 	});
+
+	//////////////////////////////////////////////////////////////////////////////////////////////
+	// AI Job Callbacks
+	//////////////////////////////////////////////////////////////////////////////////////////////
+
+	const jobCallbacks: JobSubmissionCallbacks = {
+		onJobComplete: (update: JobUpdate) => {
+			console.log('✅ Job completed successfully:', update);
+			const result = JSON.parse(update.result as string);
+			const timestamp = new Date().toLocaleTimeString();
+
+			const newData: ParagraphWidget['data'] = {
+				title: result.output_parsed.title,
+				content: result.output_parsed.markdown
+					? result.output_parsed.content
+					: `${result.output_parsed.content}\n\nLast updated: ${timestamp}`,
+				markdown: result.output_parsed.markdown
+			};
+
+			console.log(`🤖 AI Agent generated new content: "${result.output_parsed.title}"`);
+			contentProducer.publish(newData);
+		},
+		onJobError: (error: Error) => {
+			console.error('❌ Job failed:', error);
+			// TODO: Show error notification to user
+		},
+		onStatusUpdate: (update: JobUpdate) => {
+			console.log('📊 Status update:', update.status);
+			// TODO: Update progress indicator
+		},
+		onConnectionStateChange: (state: string) => {
+			console.log('🔌 Connection state:', state);
+			// TODO: Show connection status indicator
+		}
+	};
 </script>
 
 <div class="paragraph-widget h-full overflow-auto">
 	<div class="absolute right-16 top-4 z-10">
 		<Button
 			class="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
-			onclick={() => currentUser?.idToken && submitParagraphGenerationJob(currentUser.idToken)}
-			>Submit AI Job</Button
+			onclick={() =>
+				currentUser?.idToken &&
+				submitAIJob(
+					paragraphTitleQuery('Write a paragraph about the economy of Santa Rosa, CA'),
+					currentUser.idToken,
+					jobCallbacks
+				)}>Submit AI Job</Button
 		>
 	</div>
 	{#if data.title}
