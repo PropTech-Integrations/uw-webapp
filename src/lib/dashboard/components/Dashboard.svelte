@@ -20,9 +20,10 @@
 				rect,
 				dashboard.config.gridColumns,
 				dashboard.config.gridRows,
-				dashboard.config.gap
+				dashboard.config.gap,
+				dashboard.config.minCellHeight
 			);
-
+			console.log('position', position);
 			if (dashboard.activeWidget) {
 				const canPlace = dashboard.canPlaceWidget(
 					{

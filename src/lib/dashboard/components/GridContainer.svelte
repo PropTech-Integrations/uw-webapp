@@ -48,9 +48,9 @@
 		{@render children?.()}
 	</div>
 </div>
-
 <style>
 	.dashboard-grid {
 		/* No fixed height - grows dynamically with grid content */
 	}
 </style>
+

@@ -329,7 +329,7 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<!-- <DashboardControls /> -->
+<DashboardControls />
 
 <!-- <div class="mx-auto max-w-7xl px-4 pb-4">
 		<MapStoreDebugPanel />

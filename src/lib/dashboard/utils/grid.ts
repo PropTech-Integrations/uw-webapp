@@ -36,22 +36,27 @@ export function getGridPositionFromCoordinates(
 	gridColumns: number,
 	gridRows: number,
 	gap: number,
+	minCellHeight: number,
 	padding: number = 16 // p-4 class = 1rem = 16px
 ): Position {
 	// Account for padding on the container
 	const effectiveWidth = containerRect.width - (padding * 2);
-	const effectiveHeight = containerRect.height - (padding * 2);
 	
 	// Calculate cell dimensions including gaps
 	const totalGapWidth = gap * (gridColumns - 1);
 	const totalGapHeight = gap * (gridRows - 1);
 	
 	const cellWidth = (effectiveWidth - totalGapWidth) / gridColumns;
-	const cellHeight = (effectiveHeight - totalGapHeight) / gridRows;
+	// Use the actual minCellHeight from the grid configuration
+	const cellHeight = minCellHeight;
 
-	// Adjust mouse position to account for padding
-	const relativeX = x - containerRect.left - padding;
-	const relativeY = y - containerRect.top - padding;
+	// Calculate relative position within the grid
+	// The grid starts at container.left + padding, and container.top + padding
+	const gridLeft = containerRect.left + padding;
+	const gridTop = containerRect.top + padding;
+	
+	const relativeX = x - gridLeft;
+	const relativeY = y - gridTop;
 
 	// Calculate column and row
 	const col = Math.min(
