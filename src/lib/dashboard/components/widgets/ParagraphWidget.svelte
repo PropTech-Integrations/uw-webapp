@@ -21,6 +21,7 @@
 	import { setupConsumer } from './utils/consumerSetup';
 	import { mapStore } from '$lib/stores/mapObjectStore';
 	import { paragraphTitleQuery } from '$lib/dashboard/types/OpenAIQueryDefs';
+	import { project as projectStore } from '$lib/stores/project.svelte';
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	// Constants
@@ -229,8 +230,11 @@
 			error = null;
 			isLoading = true;
 			
+			// Get vector store ID from current project
+			const vectorStoreId = $projectStore?.vectorStoreId || 'vs_68da2c6862088191a5b51b8b4566b300';
+			
 			await submitAIJob(
-				paragraphTitleQuery(promptToUse),
+				paragraphTitleQuery(promptToUse, 'gpt-5-nano', vectorStoreId),
 				currentUser.idToken,
 				jobCallbacks
 			);

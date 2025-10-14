@@ -3,6 +3,7 @@
 	import JobSubmission from '$lib/components/AI/JobSubmission.svelte';
 	import { zodTextFormat } from 'openai/helpers/zod';
 	import { z } from 'zod';
+	import { project as projectStore } from '$lib/stores/project.svelte';
 
 	// Define a type for Job Input Request
 
@@ -54,10 +55,18 @@
 		)
 	});
 
+	let { data }: { data: PageData } = $props();
+
+	// Get vector store ID from current project
+	const currentProject = $derived($projectStore);
+	const getVectorStoreId = () => {
+		return currentProject?.vectorStoreId || 'vs_68da2c6862088191a5b51b8b4566b300';
+	};
+
 	const jobInput1Request: JobInputRequest = {
 		model: 'gpt-5-nano',
 		input: [{ role: 'system', content: 'Extract the details from the file' }],
-		tools: [{ type: 'file_search', vector_store_ids: ['vs_68da2c6862088191a5b51b8b4566b300'] }],
+		tools: [{ type: 'file_search', vector_store_ids: [getVectorStoreId()] }],
 		tool_choice: 'auto',
 		text: { format: zodTextFormat(projectSchema, 'projectDetails') }
 	};
@@ -65,7 +74,7 @@
 	const jobInput2Request: JobInputRequest = {
 		model: 'gpt-5-nano',
 		input: [{ role: 'system', content: 'Extract the details from the file' }],
-		tools: [{ type: 'file_search', vector_store_ids: ['vs_68da2c6862088191a5b51b8b4566b300'] }],
+		tools: [{ type: 'file_search', vector_store_ids: [getVectorStoreId()] }],
 		tool_choice: 'auto',
 		text: { format: zodTextFormat(brokerSchema, 'projectDetails') }
 	};
@@ -79,10 +88,8 @@
 				content: 'Write a two sentence summary of this property'
 			}
 		],
-		tools: '[{"type":"file_search","vector_store_ids":["vs_68da2c6862088191a5b51b8b4566b300"]}]'
+		tools: JSON.stringify([{ type: 'file_search', vector_store_ids: [getVectorStoreId()] }])
 	};
-
-	let { data }: { data: PageData } = $props();
 
 	// const jobInput1 = {
 	// 	request:

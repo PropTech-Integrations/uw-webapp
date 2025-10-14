@@ -20,7 +20,8 @@
 
 	import { createJobWidgetBridge, type JobWidgetBridge } from '$lib/dashboard/types/widgetBridge';
 	// import { z } from 'zod';
-	import { paragraphTitleQuery, type AIResponse } from '../types/OpenAIQueryDefs';
+	import { paragraphTitleQuery } from '../types/OpenAIQueryDefs';
+	import { project as projectStore } from '$lib/stores/project.svelte';
 
 	// ===== Types =====
 	interface Props {
@@ -148,7 +149,11 @@
 
 	// ===== Enhanced Job Configuration =====
 
-	let jobInput = $state(paragraphTitleQuery(prompt, model));
+	// Get vector store ID from current project
+	const currentProject = $derived($projectStore);
+	const getVectorStoreId = () => currentProject?.vectorStoreId || 'vs_68da2c6862088191a5b51b8b4566b300';
+	
+	let jobInput = $state(paragraphTitleQuery(prompt, model, getVectorStoreId()));
 
 	// ===== Enhanced Transformation Logic =====
 	function transformJobResult(result: unknown): ParagraphWidgetData {
@@ -301,7 +306,7 @@
 			console.log(`🔄 Retrying... (${retryCount}/${MAX_RETRIES})`);
 			setTimeout(() => {
 				jobState.status = 'idle';
-				jobInput = paragraphTitleQuery(prompt, model);
+				jobInput = paragraphTitleQuery(prompt, model, getVectorStoreId());
 			}, 2000);
 		}
 	}
@@ -322,7 +327,7 @@
 		};
 
 		retryCount = 0;
-		jobInput = paragraphTitleQuery(prompt, model);
+		jobInput = paragraphTitleQuery(prompt, model, getVectorStoreId());
 
 		widgetData = {
 			title: 'AI Generated Content',

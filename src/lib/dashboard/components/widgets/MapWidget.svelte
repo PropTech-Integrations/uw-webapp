@@ -33,12 +33,46 @@
 	});
 
 	const apiKey = PUBLIC_GEOAPIFY_API_KEY;
-	const lat = widgetData.lat;
-	const lon = widgetData.lon;
-	const zoom = widgetData.zoom;
 
 	// --- DOM Element Reference ---
 	let mapContainer: HTMLDivElement; // This will be a reference to the <div> element, bound in the template.
+
+	// Function to fetch and display isoline
+	async function addIsolineToMap(map: any, centerLat: number, centerLon: number) {
+		try {
+			// 5 minutes = 300 seconds
+			const range = 300;
+			const isolineUrl = `https://api.geoapify.com/v1/isoline?lat=${centerLat}&lon=${centerLon}&type=time&mode=drive&range=${range}&apiKey=${apiKey}`;
+			
+			console.log('Fetching isoline data from:', isolineUrl);
+			
+			const response = await fetch(isolineUrl);
+			const data = await response.json();
+			
+			if (response.ok && data.features && data.features.length > 0) {
+				console.log('Isoline data received:', data);
+				
+				// Add the isoline to the map using Leaflet's GeoJSON layer
+				L.geoJSON(data, {
+					style: function (feature: any) {
+						return {
+							fillColor: '#3b82f6',
+							fillOpacity: 0.3,
+							color: '#2563eb',
+							weight: 2,
+							opacity: 0.8
+						};
+					}
+				}).addTo(map);
+				
+				console.log('✅ Isoline added to map successfully');
+			} else {
+				console.error('Failed to fetch isoline data:', data);
+			}
+		} catch (error) {
+			console.error('Error fetching isoline:', error);
+		}
+	}
 
 	// --- Lifecycle with $effect ---
 	// $effect runs after the component mounts. It will automatically re-run if any of its
@@ -50,11 +84,16 @@
 			return;
 		}
 
+		// Get current widget data values
+		const currentLat = widgetData.lat;
+		const currentLon = widgetData.lon;
+		const currentZoom = widgetData.zoom;
+
 		console.log('===============');
-		console.log(lat, lon, zoom);
+		console.log(currentLat, currentLon, currentZoom);
 		console.log('===============');
 		// 1. Initialize the Leaflet map, binding it to our <div>
-		const map = L.map(mapContainer).setView([lat, lon], zoom);
+		const map = L.map(mapContainer).setView([currentLat, currentLon], currentZoom);
 
 		// 2. Add the attribution text
 		map.attributionControl.setPrefix('').addAttribution('');
@@ -65,7 +104,16 @@
 			accessToken: 'no-token' // not needed for Geoapify
 		}).addTo(map);
 
-		// 4. Return a cleanup function
+		// 4. Add a marker at the center point
+		L.marker([currentLat, currentLon])
+			.addTo(map)
+			.bindPopup('Center Point')
+			.openPopup();
+
+		// 5. Fetch and add the 5-minute drive isoline
+		addIsolineToMap(map, currentLat, currentLon);
+
+		// 6. Return a cleanup function
 		// This function will be called automatically when the component is unmounted.
 		return () => {
 			map.remove();

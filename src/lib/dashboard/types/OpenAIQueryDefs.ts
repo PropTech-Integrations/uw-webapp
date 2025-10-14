@@ -5,7 +5,11 @@ import { z } from 'zod';
 // and the priority of the request and the AI model to use.
 import { getWidgetTextFormat, ParagraphWidgetDataSchema } from '$lib/dashboard/types/widgetSchemas';
 
-export const paragraphTitleQuery = (customPrompt?: string, model: string = 'gpt-5-nano') => {
+export const paragraphTitleQuery = (
+	customPrompt?: string,
+	model: string = 'gpt-5-nano',
+	vectorStoreId: string = 'vs_68da2c6862088191a5b51b8b4566b300'
+) => {
 	const textFormat = getWidgetTextFormat('paragraph', 'ParagraphContent');
 
 	return {
@@ -28,7 +32,7 @@ export const paragraphTitleQuery = (customPrompt?: string, model: string = 'gpt-
 			text: {
 				format: textFormat
 			},
-			tools: [{ vector_store_ids: ['vs_68da2c6862088191a5b51b8b4566b300'], type: 'file_search' }]
+			tools: [{ vector_store_ids: [vectorStoreId], type: 'file_search' }]
 		}),
 		priority: 'HIGH' as const
 	};

@@ -23,6 +23,7 @@ export interface Project {
 	isArchived: boolean;
 	isDeleted: boolean;
 	isPublic: boolean;
+	vectorStoreId?: string | null;
 	members: string[]; // list of usernames/emails
 	documents: ProjectDocument[]; // list of document IDs
 	tags: string[];
