@@ -266,26 +266,26 @@ export function getWidgetTextFormat<T extends WidgetType>(
 	return textFormat as OpenAITextFormatConfig;
 }
 
-/**
- * Get OpenAI structured output config for a specific widget type
- * @deprecated Use getWidgetTextFormat() instead for proper OpenAI text format
- * @param widgetType - The widget type
- * @param name - Optional custom name (defaults to widgetType)
- * @param description - Optional description
- */
-export function getWidgetOpenAIConfig<T extends WidgetType>(
-	widgetType: T,
-	name?: string,
-	description?: string
-): OpenAIStructuredOutputConfig {
-	console.log(`\n🔧 [getWidgetOpenAIConfig] Getting OpenAI config for widget type: ${widgetType}`);
-	console.log(`   ⚠️  DEPRECATED: Use getWidgetTextFormat() instead`);
-	const schema = WidgetDataSchemas[widgetType];
-	const configName = name || `${widgetType}WidgetData`;
-	const configDescription = description || `Data for ${widgetType} widget`;
+// /**
+//  * Get OpenAI structured output config for a specific widget type
+//  * @deprecated Use getWidgetTextFormat() instead for proper OpenAI text format
+//  * @param widgetType - The widget type
+//  * @param name - Optional custom name (defaults to widgetType)
+//  * @param description - Optional description
+//  */
+// export function getWidgetOpenAIConfig<T extends WidgetType>(
+// 	widgetType: T,
+// 	name?: string,
+// 	description?: string
+// ): OpenAIStructuredOutputConfig {
+// 	console.log(`\n🔧 [getWidgetOpenAIConfig] Getting OpenAI config for widget type: ${widgetType}`);
+// 	console.log(`   ⚠️  DEPRECATED: Use getWidgetTextFormat() instead`);
+// 	const schema = WidgetDataSchemas[widgetType];
+// 	const configName = name || `${widgetType}WidgetData`;
+// 	const configDescription = description || `Data for ${widgetType} widget`;
 	
-	return zodSchemaToOpenAI(configName, schema, configDescription);
-}
+// 	return zodSchemaToOpenAI(configName, schema, configDescription);
+// }
 
 // ===== Validated Data Publisher =====
 

@@ -80,6 +80,7 @@ class DashboardStore {
 	get resizeState() { return this.#resizeState; }
 	get hasUnsavedChanges() { return this.#hasUnsavedChanges; }
 	get isInitialized() { return this.#initialized; }
+	get autoSaveEnabled() { return this.#autoSaveEnabled; }
 	
 	// Derived state with memoization
 	gridCells = $derived.by(() => this.#computeGridCells());

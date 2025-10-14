@@ -1,21 +1,22 @@
+<!-- ParagraphWidget.svelte -->
+<!-- Requirements:  
+	 - ParagraphWidgetDataSchema: A Zod schema for all the data required to display information in a paragraph widget
+	 - WidgetId: A unique identifier for the paragraph widget
+ -->
 <script lang="ts">
-	import { z } from 'zod';
+	// Importing Svelte Library Functions
 	import { getContext, onDestroy } from 'svelte';
-	
-	// UI Components
-	import { Button, Alert, Spinner } from 'flowbite-svelte';
-	import TypeWriter from '$lib/components/TypeWriter/TypeWriter.svelte';
-	
-	// Types
-	import type { ParagraphWidget } from '$lib/dashboard/types/widget';
-	import { 
-		ParagraphWidgetDataSchema, 
-		type ParagraphWidgetData,
-		type WidgetChannelConfig 
-	} from '$lib/dashboard/types/widgetSchemas';
+
+    // Importing 3rd Party Libraries
+	import { z } from 'zod';
+
+	// Data Types
+	import { ParagraphWidgetDataSchema } from '$lib/dashboard/types/widgetSchemas';
+
+	// Authentication
 	import type { CurrentUser } from '$lib/types/auth';
 	import type { JobUpdate } from '$lib/dashboard/lib/JobManager';
-	
+
 	// Utils
 	import { submitAIJob, type JobSubmissionCallbacks } from './utils/aiJobSubmission';
 	import { setupConsumer } from './utils/consumerSetup';
@@ -23,10 +24,17 @@
 	import { paragraphTitleQuery } from '$lib/dashboard/types/OpenAIQueryDefs';
 	import { project as projectStore } from '$lib/stores/project.svelte';
 
+	// Inferred Types
+	type ParagraphWidgetData = z.infer<typeof ParagraphWidgetDataSchema>;
+			
+	// UI Components
+	import { Button, Alert, Spinner } from 'flowbite-svelte';
+	import TypeWriter from '$lib/components/TypeWriter/TypeWriter.svelte';
+
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	// Constants
 	//////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	const PARAGRAPH_WIDGET_DATA_CHANNEL_ID = 'paragraph-content';
 	const PARAGRAPH_WIDGET_ID = 'paragraph-widget';
 	const WIDGET_TYPE = 'paragraph';
@@ -34,7 +42,7 @@
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	// Component Props & State
 	//////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	interface Props {
 		data: ParagraphWidget['data'];
 		/** Optional custom channel ID (defaults to 'paragraph-content') */
@@ -53,9 +61,9 @@
 		onFlipControlReady?: (flipFn: () => void) => void;
 	}
 
-	const { 
-		data, 
-		channelId = PARAGRAPH_WIDGET_DATA_CHANNEL_ID, 
+	const {
+		data,
+		channelId = PARAGRAPH_WIDGET_DATA_CHANNEL_ID,
 		widgetId = PARAGRAPH_WIDGET_ID,
 		defaultPrompt = 'Write a paragraph about the economy around the property',
 		enableAIGeneration = true,
@@ -76,15 +84,12 @@
 	// Get current user from context
 	const pageData = getContext<{ currentUser: CurrentUser }>('pageData');
 	const currentUser = $derived(pageData?.currentUser);
-	
+
 	// Computed state
 	const canSubmitJob = $derived(
-		!isLoading && 
-		currentUser?.idToken && 
-		enableAIGeneration &&
-		connectionState !== 'Ready'
+		!isLoading && currentUser?.idToken && enableAIGeneration && connectionState !== 'Ready'
 	);
-	
+
 	const formattedUpdateTime = $derived(
 		lastUpdateTime?.toLocaleTimeString('en-US', {
 			hour: '2-digit',
@@ -96,7 +101,7 @@
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	// Helper Functions
 	//////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	function validateData(data: unknown): ParagraphWidgetData {
 		try {
 			return ParagraphWidgetDataSchema.parse(data);
@@ -109,11 +114,11 @@
 			};
 		}
 	}
-	
+
 	function clearError() {
 		error = null;
 	}
-	
+
 	function handleDataUpdate(newData: ParagraphWidgetData) {
 		try {
 			// Normalize data to ensure markdown is never undefined
@@ -148,15 +153,11 @@
 	);
 
 	// Setup consumer with error handling
-	const { unsubscribe } = setupConsumer<ParagraphWidgetData>(
-		channel, 
-		widgetId, 
-		(validatedData) => {
-			if (validatedData) {
-				handleDataUpdate(validatedData);
-			}
+	const { unsubscribe } = setupConsumer<ParagraphWidgetData>(channel, widgetId, (validatedData) => {
+		if (validatedData) {
+			handleDataUpdate(validatedData);
 		}
-	);
+	});
 
 	// Cleanup on destroy
 	onDestroy(() => {
@@ -171,10 +172,10 @@
 		onJobComplete: (update: JobUpdate) => {
 			try {
 				isLoading = false;
-				
+
 				const result = JSON.parse(update.result as string);
 				const parsedOutput = result.output_parsed;
-				
+
 				if (!parsedOutput) {
 					throw new Error('Invalid AI response format');
 				}
@@ -187,52 +188,51 @@
 
 				console.log(`✅ AI content generated: "${newData.title || 'Untitled'}"`);
 				contentProducer.publish(newData);
-				
 			} catch (err) {
 				console.error('Failed to process AI response:', err);
 				error = 'Failed to process AI response';
 				isLoading = false;
 			}
 		},
-		
+
 		onJobError: (err: Error) => {
 			console.error('❌ Job failed:', err);
 			error = err.message || 'AI generation failed';
 			isLoading = false;
 		},
-		
+
 		onStatusUpdate: (update: JobUpdate) => {
 			console.log('📊 Job status:', update.status);
 			// Could add more granular status tracking here
 		},
-		
+
 		onConnectionStateChange: (state: string) => {
 			console.log('🔌 Connection state:', state);
 			// Map technical states to user-friendly labels
 			const stateMap: Record<string, typeof connectionState> = {
-				'connected': 'Researching',
-				'connecting': 'Ready',
-				'disconnected': 'Complete'
+				connected: 'Researching',
+				connecting: 'Ready',
+				disconnected: 'Complete'
 			};
 			connectionState = stateMap[state] || 'Complete';
 		}
 	};
-	
+
 	async function handleAIGeneration(customPrompt?: string) {
 		if (!currentUser?.idToken) {
 			error = 'Authentication required';
 			return;
 		}
-		
+
 		const promptToUse = customPrompt || defaultPrompt;
-		
+
 		try {
 			error = null;
 			isLoading = true;
-			
+
 			// Get vector store ID from current project
 			const vectorStoreId = $projectStore?.vectorStoreId || 'vs_68da2c6862088191a5b51b8b4566b300';
-			
+
 			await submitAIJob(
 				paragraphTitleQuery(promptToUse, 'gpt-5-nano', vectorStoreId),
 				currentUser.idToken,
@@ -244,7 +244,7 @@
 			isLoading = false;
 		}
 	}
-	
+
 	// Flip control functions
 	function toggleFlip() {
 		isFlipped = !isFlipped;
@@ -252,7 +252,7 @@
 			customPromptInput = defaultPrompt;
 		}
 	}
-	
+
 	function handleFormSubmit() {
 		if (customPromptInput.trim()) {
 			handleAIGeneration(customPromptInput);
@@ -260,19 +260,19 @@
 			customPromptInput = '';
 		}
 	}
-	
+
 	function handleFormCancel() {
 		isFlipped = false;
 		customPromptInput = '';
 	}
-	
+
 	// Expose AI generation function to parent component
 	$effect(() => {
 		if (onAIGenerationReady) {
 			onAIGenerationReady(handleAIGeneration);
 		}
 	});
-	
+
 	// Expose flip control to parent component
 	$effect(() => {
 		if (onFlipControlReady) {
@@ -284,11 +284,13 @@
 <div class="flip-container h-full {className}" class:flipped={isFlipped}>
 	<div class="flip-card h-full">
 		<!-- FRONT SIDE -->
-		<div class="flip-card-front absolute h-full w-full overflow-auto rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+		<div
+			class="flip-card-front absolute h-full w-full overflow-auto rounded-lg bg-white shadow-sm dark:bg-gray-800"
+		>
 			<!-- Error Display -->
 			{#if error}
-				<Alert 
-					color="red" 
+				<Alert
+					color="red"
 					dismissable
 					class="absolute left-4 right-4 top-4 z-20"
 					onclose={clearError}
@@ -296,13 +298,13 @@
 					{error}
 				</Alert>
 			{/if}
-			
+
 			<!-- AI Generation Controls -->
 			{#if enableAIGeneration}
 				<div class="absolute right-12 top-4 z-10 flex items-center gap-2">
 					<!-- Connection Status Indicator -->
 					<div class="flex items-center gap-1">
-						<div 
+						<div
 							class="h-2 w-2 rounded-full"
 							class:bg-green-500={connectionState === 'Researching'}
 							class:dark:bg-green-400={connectionState === 'Researching'}
@@ -317,7 +319,7 @@
 					</div>
 				</div>
 			{/if}
-			
+
 			<!-- Content Display -->
 			<div class="px-4 pb-4 pt-4" class:loading={isLoading}>
 				{#if widgetData.title}
@@ -325,7 +327,7 @@
 						{widgetData.title}
 					</h3>
 				{/if}
-				
+
 				{#if isLoading && !widgetData.content}
 					<div class="flex items-center justify-center py-12">
 						<Spinner size="8" color="gray" />
@@ -341,7 +343,7 @@
 						</div>
 					{/key}
 				{/if}
-				
+
 				<!-- Update Timestamp -->
 				{#if formattedUpdateTime}
 					<div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
@@ -352,28 +354,37 @@
 		</div>
 
 		<!-- BACK SIDE -->
-		<div class="flip-card-back absolute h-full w-full overflow-auto rounded-lg bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900 dark:to-indigo-950 shadow-sm">
+		<div
+			class="flip-card-back absolute h-full w-full overflow-auto rounded-lg bg-gradient-to-br from-blue-50 to-indigo-100 shadow-sm dark:from-blue-900 dark:to-indigo-950"
+		>
 			<div class="flex h-full flex-col p-6">
 				<!-- Header -->
 				<div class="mb-6 flex items-center gap-3">
-					<div class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 dark:bg-blue-500">
+					<div
+						class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 dark:bg-blue-500"
+					>
 						<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path 
-								stroke-linecap="round" 
-								stroke-linejoin="round" 
-								stroke-width="2" 
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
 								d="M13 10V3L4 14h7v7l9-11h-7z"
 							/>
 						</svg>
 					</div>
 					<div>
-						<h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">AI Local Economy Agent</h3>
-						<p class="text-sm text-gray-600 dark:text-gray-300">The Local Economy Agent specializes in providing detailed economic analysis in targeted markets</p>
+						<h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+							AI Local Economy Agent
+						</h3>
+						<p class="text-sm text-gray-600 dark:text-gray-300">
+							The Local Economy Agent specializes in providing detailed economic analysis in
+							targeted markets
+						</p>
 					</div>
 				</div>
 
 				<!-- Form -->
-				<form 
+				<form
 					class="flex flex-1 flex-col gap-4"
 					onsubmit={(e) => {
 						e.preventDefault();
@@ -381,13 +392,16 @@
 					}}
 				>
 					<div class="flex-1">
-						<label for="custom-prompt-{widgetId}" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">
+						<label
+							for="custom-prompt-{widgetId}"
+							class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200"
+						>
 							Enter custom instructions for this agent
 						</label>
 						<textarea
 							id="custom-prompt-{widgetId}"
 							bind:value={customPromptInput}
-							class="h-16 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+							class="h-16 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
 							placeholder="Example: Write a paragraph about the economy around the property"
 							onkeydown={(e) => {
 								if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
@@ -399,7 +413,11 @@
 							}}
 						></textarea>
 						<p class="mt-2 text-xs text-gray-600 dark:text-gray-300">
-							💡 Tip: Press <kbd class="rounded bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5">Ctrl+Enter</kbd> to submit, <kbd class="rounded bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5">Esc</kbd> to cancel
+							💡 Tip: Press <kbd class="rounded bg-gray-200 px-1.5 py-0.5 dark:bg-gray-700"
+								>Ctrl+Enter</kbd
+							>
+							to submit, <kbd class="rounded bg-gray-200 px-1.5 py-0.5 dark:bg-gray-700">Esc</kbd> to
+							cancel
 						</p>
 					</div>
 
@@ -408,24 +426,24 @@
 						<button
 							type="button"
 							onclick={handleFormCancel}
-							class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600"
+							class="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:focus:ring-gray-600"
 						>
 							Cancel
 						</button>
 						<button
 							type="submit"
 							disabled={!customPromptInput.trim() || isLoading}
-							class="flex items-center gap-2 rounded-lg bg-blue-600 dark:bg-blue-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+							class="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
 						>
 							{#if isLoading}
 								<Spinner size="4" />
 								<span>Generating...</span>
 							{:else}
 								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path 
-										stroke-linecap="round" 
-										stroke-linejoin="round" 
-										stroke-width="2" 
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
 										d="M13 10V3L4 14h7v7l9-11h-7z"
 									/>
 								</svg>
@@ -445,46 +463,46 @@
 		perspective: 1000px;
 		position: relative;
 	}
-	
+
 	.flip-card {
 		position: relative;
 		transform-style: preserve-3d;
-		transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+		transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 	}
-	
+
 	.flip-container.flipped .flip-card {
 		transform: rotateY(180deg);
 	}
-	
+
 	.flip-card-front,
 	.flip-card-back {
 		backface-visibility: hidden;
 		-webkit-backface-visibility: hidden;
 	}
-	
+
 	.flip-card-front {
 		transform: rotateY(0deg);
 	}
-	
+
 	.flip-card-back {
 		transform: rotateY(180deg);
 	}
-	
+
 	/* Loading state overlay */
 	.loading {
 		opacity: 0.75;
 	}
-	
+
 	/* Custom prose styles */
 	.custom-prose {
 		line-height: 1.75;
 		color: rgb(55 65 81);
 	}
-	
+
 	:global(.dark) .custom-prose {
 		color: rgb(209 213 219);
 	}
-	
+
 	/* Keyboard shortcut keys */
 	kbd {
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
