@@ -323,6 +323,59 @@ export function createJobMultiWidgetBridge(
 	};
 }
 
+// ===== New Upgraded API =====
+
+/**
+ * Bridge job updates to widget channel (cleaner name)
+ * Alias for createJobWidgetBridge
+ */
+export const bridgeJobToWidget = createJobWidgetBridge;
+
+/**
+ * Bridge multiple channels from a single job
+ */
+export function bridgeJobToMultipleWidgets(
+	jobId: string,
+	channels: Array<{
+		channel: WidgetChannelConfig<any>;
+		transformer?: (jobResult: string) => unknown;
+		filter?: (update: JobUpdate) => boolean;
+	}>
+): JobWidgetBridge {
+	console.log(`\n🌉🌉 [bridgeJobToMultipleWidgets] Creating multi-bridge for job: ${jobId}`);
+	console.log(`   Number of channels: ${channels.length}`);
+	
+	const bridges = channels.map((config) =>
+		createJobWidgetBridge({
+			jobId,
+			channel: config.channel,
+			transformer: config.transformer,
+			filter: config.filter as any
+		})
+	);
+
+	console.log(`✅ [bridgeJobToMultipleWidgets] All bridges created`);
+
+	return {
+		disconnect(): void {
+			console.log(`\n🔌 [bridgeJobToMultipleWidgets] Disconnecting all bridges for job: ${jobId}`);
+			bridges.forEach((bridge) => bridge.disconnect());
+		},
+		getStatus() {
+			console.log(`[bridgeJobToMultipleWidgets] getStatus() called for job: ${jobId}`);
+			const statuses = bridges.map((b) => b.getStatus());
+			return {
+				connected: statuses.some((s) => s.connected),
+				lastUpdate: statuses
+					.map((s) => s.lastUpdate)
+					.filter(Boolean)
+					.sort((a, b) => b!.getTime() - a!.getTime())[0],
+				lastError: statuses.find((s) => s.lastError)?.lastError
+			};
+		}
+	};
+}
+
 // ===== Convenience Functions =====
 
 /**
@@ -336,12 +389,12 @@ export function createParagraphPublisher(
 	return createWidgetPublisher(
 		{
 			channelId,
-			widgetType: 'paragraph',
+			widgetType: 'paragraph' as const,
 			schema: z.object({
 				title: z.string().nullable().optional(),
 				content: z.string(),
 				markdown: z.boolean().nullable().optional()
-			})
+			}) as any
 		},
 		publisherId
 	);
@@ -358,12 +411,12 @@ export function createParagraphConsumer(
 	return createWidgetConsumer(
 		{
 			channelId,
-			widgetType: 'paragraph',
+			widgetType: 'paragraph' as const,
 			schema: z.object({
 				title: z.string().nullable().optional(),
 				content: z.string(),
 				markdown: z.boolean().nullable().optional()
-			})
+			}) as any
 		},
 		consumerId
 	);
@@ -386,25 +439,123 @@ export function createReactiveWidgetConsumer<T extends WidgetType>(
 	return createWidgetConsumer(config, consumerId);
 }
 
+// ===== Preset Publishers/Consumers for All Widget Types =====
+
+import { WidgetChannels } from './widgetSchemas';
+
+/**
+ * Quick publisher creators for common widget types
+ * Usage: Publishers.paragraph(channelId, publisherId)
+ */
+export const Publishers = {
+	paragraph: (channelId: string, publisherId: string) =>
+		createWidgetPublisher(WidgetChannels.paragraph(channelId), publisherId),
+
+	table: (channelId: string, publisherId: string) =>
+		createWidgetPublisher(WidgetChannels.table(channelId), publisherId),
+
+	metric: (channelId: string, publisherId: string) =>
+		createWidgetPublisher(WidgetChannels.metric(channelId), publisherId),
+
+	lineChart: (channelId: string, publisherId: string) =>
+		createWidgetPublisher(WidgetChannels.lineChart(channelId), publisherId),
+
+	barChart: (channelId: string, publisherId: string) =>
+		createWidgetPublisher(WidgetChannels.barChart(channelId), publisherId),
+
+	title: (channelId: string, publisherId: string) =>
+		createWidgetPublisher(WidgetChannels.title(channelId), publisherId),
+
+	image: (channelId: string, publisherId: string) =>
+		createWidgetPublisher(WidgetChannels.image(channelId), publisherId),
+
+	map: (channelId: string, publisherId: string) =>
+		createWidgetPublisher(WidgetChannels.map(channelId), publisherId)
+} as const;
+
+/**
+ * Quick consumer creators for common widget types
+ * Usage: Consumers.paragraph(channelId, consumerId)
+ */
+export const Consumers = {
+	paragraph: (channelId: string, consumerId: string) =>
+		createWidgetConsumer(WidgetChannels.paragraph(channelId), consumerId),
+
+	table: (channelId: string, consumerId: string) =>
+		createWidgetConsumer(WidgetChannels.table(channelId), consumerId),
+
+	metric: (channelId: string, consumerId: string) =>
+		createWidgetConsumer(WidgetChannels.metric(channelId), consumerId),
+
+	lineChart: (channelId: string, consumerId: string) =>
+		createWidgetConsumer(WidgetChannels.lineChart(channelId), consumerId),
+
+	barChart: (channelId: string, consumerId: string) =>
+		createWidgetConsumer(WidgetChannels.barChart(channelId), consumerId),
+
+	title: (channelId: string, consumerId: string) =>
+		createWidgetConsumer(WidgetChannels.title(channelId), consumerId),
+
+	image: (channelId: string, consumerId: string) =>
+		createWidgetConsumer(WidgetChannels.image(channelId), consumerId),
+
+	map: (channelId: string, consumerId: string) =>
+		createWidgetConsumer(WidgetChannels.map(channelId), consumerId)
+} as const;
+
+/**
+ * Create preset widget stores for reactive Svelte integration
+ * Usage: WidgetStores.paragraph(channelId, widgetId)
+ */
+export const WidgetStores = {
+	paragraph: (channelId: string, widgetId: string) =>
+		createReactiveWidgetConsumer(WidgetChannels.paragraph(channelId), widgetId),
+
+	table: (channelId: string, widgetId: string) =>
+		createReactiveWidgetConsumer(WidgetChannels.table(channelId), widgetId),
+
+	metric: (channelId: string, widgetId: string) =>
+		createReactiveWidgetConsumer(WidgetChannels.metric(channelId), widgetId),
+
+	lineChart: (channelId: string, widgetId: string) =>
+		createReactiveWidgetConsumer(WidgetChannels.lineChart(channelId), widgetId),
+
+	barChart: (channelId: string, widgetId: string) =>
+		createReactiveWidgetConsumer(WidgetChannels.barChart(channelId), widgetId),
+
+	title: (channelId: string, widgetId: string) =>
+		createReactiveWidgetConsumer(WidgetChannels.title(channelId), widgetId),
+
+	image: (channelId: string, widgetId: string) =>
+		createReactiveWidgetConsumer(WidgetChannels.image(channelId), widgetId),
+
+	map: (channelId: string, widgetId: string) =>
+		createReactiveWidgetConsumer(WidgetChannels.map(channelId), widgetId)
+} as const;
+
 // ===== Example Usage =====
 
 /*
-// In an AI job handler:
-import { WidgetChannels } from './widgetSchemas';
-import { createJobWidgetBridge } from './widgetBridge';
+// ============================================================================
+// Example 1: Simple paragraph widget with AI job
+// ============================================================================
+import { WidgetChannels, bridgeJobToWidget } from '$lib/dashboard/types/widgetBridge';
 
-async function submitAIJob() {
-  const jobId = await submitJob({ request: "Generate a summary", priority: "HIGH" });
+async function setupParagraphWidget() {
+  // Submit AI job
+  const jobId = await submitJob({
+    request: "Generate a summary of recent sales",
+    priority: "HIGH"
+  });
   
-  // Bridge job updates to paragraph widget
-  const bridge = createJobWidgetBridge({
+  // Create bridge to paragraph widget (NEW CLEANER API)
+  const bridge = bridgeJobToWidget({
     jobId,
-    channel: WidgetChannels.paragraphContent,
+    channel: WidgetChannels.paragraph('sales-summary'),
     transformer: (result) => {
-      const parsed = JSON.parse(result);
+      const data = JSON.parse(result);
       return {
-        title: parsed.title,
-        content: parsed.summary,
+        content: data.summary,
         markdown: true
       };
     }
@@ -413,9 +564,103 @@ async function submitAIJob() {
   return { jobId, bridge };
 }
 
-// In a widget component:
-import { WidgetChannels } from '$lib/dashboard/types/widgetSchemas';
-import { createWidgetConsumer } from '$lib/dashboard/types/widgetBridge';
+// ============================================================================
+// Example 2: Using Preset Publishers/Consumers
+// ============================================================================
+import { Publishers, Consumers, WidgetStores } from '$lib/dashboard/types/widgetBridge';
+
+// Direct publishing (without AI job)
+function publishMetricData() {
+  const publisher = Publishers.metric('cpu-usage', 'system-monitor');
+  
+  publisher.publish({
+    label: 'CPU Usage',
+    value: 75.5,
+    unit: '%',
+    changeType: 'increase',
+    change: 5.2
+  });
+}
+
+// ============================================================================
+// Example 3: In a Svelte component
+// ============================================================================
+<script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
+  import { WidgetStores } from '$lib/dashboard/types/widgetBridge';
+  
+  let dataStore = WidgetStores.paragraph('sales-summary', 'widget-1');
+  let content: string | undefined;
+  
+  const unsubscribe = dataStore.subscribe(data => {
+    content = data?.content;
+  });
+  
+  onDestroy(unsubscribe);
+</script>
+
+{#if content}
+  <div>{content}</div>
+{/if}
+
+// ============================================================================
+// Example 4: Multiple widgets from one job
+// ============================================================================
+import { bridgeJobToMultipleWidgets, WidgetChannels } from '$lib/dashboard/types/widgetBridge';
+
+async function setupDashboard() {
+  const jobId = await submitJob({
+    request: "Analyze quarterly performance",
+    priority: "HIGH"
+  });
+  
+  const bridge = bridgeJobToMultipleWidgets(jobId, [
+    {
+      channel: WidgetChannels.metric('revenue-metric'),
+      transformer: (result) => {
+        const data = JSON.parse(result);
+        return {
+          label: 'Q4 Revenue',
+          value: data.revenue,
+          change: data.revenueChange,
+          changeType: data.revenueChange > 0 ? 'increase' : 'decrease',
+          unit: '$'
+        };
+      }
+    },
+    {
+      channel: WidgetChannels.lineChart('revenue-chart'),
+      transformer: (result) => {
+        const data = JSON.parse(result);
+        return {
+          datasets: [{
+            label: 'Revenue',
+            data: data.monthlyRevenue,
+            color: '#10b981'
+          }],
+          labels: data.months
+        };
+      }
+    },
+    {
+      channel: WidgetChannels.paragraph('analysis'),
+      transformer: (result) => {
+        const data = JSON.parse(result);
+        return {
+          content: data.analysis,
+          markdown: true
+        };
+      }
+    }
+  ]);
+  
+  return { jobId, bridge };
+}
+
+// ============================================================================
+// Example 5: Legacy API (still supported for backward compatibility)
+// ============================================================================
+import { createWidgetConsumer, createJobWidgetBridge } from '$lib/dashboard/types/widgetBridge';
 
 const consumer = createWidgetConsumer(
   WidgetChannels.paragraphContent,

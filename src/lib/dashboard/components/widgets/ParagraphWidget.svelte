@@ -12,15 +12,15 @@
 
 	// Data Types
 	import { ParagraphWidgetDataSchema } from '$lib/dashboard/types/widgetSchemas';
+	import type { ParagraphWidget } from '$lib/dashboard/types/widget';
 
 	// Authentication
 	import type { CurrentUser } from '$lib/types/auth';
 	import type { JobUpdate } from '$lib/dashboard/lib/JobManager';
 
-	// Utils
+	// Utils - NEW UPGRADED API
+	import { Publishers, WidgetStores } from '$lib/dashboard/types/widgetBridge';
 	import { submitAIJob, type JobSubmissionCallbacks } from './utils/aiJobSubmission';
-	import { setupConsumer } from './utils/consumerSetup';
-	import { mapStore } from '$lib/stores/mapObjectStore';
 	import { paragraphTitleQuery } from '$lib/dashboard/types/OpenAIQueryDefs';
 	import { project as projectStore } from '$lib/stores/project.svelte';
 
@@ -136,24 +136,17 @@
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
-	// Channel Setup
+	// Channel Setup - UPGRADED API
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
-	const channel: WidgetChannelConfig<'paragraph'> = {
-		channelId,
-		widgetType: WIDGET_TYPE,
-		schema: ParagraphWidgetDataSchema as z.ZodSchema<ParagraphWidgetData>,
-		description: 'Channel for paragraph widget content'
-	};
+	// Setup content publisher using new Publishers preset
+	const contentPublisher = Publishers.paragraph(channelId, `content-generator-agent-${widgetId}`);
 
-	// Setup content producer
-	const contentProducer = mapStore.registerProducer<ParagraphWidget['data']>(
-		channelId,
-		`content-generator-agent-${widgetId}`
-	);
+	// Setup reactive store using new WidgetStores preset
+	const widgetStore = WidgetStores.paragraph(channelId, widgetId);
 
-	// Setup consumer with error handling
-	const { unsubscribe } = setupConsumer<ParagraphWidgetData>(channel, widgetId, (validatedData) => {
+	// Subscribe to widget store updates
+	const unsubscribe = widgetStore.subscribe((validatedData) => {
 		if (validatedData) {
 			handleDataUpdate(validatedData);
 		}
@@ -161,7 +154,7 @@
 
 	// Cleanup on destroy
 	onDestroy(() => {
-		unsubscribe?.();
+		unsubscribe();
 	});
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,14 +173,14 @@
 					throw new Error('Invalid AI response format');
 				}
 
-				const newData: ParagraphWidget['data'] = {
+				const newData = {
 					title: parsedOutput.title || null,
 					content: parsedOutput.content || '',
-					markdown: parsedOutput.markdown ?? false
+					markdown: (parsedOutput.markdown ?? false) as boolean | null
 				};
 
 				console.log(`✅ AI content generated: "${newData.title || 'Untitled'}"`);
-				contentProducer.publish(newData);
+				contentPublisher.publish(newData);
 			} catch (err) {
 				console.error('Failed to process AI response:', err);
 				error = 'Failed to process AI response';

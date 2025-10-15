@@ -377,9 +377,11 @@ export function parseWidgetData<T extends WidgetType>(
 // ===== Preset Channel Configurations =====
 
 /**
- * Common channel configurations for widgets
+ * Channel configuration factory for all widget types
+ * Use these to create type-safe channel configurations
  */
 export const WidgetChannels = {
+	/** Legacy preset - use factory functions below instead */
 	paragraphContent: {
 		channelId: 'paragraph-content',
 		widgetType: 'paragraph',
@@ -387,6 +389,7 @@ export const WidgetChannels = {
 		description: 'Channel for paragraph widget content'
 	} as WidgetChannelConfig<'paragraph'>,
 
+	/** Legacy preset - use factory functions below instead */
 	tableData: {
 		channelId: 'table-data',
 		widgetType: 'table',
@@ -394,6 +397,7 @@ export const WidgetChannels = {
 		description: 'Channel for table widget data'
 	} as WidgetChannelConfig<'table'>,
 
+	/** Legacy preset - use factory functions below instead */
 	metricData: {
 		channelId: 'metric-data',
 		widgetType: 'metric',
@@ -401,12 +405,111 @@ export const WidgetChannels = {
 		description: 'Channel for metric widget data'
 	} as WidgetChannelConfig<'metric'>,
 
+	/** Legacy preset - use factory functions below instead */
 	chartData: {
 		channelId: 'chart-data',
 		widgetType: 'lineChart',
 		schema: LineChartWidgetDataSchema,
 		description: 'Channel for chart widget data'
-	} as WidgetChannelConfig<'lineChart'>
+	} as WidgetChannelConfig<'lineChart'>,
+
+	// ===== Channel Factory Functions =====
+
+	/**
+	 * Create a paragraph widget channel configuration
+	 * @param channelId - Unique channel identifier
+	 * @param description - Optional description
+	 */
+	paragraph: (channelId: string, description?: string): WidgetChannelConfig<'paragraph'> => ({
+		channelId,
+		widgetType: 'paragraph' as const,
+		schema: ParagraphWidgetDataSchema as any,
+		description: description || `Paragraph channel: ${channelId}`
+	}),
+
+	/**
+	 * Create a table widget channel configuration
+	 * @param channelId - Unique channel identifier
+	 * @param description - Optional description
+	 */
+	table: (channelId: string, description?: string): WidgetChannelConfig<'table'> => ({
+		channelId,
+		widgetType: 'table',
+		schema: TableWidgetDataSchema,
+		description: description || `Table channel: ${channelId}`
+	}),
+
+	/**
+	 * Create a title widget channel configuration
+	 * @param channelId - Unique channel identifier
+	 * @param description - Optional description
+	 */
+	title: (channelId: string, description?: string): WidgetChannelConfig<'title'> => ({
+		channelId,
+		widgetType: 'title',
+		schema: TitleWidgetDataSchema,
+		description: description || `Title channel: ${channelId}`
+	}),
+
+	/**
+	 * Create an image widget channel configuration
+	 * @param channelId - Unique channel identifier
+	 * @param description - Optional description
+	 */
+	image: (channelId: string, description?: string): WidgetChannelConfig<'image'> => ({
+		channelId,
+		widgetType: 'image',
+		schema: ImageWidgetDataSchema,
+		description: description || `Image channel: ${channelId}`
+	}),
+
+	/**
+	 * Create a line chart widget channel configuration
+	 * @param channelId - Unique channel identifier
+	 * @param description - Optional description
+	 */
+	lineChart: (channelId: string, description?: string): WidgetChannelConfig<'lineChart'> => ({
+		channelId,
+		widgetType: 'lineChart',
+		schema: LineChartWidgetDataSchema,
+		description: description || `Line chart channel: ${channelId}`
+	}),
+
+	/**
+	 * Create a bar chart widget channel configuration
+	 * @param channelId - Unique channel identifier
+	 * @param description - Optional description
+	 */
+	barChart: (channelId: string, description?: string): WidgetChannelConfig<'barChart'> => ({
+		channelId,
+		widgetType: 'barChart',
+		schema: BarChartWidgetDataSchema,
+		description: description || `Bar chart channel: ${channelId}`
+	}),
+
+	/**
+	 * Create a metric widget channel configuration
+	 * @param channelId - Unique channel identifier
+	 * @param description - Optional description
+	 */
+	metric: (channelId: string, description?: string): WidgetChannelConfig<'metric'> => ({
+		channelId,
+		widgetType: 'metric',
+		schema: MetricWidgetDataSchema,
+		description: description || `Metric channel: ${channelId}`
+	}),
+
+	/**
+	 * Create a map widget channel configuration
+	 * @param channelId - Unique channel identifier
+	 * @param description - Optional description
+	 */
+	map: (channelId: string, description?: string): WidgetChannelConfig<'map'> => ({
+		channelId,
+		widgetType: 'map',
+		schema: MapWidgetDataSchema,
+		description: description || `Map channel: ${channelId}`
+	})
 } as const;
 
 // ===== Type Guards =====
