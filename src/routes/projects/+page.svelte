@@ -126,6 +126,9 @@
 	import DeleteModal from '$lib/components/Dialog/DeleteModal.svelte';
 	import ProjectModal from './ProjectModal.svelte';
 	import MetaTag from './MetaTag.svelte';
+	import { gql } from '$lib/realtime/graphql/requestHandler';
+	import { M_CREATE_PROJECT } from '$lib/realtime/graphql/mutations/Project';
+	import { goto } from '$app/navigation';
 
 	// State
 	let openProject: boolean = $state(false); // modal control
@@ -137,6 +140,49 @@
 	const description: string = 'My StratiqAI Projects';
 	const title: string = 'My StratiqAI Projects';
 	const subtitle: string = 'My StratiqAI Projects';
+
+	async function createNewProjectHandler(e: Event) {
+		e.preventDefault();
+
+		const id =  crypto.randomUUID?.() || Math.random().toString(36).slice(2);
+			// const now = new Date().toISOString();
+
+		// Prepare input for create/update project mutations
+		const input = {
+			id: id,
+			name: 'New Project',
+			description: '',
+			image: '',
+			address: '',
+			city: '',
+			state: '',
+			zip: '',
+			country: '',
+			assetType: '',
+			status: 'Active',
+			isActive: true,
+			isArchived: false,
+			isDeleted: false,
+			isPublic: false,
+			members: [],
+			documents: [],
+			tags: []
+		};
+
+		// console.log('input', JSON.stringify(input, null, 2));
+		let mutation: string;
+		let opName: string;
+
+		// console.log('input', input);
+		// console.log('idToken', idToken);
+		try {
+			const res = await gql<{ [key: string]: any }>(M_CREATE_PROJECT, { input }, idToken);
+			await goto(`/projects/workspace/${id}/get-started`);
+		} catch (err) {
+			console.error('Error creating new project:', err);
+			alert('Error creating new project');
+		}
+	}
 </script>
 
 <MetaTag {path} {description} {title} {subtitle} />
@@ -192,15 +238,11 @@
 				const id = uuidv4();
 				window.location.href = `/projects/workspace/${id}/get-started?new=1`;
 			}}
-			
+			onclick={() => (openProject = true)}
 			-->
 			{#snippet end()}
 				<div class="flex items-center space-x-2">
-					<Button
-						size="sm"
-						class="gap-2 whitespace-nowrap px-3"
-						onclick={() => (openProject = true)}
-					>
+					<Button size="sm" class="gap-2 whitespace-nowrap px-3" onclick={createNewProjectHandler}>
 						<PlusOutline size="sm" />Add Project
 					</Button>
 					<!-- <Button size="sm" color="alternative" class="gap-2 px-3">

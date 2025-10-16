@@ -331,9 +331,9 @@
 
 <DashboardControls />
 
-<!-- <div class="mx-auto max-w-7xl px-4 pb-4">
-		<MapStoreDebugPanel />
-	</div>  -->
+<div class="mx-auto max-w-7xl px-4 pb-4">
+	<MapStoreDebugPanel />
+</div>
 
 <main class="mx-auto max-w-7xl p-4">
 	{#if isLoading}

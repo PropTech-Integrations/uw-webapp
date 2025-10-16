@@ -103,6 +103,7 @@
 	// GraphQL Operations
 	// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	async function updateProjectDocuments(updatedDocuments: ProjectDocument[]): Promise<void> {
+		console.log('updateProjectDocuments', updatedDocuments);
 		try {
 			await gql<{ updateProject: Project }>(
 				M_UPDATE_PROJECT,
